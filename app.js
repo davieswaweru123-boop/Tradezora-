@@ -79,8 +79,34 @@ function trade(direction) {
   toast(`Demo ${direction} trade placed — $${stake.toFixed(2)}`);
 }
 
+
+function updateDerivStatus() {
+  const status = $("derivStatus");
+  if (!status) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const connected = params.get("connected") === "1";
+
+  if (connected) {
+    localStorage.setItem("tradezora_deriv_connected", "1");
+    status.textContent = "✓ Deriv Connected";
+    status.style.background = "#e9f8ef";
+    status.style.color = "#187a43";
+    toast("Deriv account connected successfully.");
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return;
+  }
+
+  if (localStorage.getItem("tradezora_deriv_connected") === "1") {
+    status.textContent = "✓ Deriv Connected";
+    status.style.background = "#e9f8ef";
+    status.style.color = "#187a43";
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   renderMarkets();
+  updateDerivStatus();
 
   $("connectBtn")?.addEventListener("click", connectDeriv);
   $("mobileConnectBtn")?.addEventListener("click", connectDeriv);
