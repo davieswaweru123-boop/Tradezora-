@@ -10,7 +10,7 @@ renderMarkets();
 document.getElementById("marketSearch").addEventListener("input",e=>renderMarkets(e.target.value));
 const toastEl=document.getElementById("toast");
 function toast(msg){toastEl.textContent=msg;toastEl.classList.add("show");setTimeout(()=>toastEl.classList.remove("show"),2200)}
-document.getElementById("connectBtn").onclick=()=>toast("Deriv OAuth connection will be enabled in the API integration phase.");
+document.getElementById("connectBtn").onclick=()=>{window.location.href="https://tradezora-backend-use-1.onrender.com/auth/login";};
 document.getElementById("realBtn").onclick=()=>toast("Real trading requires an authenticated Deriv account and explicit confirmation.");
 document.getElementById("createBtn").onclick=()=>toast("Strategy builder coming next.");
 document.getElementById("stopAll").onclick=()=>{document.getElementById("bot").checked=false;toast("All automation stopped.");};
