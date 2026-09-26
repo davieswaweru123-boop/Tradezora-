@@ -3,66 +3,133 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#03101d">
   <title>TradeZora — Trading Dashboard</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand"><div class="logo">TZ</div><div><strong>Trade<span>Zora</span></strong><small>Trade Smarter. Grow Faster.</small></div></div>
+      <div class="brand">
+        <div class="logo">TZ</div>
+        <div>
+          <strong>Trade<span>Zora</span></strong>
+          <small>Trade Smarter. Grow Faster.</small>
+        </div>
+      </div>
 
       <nav>
-        <button class="nav active">⌂ <span>Dashboard</span></button>
-        <button class="nav">↗ <span>Trade</span></button>
-        <button class="nav">🤖 <span>Automation</span></button>
-        <button class="nav">◉ <span>Markets</span></button>
-        <button class="nav">◷ <span>Trade History</span></button>
-        <button class="nav">▣ <span>Wallet</span></button>
-        <button class="nav">⚙ <span>Settings</span></button>
+        <button class="nav active" type="button">⌂ <span>Dashboard</span></button>
+        <button class="nav" type="button">↗ <span>Trade</span></button>
+        <button class="nav" type="button">🤖 <span>Automation</span></button>
+        <button class="nav" type="button">◉ <span>Markets</span></button>
+        <button class="nav" type="button">◷ <span>Trade History</span></button>
+        <button class="nav" type="button">▣ <span>Wallet</span></button>
+        <button class="nav" type="button">⚙ <span>Settings</span></button>
       </nav>
 
       <div class="connect-card">
         <h3>Connect Your Deriv Account</h3>
         <p>Link your Deriv account to access live markets and trading features.</p>
-        <button class="connect-btn" id="connectBtn">Connect Deriv</button>
+        <button class="connect-btn" id="connectBtn" type="button">Connect Deriv</button>
       </div>
 
       <div class="quick">
         <h4>Quick Links</h4>
-        <a>◉ Help & Support</a>
-        <a>▣ Video Tutorials</a>
-        <a>◈ Risk Management</a>
-        <a>▤ Terms & Conditions</a>
+        <a href="#" data-toast="Help & Support coming soon">◉ Help & Support</a>
+        <a href="#" data-toast="Video Tutorials coming soon">▣ Video Tutorials</a>
+        <a href="#" data-toast="Risk Management coming soon">◈ Risk Management</a>
+        <a href="#" data-toast="Terms & Conditions coming soon">▤ Terms & Conditions</a>
       </div>
 
-      <div class="security">🛡 <div><b>Your security matters</b><small>Your data is protected with industry-standard encryption.</small></div></div>
+      <div class="security">
+        🛡
+        <div>
+          <b>Your security matters</b>
+          <small>Your data is protected with industry-standard encryption.</small>
+        </div>
+      </div>
     </aside>
 
     <main class="main">
       <header class="topbar">
-        <div class="disclosure">🛡 <div><b>Independent third-party platform for Deriv accounts</b><small>Not affiliated with or operated by Deriv.</small></div></div>
-        <div class="profile">◯ <span>W</span><div><b>Demo User</b><small>● Online</small></div>⌄</div>
+        <div class="disclosure">
+          🛡
+          <div>
+            <b>Independent third-party platform for Deriv accounts</b>
+            <small>Not affiliated with or operated by Deriv.</small>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <div class="profile">
+            <span>W</span>
+            <div>
+              <b>Demo User</b>
+              <small>● Online</small>
+            </div>
+            <span class="profile-arrow">⌄</span>
+          </div>
+        </div>
       </header>
+
+      <div class="mobile-connect-row">
+        <button class="mobile-connect" id="mobileConnectBtn" type="button">Connect Deriv</button>
+      </div>
 
       <section class="content">
         <div class="stats">
-          <div class="stat"><small>Account Balance</small><strong id="balance">$1,000.00</strong><em>Demo</em></div>
-          <div class="stat"><small>Total Equity</small><strong>$1,000.00</strong></div>
-          <div class="stat"><small>Open P&amp;L</small><strong class="positive" id="openPnl">$0.00</strong><small class="positive">0.00%</small></div>
-          <div class="stat"><small>Today's P&amp;L</small><strong>$0.00</strong><small class="positive">0.00%</small></div>
-          <div class="stat account"><small>Trading Account</small><select><option>● Demo Account</option><option>Real Account</option></select><button id="realBtn">Switch to real trading</button></div>
+          <div class="stat">
+            <small>Account Balance</small>
+            <strong id="balance">$1,000.00</strong>
+            <em>Demo</em>
+          </div>
+          <div class="stat">
+            <small>Total Equity</small>
+            <strong>$1,000.00</strong>
+          </div>
+          <div class="stat">
+            <small>Open P&amp;L</small>
+            <strong class="positive" id="openPnl">$0.00</strong>
+            <small class="positive">0.00%</small>
+          </div>
+          <div class="stat">
+            <small>Today's P&amp;L</small>
+            <strong>$0.00</strong>
+            <small class="positive">0.00%</small>
+          </div>
+          <div class="stat account">
+            <small>Trading Account</small>
+            <select id="accountType">
+              <option>● Demo Account</option>
+              <option>Real Account</option>
+            </select>
+            <button id="realBtn" type="button">Switch to real trading</button>
+          </div>
         </div>
 
         <div class="workspace">
           <section class="markets panel">
             <div class="panel-title"><h2>Markets</h2></div>
-            <input class="search" placeholder="⌕  Search markets..." id="marketSearch">
-            <div class="tabs"><button class="selected">All</button><button>Forex</button><button>Indices</button><button>Commodities</button><button>Synthetic</button></div>
+            <input class="search" placeholder="⌕  Search markets..." id="marketSearch" autocomplete="off">
+            <div class="tabs">
+              <button class="selected" type="button">All</button>
+              <button type="button">Forex</button>
+              <button type="button">Indices</button>
+              <button type="button">Commodities</button>
+              <button type="button">Synthetic</button>
+            </div>
             <div id="marketList"></div>
           </section>
 
           <section class="chart panel">
-            <div class="chart-head"><div><h2>Volatility 100 Index ☆</h2><span class="live">● 5772.41 <b>+35.62 (+0.62%)</b></span></div><button>⛶</button></div>
+            <div class="chart-head">
+              <div>
+                <h2>Volatility 100 Index ☆</h2>
+                <span class="live">● 5772.41 <b>+35.62 (+0.62%)</b></span>
+              </div>
+              <button type="button" data-toast="Chart expanded view coming soon">⛶</button>
+            </div>
             <div class="chart-area">
               <div class="grid"></div>
               <svg viewBox="0 0 800 330" preserveAspectRatio="none" aria-label="Demo price chart">
@@ -71,40 +138,130 @@
               </svg>
               <div class="price-tag">5772.41</div>
             </div>
-            <div class="timeframes"><button>1m</button><button class="selected">5m</button><button>15m</button><button>30m</button><button>1h</button><button>4h</button><button>1D</button></div>
+            <div class="timeframes">
+              <button type="button">1m</button>
+              <button class="selected" type="button">5m</button>
+              <button type="button">15m</button>
+              <button type="button">30m</button>
+              <button type="button">1h</button>
+              <button type="button">4h</button>
+              <button type="button">1D</button>
+            </div>
           </section>
 
           <section class="trade panel">
-            <div class="trade-tabs"><button class="selected">Rise/Fall</button><button>Higher/Lower</button><button>Touch/No Touch</button></div>
-            <label>Market<select><option>Volatility 100 Index</option><option>Volatility 75 Index</option><option>EUR/USD</option></select></label>
-            <label>Contract Type<select><option>Rise/Fall</option></select></label>
-            <div class="two"><label>Duration<input id="duration" value="5"><select><option>ticks</option><option>minutes</option></select></label><label>Stake<input id="stake" value="1.00"></label></div>
-            <div class="payout"><span>Potential Payout<strong id="payout">$1.90</strong></span><span>Payout<strong class="positive">90%</strong></span></div>
-            <div class="actions"><button class="up" id="upBtn">↗ UP</button><button class="down" id="downBtn">↘ DOWN</button></div>
+            <div class="trade-tabs">
+              <button class="selected" type="button">Rise/Fall</button>
+              <button type="button">Higher/Lower</button>
+              <button type="button">Touch/No Touch</button>
+            </div>
+
+            <label>
+              Market
+              <select>
+                <option>Volatility 100 Index</option>
+                <option>Volatility 75 Index</option>
+                <option>EUR/USD</option>
+              </select>
+            </label>
+
+            <label>
+              Contract Type
+              <select><option>Rise/Fall</option></select>
+            </label>
+
+            <div class="two">
+              <label>
+                Duration
+                <input id="duration" value="5" inputmode="numeric">
+                <select><option>ticks</option><option>minutes</option></select>
+              </label>
+              <label>
+                Stake
+                <input id="stake" value="1.00" inputmode="decimal">
+              </label>
+            </div>
+
+            <div class="payout">
+              <span>Potential Payout<strong id="payout">$1.90</strong></span>
+              <span>Payout<strong class="positive">90%</strong></span>
+            </div>
+
+            <div class="actions">
+              <button class="up" id="upBtn" type="button">↗ UP</button>
+              <button class="down" id="downBtn" type="button">↘ DOWN</button>
+            </div>
           </section>
         </div>
 
         <div class="lower">
-          <section class="panel positions"><div class="panel-title"><h2>Open Positions</h2><a>View all</a></div>
-            <div class="table"><div class="tr head"><span>ID</span><span>Market</span><span>Type</span><span>Stake</span><span>Entry</span><span>Current</span><span>P/L</span><span>Status</span></div>
-              <div class="tr"><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>$0.00</span><span>Waiting</span></div>
+          <section class="panel positions">
+            <div class="panel-title">
+              <h2>Open Positions</h2>
+              <a href="#" data-toast="No open positions">View all</a>
+            </div>
+            <div class="table">
+              <div class="tr head">
+                <span>ID</span><span>Market</span><span>Type</span><span>Stake</span>
+                <span>Entry</span><span>Current</span><span>P/L</span><span>Status</span>
+              </div>
+              <div class="tr">
+                <span>—</span><span>—</span><span>—</span><span>—</span>
+                <span>—</span><span>—</span><span>$0.00</span><span>Waiting</span>
+              </div>
             </div>
           </section>
 
           <section class="panel automation">
-            <div class="panel-title"><h2>🤖 Automation</h2><button class="small-btn" id="createBtn">Create Strategy</button></div>
-            <div class="strategy"><div><b>Trend Follower</b><span class="badge">Ready</span><small>Market: Volatility 100 · Stake: $1.00 · Duration: 5 ticks</small></div><label class="switch"><input type="checkbox" id="bot"><i></i></label></div>
-            <div class="bot-controls"><button id="pauseBtn">Ⅱ Pause</button><button class="stop" id="stopBtn">■ Stop</button></div>
-            <div class="safety"><h3>🛡 Safety Controls</h3><div><span>Max Stake <b>$10.00</b></span><span>Max Trades <b>50</b></span><span>Daily Loss <b>$20.00</b></span><span>Take Profit <b>$50.00</b></span></div></div>
-            <button class="stop-all" id="stopAll">■ STOP ALL</button>
+            <div class="panel-title">
+              <h2>🤖 Automation</h2>
+              <button class="small-btn" id="createBtn" type="button">Create Strategy</button>
+            </div>
+
+            <div class="strategy">
+              <div>
+                <b>Trend Follower</b><span class="badge">Ready</span>
+                <small>Market: Volatility 100 · Stake: $1.00 · Duration: 5 ticks</small>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="bot">
+                <i></i>
+              </label>
+            </div>
+
+            <div class="bot-controls">
+              <button id="pauseBtn" type="button">Ⅱ Pause</button>
+              <button class="stop" id="stopBtn" type="button">■ Stop</button>
+            </div>
+
+            <div class="safety">
+              <h3>🛡 Safety Controls</h3>
+              <div>
+                <span>Max Stake <b>$10.00</b></span>
+                <span>Max Trades <b>50</b></span>
+                <span>Daily Loss <b>$20.00</b></span>
+                <span>Take Profit <b>$50.00</b></span>
+              </div>
+            </div>
+
+            <button class="stop-all" id="stopAll" type="button">■ STOP ALL</button>
           </section>
         </div>
 
-        <section class="panel recent"><div class="panel-title"><h2>Recent Trades</h2><a>View all</a></div><div id="trades"><div class="empty">No trades yet. Your demo trades will appear here.</div></div></section>
+        <section class="panel recent">
+          <div class="panel-title">
+            <h2>Recent Trades</h2>
+            <a href="#" data-toast="No recent trades">View all</a>
+          </div>
+          <div id="trades">
+            <div class="empty">No trades yet. Your demo trades will appear here.</div>
+          </div>
+        </section>
       </section>
     </main>
   </div>
-  <div class="toast" id="toast"></div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
 </body>
 </html>
