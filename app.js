@@ -12,7 +12,7 @@ async function loadDerivAccount() {
   try {
     const response = await fetch(
       "https://tradezora-backend-use-1.onrender.com/api/account",
-      { headers: {"X-TradeZora-Session": sessionId} }
+      { headers: { "X-TradeZora-Session": sessionId } }
     );
     const data = await response.json();
 
@@ -25,33 +25,45 @@ async function loadDerivAccount() {
     }
 
     const balance = account.balance ?? account.available_balance ?? null;
-    const currency = account.currency || "";
-    const loginid = account.account_id || account.id || account.loginid || "";
+    const currency = account.currency || "USD";
+    const accountId = account.account_id || account.id || account.loginid || "";
+    const type = account.account_type || (account.demo_account ? "demo" : "");
+
+    if (balance !== null && $("balance")) {
+      $("balance").textContent = `${Number(balance).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })} ${currency}`;
+    }
+
+    const label = type === "demo" ? "Demo" : type === "real" ? "Real" : "Connected";
+    const balanceText = balance !== null
+      ? `Balance: ${Number(balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${currency}`
+      : "Account details received.";
 
     box.innerHTML =
       "<strong>Deriv Account Connected</strong><br>" +
-      (loginid ? "Account: " + loginid + "<br>" : "") +
-      (balance !== null
-        ? "Balance: " + Number(balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " " + currency
-        : "Account details received.");
+      (accountId ? "Account: " + accountId + "<br>" : "") +
+      balanceText + "<br>" +
+      "Type: " + label;
   } catch (err) {
     box.textContent = "✓ Deriv connected, but account data could not be loaded yet.";
-    console.error(err);
+    console.error("Deriv account load failed:", err);
   }
 }
-
 
 async function exchangeConnectionCode() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get("connection_code");
-  if (!code) return;
+
+  if (!code) return false;
 
   try {
     const response = await fetch(
       "https://tradezora-backend-use-1.onrender.com/api/session/exchange",
       {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ connection_code: code })
       }
     );
@@ -60,12 +72,16 @@ async function exchangeConnectionCode() {
 
     if (response.ok && data.session_id) {
       localStorage.setItem("tradezora_session_id", data.session_id);
+      return true;
     }
+
+    console.error("Session exchange failed:", data);
   } catch (err) {
     console.error("Session exchange failed:", err);
   }
-}
 
+  return false;
+}
 
 function updateDerivStatus() {
   const status = $("derivStatus");
@@ -74,16 +90,8 @@ function updateDerivStatus() {
   const params = new URLSearchParams(window.location.search);
   const connected = params.get("connected") === "1";
 
-  if (connected) {
+  if (connected || localStorage.getItem("tradezora_deriv_connected") === "1") {
     localStorage.setItem("tradezora_deriv_connected", "1");
-    status.textContent = "✓ Deriv Connected";
-    status.style.background = "#e9f8ef";
-    status.style.color = "#187a43";
-    window.history.replaceState({}, document.title, window.location.pathname);
-    return;
-  }
-
-  if (localStorage.getItem("tradezora_deriv_connected") === "1") {
     status.textContent = "✓ Deriv Connected";
     status.style.background = "#e9f8ef";
     status.style.color = "#187a43";
@@ -171,9 +179,15 @@ function trade(direction) {
   toast(`Demo ${direction} trade placed — $${stake.toFixed(2)}`);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   updateDerivStatus();
-  exchangeConnectionCode().then(loadDerivAccount);
+  const exchanged = await exchangeConnectionCode();
+  await loadDerivAccount();
+
+  if (exchanged || new URLSearchParams(window.location.search).get("connected") === "1") {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
   renderMarkets();
 
   $("connectBtn")?.addEventListener("click", connectDeriv);
