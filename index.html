@@ -32,7 +32,7 @@ body{padding-bottom:24px}.wrap{max-width:520px;margin:auto;padding:10px 10px 24p
 <body>
 <main class="wrap">
 <div class="top"><div class="brand">TradeZora</div><div id="status" class="status">Not connected</div></div>
-<section class="hero"><h1>TradeZora <span style="color:#4da3ff">Terminal</span></h1><p>Fast demo trading interface for Deriv markets. Demo account only.</p></section>
+<section class="hero"><h1>TradeZora <span style="color:#4da3ff">Terminal</span></h1><p>Fast demo trading interface for Deriv markets. Demo account only.</p><div style="margin-top:7px;font-size:9px;color:#4da3ff">Callback Fix v2</div></section>
 <section class="card"><div class="balance-label">Demo Account Balance</div><div id="balance" class="balance">$0.00</div><div id="accountType" class="muted">Not connected</div></section>
 <section class="card">
 <button id="connectBtn" class="btn primary" type="button">Connect Deriv</button>
@@ -93,12 +93,31 @@ async function connectDeriv(){
   window.location.href=BACKEND_URL+"/auth/login";
 }
 async function exchange(code){
+  // The Deriv authorization code is sent to our backend for the
+  // server-side session exchange. Never exchange Deriv tokens in the browser.
+  if(!code) throw new Error("No Deriv connection code was returned.");
+
   const r=await fetch(BACKEND_URL+"/api/session/exchange",{
-    method:"POST",headers:{"Content-Type":"application/json"},
+    method:"POST",
+    mode:"cors",
+    cache:"no-store",
+    headers:{"Content-Type":"application/json","Accept":"application/json"},
     body:JSON.stringify({connection_code:code})
   });
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok||!d.session_id)throw Error(d.error||"Could not establish the Deriv session.");
+
+  const raw=await r.text();
+  let d={};
+  try{d=raw?JSON.parse(raw):{};}catch(_){}
+
+  if(!r.ok){
+    const detail=d.error||d.message||raw||("HTTP "+r.status);
+    throw new Error("Session exchange failed ("+r.status+"): "+detail);
+  }
+
+  if(!d.session_id){
+    throw new Error("Backend replied without a session ID.");
+  }
+
   localStorage.setItem(STORAGE_SESSION,d.session_id);
   return d.session_id;
 }
@@ -244,18 +263,4 @@ async function disconnectDeriv(){
   clearInterval(priceTimer);clearInterval(accountTimer);clearInterval(historyTimer);clearInterval(contractTimer);
   localStorage.removeItem(STORAGE_SESSION);sessionId=null;setUI(false);
   $("historyCard").classList.add("hidden");$("openCard").classList.add("hidden");$("tradeOutcome").className="resultCard hidden";
-  $("balance").textContent="$0.00";$("accountType").textContent="Not connected";$("equity").textContent="$0.00";$("accountId").textContent="—";
-  msg("Deriv disconnected.","success");
-}
-async function initialize(){
-  const p=new URLSearchParams(location.search),code=p.get("connection_code");
-  if(code){
-    try{
-      msg("Finishing Deriv connection…");
-      sessionId=await exchange(code);
-      history.replaceState({},document.title,FRONTEND_URL);
-      await loadAccount();await loadMarkets();await loadHistory();
-      priceTimer=setInterval(refreshPrice,3000);
-      accountTimer=setInterval(loadAccount,5000);
-      historyTimer=setInterval(loadHistory,5000);
- 
+  $("balance").textContent="$0.00";$("accountType").textContent="Not connected";$("equity").textContent="$0.00";$
