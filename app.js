@@ -80,33 +80,36 @@ function trade(direction) {
 }
 
 
-function updateDerivStatus() {
-  const status = $("derivStatus");
-  if (!status) return;
-
+async function exchangeConnectionCode() {
   const params = new URLSearchParams(window.location.search);
-  const connected = params.get("connected") === "1";
+  const code = params.get("connection_code");
 
-  if (connected) {
-    localStorage.setItem("tradezora_deriv_connected", "1");
-    status.textContent = "✓ Deriv Connected";
-    status.style.background = "#e9f8ef";
-    status.style.color = "#187a43";
-    toast("Deriv account connected successfully.");
-    window.history.replaceState({}, document.title, window.location.pathname);
-    return;
+  if (!code) return;
+
+  try {
+    const response = await fetch(
+      "https://tradezora-backend-use-1.onrender.com/api/session/exchange",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ connection_code: code })
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.session_id) {
+      localStorage.setItem("tradezora_session_id", data.session_id);
+    }
+  } catch (err) {
+    console.error("Session exchange failed:", err);
   }
 
-  if (localStorage.getItem("tradezora_deriv_connected") === "1") {
-    status.textContent = "✓ Deriv Connected";
-    status.style.background = "#e9f8ef";
-    status.style.color = "#187a43";
-  }
+  window.history.replaceState({}, document.title, window.location.pathname);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   renderMarkets();
-  updateDerivStatus();
 
   $("connectBtn")?.addEventListener("click", connectDeriv);
   $("mobileConnectBtn")?.addEventListener("click", connectDeriv);
