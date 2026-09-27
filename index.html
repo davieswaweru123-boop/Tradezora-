@@ -32,7 +32,7 @@ body{padding-bottom:24px}.wrap{max-width:520px;margin:auto;padding:10px 10px 24p
 <body>
 <main class="wrap">
 <div class="top"><div class="brand">TradeZora</div><div id="status" class="status">Not connected</div></div>
-<section class="hero"><h1>TradeZora <span style="color:#4da3ff">Terminal</span></h1><p>Fast demo trading interface for Deriv markets. Demo account only.</p><div style="margin-top:7px;font-size:9px;color:#4da3ff">Callback Fix v2</div></section>
+<section class="hero"><h1>TradeZora <span style="color:#4da3ff">Terminal</span></h1><p>Fast demo trading interface for Deriv markets. Demo account only.</p><div style="margin-top:7px;font-size:9px;color:#4da3ff">FULL BUILD v3 • OAuth Callback Fix</div></section>
 <section class="card"><div class="balance-label">Demo Account Balance</div><div id="balance" class="balance">$0.00</div><div id="accountType" class="muted">Not connected</div></section>
 <section class="card">
 <button id="connectBtn" class="btn primary" type="button">Connect Deriv</button>
@@ -263,4 +263,4 @@ async function disconnectDeriv(){
   clearInterval(priceTimer);clearInterval(accountTimer);clearInterval(historyTimer);clearInterval(contractTimer);
   localStorage.removeItem(STORAGE_SESSION);sessionId=null;setUI(false);
   $("historyCard").classList.add("hidden");$("openCard").classList.add("hidden");$("tradeOutcome").className="resultCard hidden";
-  $("balance").textContent="$0.00";$("accountType").textContent="Not connected";$("equity").textContent="$0.00";$
+  $("balance").textContent="$0.00";$("accountType").textContent="Not connected";$("equity").te
