@@ -187,14 +187,11 @@ function drawChart(){
     if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
   });
   ctx.strokeStyle="#39d98a";ctx.lineWidth=2;ctx.stroke();
-  // Show the movement over the recent visible window, not from a
-  // possibly stale first tick. This prevents misleading values such as
-  // +1161.782% when the first quote is an outlier.
-  const windowSize=Math.min(10,priceHistory.length);
-  const first=priceHistory[priceHistory.length-windowSize],last=priceHistory[priceHistory.length-1];
-  const pct=first?((last-first)/first)*100:0;
-  const sign=pct>0?"+":"";
-  $("chartDelta").textContent=windowSize<2?"—":sign+pct.toFixed(2)+"%";
+  const lookback=Math.min(20,priceHistory.length-1);
+  const base=priceHistory[priceHistory.length-1-lookback];
+  const last=priceHistory[priceHistory.length-1];
+  const pct=base?((last-base)/base)*100:0;
+  $("chartDelta").textContent=(pct>=0?"+":"")+pct.toFixed(3)+"%";
 }
 function setDirection(d){
   direction=d;$("riseBtn").style.opacity=d==="CALL"?"1":".55";$("fallBtn").style.opacity=d==="PUT"?"1":".55";
@@ -266,4 +263,6 @@ async function startContract(id){
 }
 async function disconnectDeriv(){
   try{if(sessionId)await api("/api/trading/disconnect",{method:"POST"});}catch(e){}
-  clearInterval(priceTimer);clearInterval(accountTimer);clearInterval(historyTimer);clearInterva
+  clearInterval(priceTimer);clearInterval(accountTimer);clearInterval(historyTimer);clearInterval(contractTimer);
+  localStorage.removeItem(STORAGE_SESSION);sessionId=null;setUI(false);
+  $("historyCard").classList.add("hidden");$("openCard").classList.add("hidden");$("tradeOutcome").className="resultCard hidden"
