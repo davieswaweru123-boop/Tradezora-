@@ -265,4 +265,92 @@ async function disconnectDeriv(){
   try{if(sessionId)await api("/api/trading/disconnect",{method:"POST"});}catch(e){}
   clearInterval(priceTimer);clearInterval(accountTimer);clearInterval(historyTimer);clearInterval(contractTimer);
   localStorage.removeItem(STORAGE_SESSION);sessionId=null;setUI(false);
-  $("historyCard").classList.add("hidden");$("openCard").classList.add("hidden");$("tradeOutcome").className="resultCard hidden"
+  $("historyCard").classList.add("hidden");$("openCard").classList.add("hidden");$("tradeOutcome").className="resultCard hidden";
+$("balance").textContent="$0.00";$("accountType").textContent="Not connected";$("equity").textContent="$0.00";$("accountId").textContent="—";
+msg("Deriv disconnected.","success");
+}
+
+async function initialize(){
+  const p=new URLSearchParams(window.location.search);
+  const code=p.get("connection_code");
+  const oauthError=p.get("error");
+  const oauthErrorDescription=p.get("error_description");
+
+  console.log("TradeZora Callback Fix v2 loaded");
+
+  if(oauthError){
+    setUI(false);
+    msg("Deriv authorization error: "+(oauthErrorDescription||oauthError),"error");
+    return;
+  }
+
+  if(code){
+    setUI(false);
+    msg("Finishing Deriv connection…","");
+
+    try{
+      sessionId=await exchange(code);
+      history.replaceState({},document.title,FRONTEND_URL);
+
+      await loadAccount();
+      await loadMarkets();
+      await loadHistory();
+
+      startRefreshTimers();
+      msg("Deriv connected successfully.","success");
+      return;
+    }catch(e){
+      console.error("TradeZora OAuth callback error:",e);
+      localStorage.removeItem(STORAGE_SESSION);
+      sessionId=null;
+      setUI(false);
+      msg(e&&e.message?e.message:"Deriv connection failed.","error");
+      return;
+    }
+  }
+
+  sessionId=localStorage.getItem(STORAGE_SESSION);
+
+  if(!sessionId){
+    setUI(false);
+    return;
+  }
+
+  try{
+    await loadAccount();
+    await loadMarkets();
+    await loadHistory();
+    startRefreshTimers();
+  }catch(e){
+    console.error("TradeZora initialization error:",e);
+    localStorage.removeItem(STORAGE_SESSION);
+    sessionId=null;
+    setUI(false);
+    msg(e&&e.message?e.message:"Session expired. Please connect Deriv again.","error");
+  }
+}
+
+function startRefreshTimers(){
+  clearInterval(priceTimer);
+  clearInterval(accountTimer);
+  clearInterval(historyTimer);
+
+  priceTimer=setInterval(refreshPrice,3000);
+  accountTimer=setInterval(loadAccount,5000);
+  historyTimer=setInterval(loadHistory,5000);
+}
+
+$("connectBtn").addEventListener("click",connectDeriv);
+$("disconnectBtn").addEventListener("click",disconnectDeriv);
+$("symbol").addEventListener("change",marketChanged);
+$("riseBtn").addEventListener("click",()=>setDirection("CALL"));
+$("fallBtn").addEventListener("click",()=>setDirection("PUT"));
+$("tradeBtn").addEventListener("click",previewTrade);
+$("buyBtn").addEventListener("click",buyTrade);
+
+setDirection("CALL");
+initialize();
+
+</script>
+</body>
+</html>
