@@ -1,283 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradeZora</title>
-  <meta name="description" content="TradeZora trading dashboard">
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f7fb;
-      color: #172033;
-    }
-    .wrap { max-width: 760px; margin: 0 auto; padding: 18px; }
-    header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 18px;
-    }
-    .brand { font-size: 27px; font-weight: 800; color: #1667d9; }
-    .status {
-      font-size: 13px; padding: 8px 11px; border-radius: 999px;
-      background: #eef2f7; color: #536070;
-    }
-    .status.connected { background: #e8f8ee; color: #168044; }
-    .card {
-      background: white; border-radius: 18px; padding: 20px;
-      margin-bottom: 16px; box-shadow: 0 5px 20px rgba(20,35,60,.07);
-    }
-    .hero {
-      background: linear-gradient(135deg, #1167d8, #2787f4);
-      color: white; padding: 24px; border-radius: 20px; margin-bottom: 16px;
-    }
-    .hero h1 { margin: 0 0 8px; font-size: 25px; }
-    .hero p { margin: 0; opacity: .9; line-height: 1.45; }
-    .balance-label { color: #657084; font-size: 13px; margin-bottom: 6px; }
-    .balance { font-size: 34px; font-weight: 800; margin-bottom: 5px; }
-    .muted { color: #718096; font-size: 13px; }
-    button {
-      width: 100%; border: 0; border-radius: 13px; padding: 14px 16px;
-      font-size: 16px; font-weight: 700; cursor: pointer;
-    }
-    .connect { background: #1667d9; color: white; }
-    .disconnect { background: #f0f3f7; color: #263247; margin-top: 10px; }
-    button:disabled { opacity: .6; cursor: wait; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .metric { background: #f7f9fc; border-radius: 14px; padding: 16px; }
-    .metric .label { color: #68758a; font-size: 12px; margin-bottom: 7px; }
-    .metric .value { font-size: 20px; font-weight: 750; }
-    .account-box { display: none; }
-    .account-box.show { display: block; }
-    .notice {
-      margin-top: 12px; padding: 11px 13px; border-radius: 11px;
-      background: #fff7df; color: #735900; font-size: 13px; line-height: 1.4;
-    }
-    .error { background: #fff0f0; color: #a32929; }
-    .success { background: #ebf9f0; color: #176d3a; }
-    .small { font-size: 12px; color: #7a8494; margin-top: 12px; line-height: 1.4; }
-    @media (max-width: 480px) {
-      .wrap { padding: 14px; }
-      .grid { grid-template-columns: 1fr 1fr; }
-    }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TradeZora</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}.wrap{max-width:780px;margin:auto;padding:16px}.brand{font-size:27px;font-weight:800;color:#1667d9}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.status{font-size:13px;padding:8px 11px;border-radius:999px;background:#eef2f7;color:#536070}.connected{background:#e8f8ee;color:#168044}.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:15px;box-shadow:0 5px 20px rgba(20,35,60,.07)}.hero{background:linear-gradient(135deg,#1167d8,#2787f4);color:#fff;padding:22px;border-radius:20px;margin-bottom:15px}.hero h1{margin:0 0 7px;font-size:24px}.hero p{margin:0;opacity:.92;line-height:1.4}.balance-label{color:#657084;font-size:13px}.balance{font-size:34px;font-weight:800;margin:5px 0}.muted{color:#718096;font-size:13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:#f7f9fc;border-radius:13px;padding:14px}.metric .label{color:#68758a;font-size:12px;margin-bottom:6px}.metric .value{font-size:18px;font-weight:750}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{margin-bottom:12px}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field input,.field select{width:100%;padding:13px;border:1px solid #dbe2ec;border-radius:11px;background:#fff;font-size:15px}.price{font-size:25px;font-weight:800;margin:4px 0 12px}.btn{width:100%;border:0;border-radius:12px;padding:14px 16px;font-size:16px;font-weight:700;cursor:pointer}.primary{background:#1667d9;color:#fff}.rise{background:#168044;color:#fff}.fall{background:#c0392b;color:#fff}.secondary{background:#eef2f7;color:#263247;margin-top:9px}.btn:disabled{opacity:.55;cursor:wait}.notice{padding:11px 13px;border-radius:11px;background:#fff7df;color:#735900;font-size:13px;line-height:1.4}.error{background:#fff0f0;color:#a32929}.success{background:#ebf9f0;color:#176d3a}.hidden{display:none}.small{font-size:12px;color:#7a8494;line-height:1.4}.trade-title{display:flex;justify-content:space-between;align-items:center;gap:10px}.badge{font-size:11px;padding:5px 8px;border-radius:999px;background:#fff2d9;color:#805b00}.proposal{background:#f7f9fc;border-radius:12px;padding:12px;margin:12px 0;font-size:13px;line-height:1.6}.direction{display:grid;grid-template-columns:1fr 1fr;gap:9px}.contract{background:#f7f9fc;border-radius:13px;padding:13px}.contract strong{font-size:14px}.contract p{margin:6px 0 0;font-size:12px;color:#718096;line-height:1.4}@media(max-width:480px){.row{grid-template-columns:1fr}.wrap{padding:13px}}
+</style>
 </head>
 <body>
-  <main class="wrap">
-    <header>
-      <div class="brand">TradeZora</div>
-      <div id="status" class="status">Not connected</div>
-    </header>
-
-    <section class="hero">
-      <h1>Trading Dashboard</h1>
-      <p>Connect your Deriv account to view your live account information.</p>
-    </section>
-
-    <section class="card">
-      <div class="balance-label">Account Balance</div>
-      <div id="balance" class="balance">$0.00</div>
-      <div id="accountType" class="muted">Not connected</div>
-    </section>
-
-    <section class="card">
-      <button id="connectBtn" class="connect" onclick="connectDeriv()">Connect Deriv</button>
-      <button id="disconnectBtn" class="disconnect" onclick="disconnectDeriv()" style="display:none;">Disconnect Deriv</button>
-      <div id="message" class="notice" style="display:none;"></div>
-    </section>
-
-    <section class="card">
-      <div class="grid">
-        <div class="metric">
-          <div class="label">Total Equity</div>
-          <div id="equity" class="value">$0.00</div>
-        </div>
-        <div class="metric">
-          <div class="label">Open P&amp;L</div>
-          <div class="value">$0.00</div>
-        </div>
-        <div class="metric">
-          <div class="label">Today's P&amp;L</div>
-          <div class="value">$0.00</div>
-        </div>
-        <div class="metric">
-          <div class="label">Account</div>
-          <div id="accountId" class="value">—</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="accountBox" class="card account-box">
-      <strong>Deriv Account</strong>
-      <p id="accountDetails" class="muted"></p>
-    </section>
-
-    <div class="small">
-      TradeZora does not store your Deriv password. Account data is requested through the connected TradeZora backend.
-    </div>
-  </main>
-
+<main class="wrap">
+<div class="top"><div class="brand">TradeZora</div><div id="status" class="status">Not connected</div></div>
+<section class="hero"><h1>Trading Dashboard</h1><p>Connect Deriv and trade supported markets using your <b>demo account only</b>.</p></section>
+<section class="card"><div class="balance-label">Demo Account Balance</div><div id="balance" class="balance">$0.00</div><div id="accountType" class="muted">Not connected</div></section>
+<section class="card"><button id="connectBtn" class="btn primary" onclick="connectDeriv()">Connect Deriv</button><button id="disconnectBtn" class="btn secondary hidden" onclick="disconnectDeriv()">Disconnect Deriv</button><div id="message" class="notice hidden" style="margin-top:11px"></div></section>
+<section id="accountCard" class="card hidden"><div class="grid"><div class="metric"><div class="label">Total Equity</div><div id="equity" class="value">$0.00</div></div><div class="metric"><div class="label">Account ID</div><div id="accountId" class="value">—</div></div></div></section>
+<section id="tradeCard" class="card hidden">
+<div class="trade-title"><h2 style="margin:0;font-size:20px">Demo Trade</h2><span class="badge">DEMO ONLY</span></div>
+<p class="muted">Volatility Indices and Crash/Boom. Rise/Fall contracts are enabled in this first demo version.</p>
+<div class="field"><label>Market</label><select id="symbol" onchange="marketChanged()"><option value="">Loading markets…</option></select></div>
+<div class="contract"><strong id="marketName">—</strong><p id="marketInfo">Select a market to see its current price.</p></div>
+<div class="price" id="price">—</div>
+<div class="row">
+<div class="field"><label>Stake</label><input id="stake" type="number" min="0.35" step="0.01" value="1"></div>
+<div class="field"><label>Duration (seconds)</label><input id="duration" type="number" min="1" step="1" value="60"></div>
+</div>
+<div class="field"><label>Direction</label><div class="direction"><button id="riseBtn" class="btn rise" onclick="setDirection('CALL')">Rise</button><button id="fallBtn" class="btn fall" onclick="setDirection('PUT')">Fall</button></div></div>
+<button id="tradeBtn" class="btn primary" onclick="previewTrade()">Preview Demo Trade</button>
+<div id="proposalBox" class="proposal hidden"></div>
+<button id="buyBtn" class="btn rise hidden" onclick="buyTrade()">Place Demo Trade</button>
+<div id="tradeResult" class="notice hidden" style="margin-top:11px"></div>
+</section>
+<section id="openCard" class="card hidden"><h3 style="margin-top:0">Open Trade</h3><div id="openStatus" class="muted">Waiting…</div></section>
+<div class="small">TradeZora uses your connected Deriv session. This interface currently refuses real-account trading.</div>
+</main>
 <script>
-const BACKEND_URL = "https://tradezora-backend-use-1.onrender.com";
-const FRONTEND_URL = "https://davieswaweru123-boop.github.io/Tradezora-/";
-
-const STORAGE_SESSION = "tradezora_session_id";
-const STORAGE_CONNECTED = "tradezora_deriv_connected";
-
-const $ = (id) => document.getElementById(id);
-
-function setMessage(text, type = "") {
-  const box = $("message");
-  if (!text) {
-    box.style.display = "none";
-    box.textContent = "";
-    box.className = "notice";
-    return;
-  }
-  box.style.display = "block";
-  box.textContent = text;
-  box.className = "notice " + type;
-}
-
-function setConnectedUI(connected) {
-  $("status").textContent = connected ? "✓ Deriv Connected" : "Not connected";
-  $("status").className = "status" + (connected ? " connected" : "");
-  $("connectBtn").style.display = connected ? "none" : "block";
-  $("disconnectBtn").style.display = connected ? "block" : "none";
-}
-
-function clearConnection() {
-  localStorage.removeItem(STORAGE_SESSION);
-  localStorage.removeItem(STORAGE_CONNECTED);
-  $("balance").textContent = "$0.00";
-  $("equity").textContent = "$0.00";
-  $("accountType").textContent = "Not connected";
-  $("accountId").textContent = "—";
-  $("accountBox").classList.remove("show");
-  setConnectedUI(false);
-}
-
-function disconnectDeriv() {
-  clearConnection();
-  setMessage("Deriv disconnected.", "success");
-}
-
-function connectDeriv() {
-  // Clear any stale browser state before starting a fresh OAuth flow.
-  localStorage.removeItem(STORAGE_SESSION);
-  localStorage.removeItem(STORAGE_CONNECTED);
-  window.location.href = BACKEND_URL + "/auth/login";
-}
-
-async function exchangeConnectionCode(code) {
-  const response = await fetch(BACKEND_URL + "/api/session/exchange", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ connection_code: code })
-  });
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok || !data.session_id) {
-    throw new Error(data.error || "Could not establish the Deriv session.");
-  }
-
-  localStorage.setItem(STORAGE_SESSION, data.session_id);
-  localStorage.setItem(STORAGE_CONNECTED, "1");
-
-  return data.session_id;
-}
-
-async function loadAccount(sessionId) {
-  const response = await fetch(BACKEND_URL + "/api/account", {
-    method: "GET",
-    headers: {
-      "X-TradeZora-Session": sessionId
-    }
-  });
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(data.error || "Could not load the Deriv account.");
-  }
-
-  const account = data.account || {};
-  const balance = Number(data.balance);
-
-  if (Number.isFinite(balance)) {
-    const currency = data.currency || account.currency || "USD";
-    $("balance").textContent = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency,
-      maximumFractionDigits: 2
-    }).format(balance);
-    $("equity").textContent = $("balance").textContent;
-  }
-
-  $("accountType").textContent = data.account_type
-    ? String(data.account_type).toUpperCase()
-    : "Deriv account";
-
-  $("accountId").textContent = data.account_id || "—";
-
-  $("accountDetails").textContent =
-    "Account: " + (data.account_id || "—") +
-    " • Type: " + (data.account_type || "—") +
-    " • Currency: " + (data.currency || "—");
-
-  $("accountBox").classList.add("show");
-  setConnectedUI(true);
-  setMessage("Deriv account loaded successfully.", "success");
-}
-
-async function initialize() {
-  const params = new URLSearchParams(window.location.search);
-  const connectionCode = params.get("connection_code");
-  const connectedFlag = params.get("connected");
-
-  // Never trust "connected=1" by itself. The one-time code must exchange successfully.
-  if (connectionCode) {
-    try {
-      setMessage("Finishing Deriv connection…");
-      setConnectedUI(false);
-
-      const sessionId = await exchangeConnectionCode(connectionCode);
-
-      // Remove OAuth parameters from the address bar.
-      window.history.replaceState({}, document.title, FRONTEND_URL);
-
-      await loadAccount(sessionId);
-      return;
-    } catch (error) {
-      console.error(error);
-      clearConnection();
-      window.history.replaceState({}, document.title, FRONTEND_URL);
-      setMessage(error.message || "Deriv connection failed.", "error");
-      return;
-    }
-  }
-
-  // If there is no stored session, always show disconnected.
-  const sessionId = localStorage.getItem(STORAGE_SESSION);
-
-  if (!sessionId) {
-    clearConnection();
-    return;
-  }
-
-  // A stored session is only considered connected after the backend confirms it.
-  try {
-    await loadAccount(sessionId);
-  } catch (error) {
-    console.error(error);
-    clearConnection();
-    setMessage("Your Deriv session has expired. Please connect again.", "error");
-  }
-}
-
-initialize();
+const BACKEND_URL="https://tradezora-backend-use-1.onrender.com";
+const FRONTEND_URL="https://davieswaweru123-boop.github.io/Tradezora-/";
+const STORAGE_SESSION="tradezora_session_id";
+let sessionId=null, direction="CALL", symbols=[], proposal=null, priceTimer=null, contractTimer=null;
+const $=id=>document.getElementById(id);
+function msg(text,type=""){const b=$("message");if(!text){b.className="notice hidden";b.textContent="";return}b.className="notice "+type;b.textContent=text;b.classList.remove("hidden")}
+function resultMsg(text,type=""){const b=$("tradeResult");b.className="notice "+type;b.textContent=text;b.classList.remove("hidden")}
+function money(v,c="USD"){const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("en-US",{style:"currency",currency:c,maximumFractionDigits:2}).format(n):"—"}
+function setUI(on){$("status").textContent=on?"✓ Deriv Connected":"Not connected";$("status").className="status"+(on?" connected":"");$("connectBtn").classList.toggle("hidden",on);$("disconnectBtn").classList.toggle("hidden",!on);$("accountCard").classList.toggle("hidden",!on);$("tradeCard").classList.toggle("hidden",!on)}
+function connectDeriv(){localStorage.removeItem(STORAGE_SESSION);window.location.href=BACKEND_URL+"/auth/login"}
+async function exchange(code){const r=await fetch(BACKEND_URL+"/api/session/exchange",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({connection_code:code})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.session_id)throw Error(d.error||"Could not establish the Deriv session.");localStorage.setItem(STORAGE_SESSION,d.session_id);return d.session_id}
+async function api(path,opts={}){const r=await fetch(BACKEND_URL+path,{...opts,headers:{...(opts.headers||{}),"X-TradeZora-Session":sessionId}});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed.");return d}
+async function loadAccount(){const d=await api("/api/account");$("balance").textContent=money(d.balance,d.currency||"USD");$("equity").textContent=money(d.balance,d.currency||"USD");$("accountId").textContent=d.account_id||"—";$("accountType").textContent=(d.account_type||"demo").toUpperCase()+" • "+(d.currency||"USD");setUI(true);msg("Deriv account loaded successfully.","success")}
+async function loadMarkets(){const d=await fetch(BACKEND_URL+"/api/trading/symbols").then(async r=>{const x=await r.json();if(!r.ok)throw Error(x.error||"Could not load markets.");return x});symbols=d.symbols||[];const s=$("symbol");s.innerHTML="";symbols.forEach((x,i)=>{const o=document.createElement("option");o.value=x.underlying_symbol;o.textContent=x.underlying_symbol_name||x.underlying_symbol;s.appendChild(o)});if(symbols.length){s.selectedIndex=0;marketChanged()}else{s.innerHTML='<option value="">No supported markets found</option>'}}
+function selected(){return symbols.find(x=>x.underlying_symbol===$("symbol").value)||null}
+async function marketChanged(){const x=selected();if(!x)return;$("marketName").textContent=x.underlying_symbol_name||x.underlying_symbol;$("marketInfo").textContent=(x.market||"Supported market")+" • "+x.underlying_symbol;await refreshPrice()}
+async function refreshPrice(){const s=$("symbol").value;if(!s)return;try{const d=await fetch(BACKEND_URL+"/api/trading/tick?symbol="+encodeURIComponent(s)).then(async r=>{const x=await r.json();if(!r.ok)throw Error(x.error||"Price unavailable");return x});$("price").textContent=Number.isFinite(Number(d.quote))?String(d.quote):"—"}catch(e){$("price").textContent="—"}}
+function setDirection(d){direction=d;$("riseBtn").style.opacity=d==="CALL"?"1":".55";$("fallBtn").style.opacity=d==="PUT"?"1":".55"}
+async function previewTrade(){if(!sessionId)return;$("tradeBtn").disabled=true;$("buyBtn").classList.add("hidden");$("proposalBox").classList.add("hidden");resultMsg(""," ");try{await api("/api/trading/connect",{method:"POST"});const body={underlying_symbol:$("symbol").value,contract_type:direction,amount:Number($("stake").value),duration:Number($("duration").value),duration_unit:"s"};const d=await api("/api/trading/proposal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});proposal=d.proposal;if(!proposal)throw Error("No proposal was returned.");const ask=Number(proposal.ask_price);const payout=Number(proposal.payout);$("proposalBox").innerHTML=`<b>Proposal</b><br>Stake: ${money(body.amount,proposal.currency||"USD")}<br>Potential payout: ${Number.isFinite(payout)?money(payout,proposal.currency||"USD"):"—"}<br>Price to buy: ${Number.isFinite(ask)?money(ask,proposal.currency||"USD"):"—"}`;$("proposalBox").classList.remove("hidden");$("buyBtn").classList.remove("hidden");resultMsg("Review the proposal, then place the demo trade.","success")}catch(e){resultMsg(e.message||"Could not create proposal.","error")}finally{$("tradeBtn").disabled=false}}
+async function buyTrade(){if(!proposal)return;$("buyBtn").disabled=true;try{const ask=Number(proposal.ask_price);const d=await api("/api/trading/buy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({proposal_id:proposal.id,price:ask})});const id=d.buy?.contract_id;if(!id)throw Error("Trade was not confirmed by Deriv.");resultMsg("Demo trade placed successfully. Contract ID: "+id,"success");proposal=null;$("buyBtn").classList.add("hidden");$("openCard").classList.remove("hidden");startContract(id);await loadAccount()}catch(e){resultMsg(e.message||"Could not place demo trade.","error")}finally{$("buyBtn").disabled=false}}
+function startContract(id){clearInterval(contractTimer);const poll=async()=>{try{const d=await api("/api/trading/open-contract",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contract_id:id})});const c=d.contract||{};const profit=c.profit!=null?money(c.profit,c.currency||"USD"):"—";$("openStatus").innerHTML=`Contract <b>${id}</b><br>Status: ${c.status||c.contract_status||"open"}<br>Profit/Loss: ${profit}<br>Sell price: ${c.sell_price!=null?money(c.sell_price,c.currency||"USD"):"—"}`;if(c.is_expired||c.status==="sold"||c.status==="expired")clearInterval(contractTimer)}catch(e){$("openStatus").textContent=e.message}};poll();contractTimer=setInterval(poll,3000)}
+async function disconnectDeriv(){try{if(sessionId)await api("/api/trading/disconnect",{method:"POST"})}catch{}clearInterval(priceTimer);clearInterval(contractTimer);localStorage.removeItem(STORAGE_SESSION);sessionId=null;setUI(false);$("balance").textContent="$0.00";$("accountType").textContent="Not connected";$("equity").textContent="$0.00";$("accountId").textContent="—";msg("Deriv disconnected.","success")}
+async function initialize(){const p=new URLSearchParams(location.search),code=p.get("connection_code");if(code){try{msg("Finishing Deriv connection…");sessionId=await exchange(code);history.replaceState({},document.title,FRONTEND_URL);await loadAccount();await loadMarkets();priceTimer=setInterval(refreshPrice,3000);return}catch(e){localStorage.removeItem(STORAGE_SESSION);history.replaceState({},document.title,FRONTEND_URL);setUI(false);msg(e.message||"Deriv connection failed.","error");return}}sessionId=localStorage.getItem(STORAGE_SESSION);if(!sessionId){setUI(false);return}try{await loadAccount();await loadMarkets();priceTimer=setInterval(refreshPrice,3000)}catch(e){localStorage.removeItem(STORAGE_SESSION);sessionId=null;setUI(false);msg("Your Deriv session has expired. Please connect again.","error")}}
+setDirection("CALL");initialize();
 </script>
-</body>
-</html>
+</body></html>
