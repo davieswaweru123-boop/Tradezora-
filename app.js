@@ -1,3 +1,95 @@
+
+async function loadDerivAccount() {
+  const box = $("derivAccountInfo");
+  if (!box) return;
+
+  const sessionId = localStorage.getItem("tradezora_session_id");
+  if (!sessionId) return;
+
+  box.style.display = "block";
+  box.textContent = "Loading Deriv account...";
+
+  try {
+    const response = await fetch(
+      "https://tradezora-backend-use-1.onrender.com/api/account",
+      { headers: {"X-TradeZora-Session": sessionId} }
+    );
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.error || "Account request failed.");
+
+    const account = data?.data?.[0] || data?.accounts?.[0] || data?.account || null;
+    if (!account) {
+      box.textContent = "✓ Deriv connected — account details received.";
+      return;
+    }
+
+    const balance = account.balance ?? account.available_balance ?? null;
+    const currency = account.currency || "";
+    const loginid = account.account_id || account.id || account.loginid || "";
+
+    box.innerHTML =
+      "<strong>Deriv Account Connected</strong><br>" +
+      (loginid ? "Account: " + loginid + "<br>" : "") +
+      (balance !== null
+        ? "Balance: " + Number(balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " " + currency
+        : "Account details received.");
+  } catch (err) {
+    box.textContent = "✓ Deriv connected, but account data could not be loaded yet.";
+    console.error(err);
+  }
+}
+
+
+async function exchangeConnectionCode() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("connection_code");
+  if (!code) return;
+
+  try {
+    const response = await fetch(
+      "https://tradezora-backend-use-1.onrender.com/api/session/exchange",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ connection_code: code })
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.session_id) {
+      localStorage.setItem("tradezora_session_id", data.session_id);
+    }
+  } catch (err) {
+    console.error("Session exchange failed:", err);
+  }
+}
+
+
+function updateDerivStatus() {
+  const status = $("derivStatus");
+  if (!status) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const connected = params.get("connected") === "1";
+
+  if (connected) {
+    localStorage.setItem("tradezora_deriv_connected", "1");
+    status.textContent = "✓ Deriv Connected";
+    status.style.background = "#e9f8ef";
+    status.style.color = "#187a43";
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return;
+  }
+
+  if (localStorage.getItem("tradezora_deriv_connected") === "1") {
+    status.textContent = "✓ Deriv Connected";
+    status.style.background = "#e9f8ef";
+    status.style.color = "#187a43";
+  }
+}
+
 const DERIV_LOGIN_URL =
   "https://tradezora-backend-use-1.onrender.com/auth/login";
 
@@ -79,36 +171,9 @@ function trade(direction) {
   toast(`Demo ${direction} trade placed — $${stake.toFixed(2)}`);
 }
 
-
-async function exchangeConnectionCode() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get("connection_code");
-
-  if (!code) return;
-
-  try {
-    const response = await fetch(
-      "https://tradezora-backend-use-1.onrender.com/api/session/exchange",
-      {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ connection_code: code })
-      }
-    );
-
-    const data = await response.json();
-
-    if (response.ok && data.session_id) {
-      localStorage.setItem("tradezora_session_id", data.session_id);
-    }
-  } catch (err) {
-    console.error("Session exchange failed:", err);
-  }
-
-  window.history.replaceState({}, document.title, window.location.pathname);
-}
-
 document.addEventListener("DOMContentLoaded", () => {
+  updateDerivStatus();
+  exchangeConnectionCode().then(loadDerivAccount);
   renderMarkets();
 
   $("connectBtn")?.addEventListener("click", connectDeriv);
