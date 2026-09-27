@@ -50,7 +50,33 @@ body{padding-bottom:24px}.wrap{max-width:520px;margin:auto;padding:10px 10px 24p
 <div class="price" id="price">—</div>
 <div class="chartWrap"><div class="chartHead"><span>Live price chart</span><b id="chartDelta">—</b></div><canvas id="priceChart" class="chartCanvas" height="150"></canvas></div>
 <div class="row"><div class="field"><label>Stake</label><input id="stake" type="number" min="0.35" step="0.01" value="1"></div><div class="field"><label>Duration (seconds)</label><input id="duration" type="number" min="1" step="1" value="60"></div></div>
-<div class="field"><label>Direction</label><div class="direction"><button id="riseBtn" class="btn rise" type="button">Rise</button><button id="fallBtn" class="btn fall" type="button">Fall</button></div></div>
+<div class="field">
+  <label>Contract Type</label>
+  <div class="direction">
+    <button id="overBtn" class="btn primary" type="button">Over</button>
+    <button id="underBtn" class="btn fall" type="button">Under</button>
+    <button id="evenBtn" class="btn rise" type="button">Even</button>
+    <button id="oddBtn" class="btn fall" type="button">Odd</button>
+    <button id="matchBtn" class="btn primary" type="button">Matches</button>
+    <button id="diffBtn" class="btn fall" type="button">Differs</button>
+  </div>
+</div>
+
+<div id="barrierField" class="field hidden">
+  <label>Barrier Digit</label>
+  <select id="barrier">
+    <option value="0">0</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5" selected>5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+    <option value="9">9</option>
+  </select>
+</div>
 <button id="tradeBtn" class="btn primary" type="button">Preview Demo Trade</button>
 <div id="proposalBox" class="proposal hidden"></div><button id="buyBtn" class="btn rise hidden" type="button">Place Demo Trade</button>
 <div id="tradeResult" class="notice hidden" style="margin-top:11px"></div>
