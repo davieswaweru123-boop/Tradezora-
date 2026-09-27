@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+hi<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1359,3 +1359,442 @@ function drawChart(){
 
   const last =
     price
+   History[
+  priceHistory.length - 1
+];
+
+const pct =
+  base
+    ? ((last - base) / base) * 100
+    : 0;
+
+$("chartDelta").textContent =
+  (pct >= 0 ? "+" : "") +
+  pct.toFixed(3) +
+  "%";
+
+drawChart();
+
+if($("livePrice")){
+  $("livePrice").textContent =
+    Number(price).toFixed(3);
+}
+
+if($("chartPrice")){
+  $("chartPrice").textContent =
+    Number(price).toFixed(3);
+}
+
+}catch(e){
+  console.error("Price refresh error:",e);
+}
+}
+
+async function previewTrade(){
+  if(!sessionId){
+    msg("Connect Deriv first.","error");
+    return;
+  }
+
+  const symbol=$("symbol").value;
+  const amount=Number($("amount").value);
+  const duration=Number($("duration").value);
+  const durationUnit=$("durationUnit").value;
+  const contractType=direction;
+
+  if(!symbol){
+    msg("Select a market.","error");
+    return;
+  }
+
+  if(!amount || amount<=0){
+    msg("Enter a valid stake amount.","error");
+    return;
+  }
+
+  if(!duration || duration<=0){
+    msg("Enter a valid duration.","error");
+    return;
+  }
+
+  const body={
+    underlying_symbol:symbol,
+    contract_type:contractType,
+    amount:amount,
+    duration:duration,
+    duration_unit:durationUnit
+  };
+
+  if(
+    contractType==="DIGITOVER" ||
+    contractType==="DIGITUNDER" ||
+    contractType==="DIGITMATCH" ||
+    contractType==="DIGITDIFF"
+  ){
+    body.barrier=Number($("barrier").value);
+  }
+
+  try{
+    $("tradeBtn").disabled=true;
+    $("tradeBtn").textContent="Loading...";
+
+    const data=await api("/api/trading/proposal",{
+      method:"POST",
+      body
+    });
+
+    if(!data.success || !data.proposal){
+      throw new Error(
+        data.error || "Could not get trade proposal."
+      );
+    }
+
+    const p=data.proposal;
+
+    $("proposalBox").classList.remove("hidden");
+
+    $("proposalContract").textContent=
+      contractNames[contractType] || contractType;
+
+    $("proposalStake").textContent=
+      Number(p.ask_price || amount).toFixed(2);
+
+    $("proposalPayout").textContent=
+      Number(p.payout || 0).toFixed(2);
+
+    $("proposalProfit").textContent=
+      Number(
+        (p.payout || 0) - (p.ask_price || amount)
+      ).toFixed(2);
+
+    $("proposalId").value=p.id || "";
+
+    $("proposalText").textContent =
+      contractNames[contractType] || contractType;
+
+    if(
+      contractType==="DIGITOVER" ||
+      contractType==="DIGITUNDER" ||
+      contractType==="DIGITMATCH" ||
+      contractType==="DIGITDIFF"
+    ){
+      $("proposalBarrier").textContent=
+        "Barrier: " + $("barrier").value;
+    }else{
+      $("proposalBarrier").textContent="";
+    }
+
+    msg("Demo trade proposal ready.","success");
+
+  }catch(e){
+    console.error("Proposal error:",e);
+    msg(
+      e.message || "Could not get trade proposal.",
+      "error"
+    );
+  }finally{
+    $("tradeBtn").disabled=false;
+    $("tradeBtn").textContent="Preview Demo Trade";
+  }
+}
+
+async function buyTrade(){
+  if(!sessionId){
+    msg("Connect Deriv first.","error");
+    return;
+  }
+
+  const proposalId=$("proposalId").value;
+
+  if(!proposalId){
+    msg("Preview a trade first.","error");
+    return;
+  }
+
+  try{
+    $("buyBtn").disabled=true;
+    $("buyBtn").textContent="Buying...";
+
+    const data=await api("/api/trading/buy",{
+      method:"POST",
+      body:{
+        proposal_id:proposalId
+      }
+    });
+
+    if(!data.success){
+      throw new Error(
+        data.error || "Demo trade could not be opened."
+      );
+    }
+
+    $("proposalBox").classList.add("hidden");
+
+    msg("Demo trade opened successfully.","success");
+
+    await loadAccount();
+    await watchOpenTrade(data.contract_id);
+
+  }catch(e){
+    console.error("Buy error:",e);
+    msg(
+      e.message || "Demo trade could not be opened.",
+      "error"
+    );
+  }finally{
+    $("buyBtn").disabled=false;
+    $("buyBtn").textContent="Buy Demo Trade";
+  }
+}
+
+async function watchOpenTrade(contractId){
+  if(!contractId) return;
+
+  const started=Date.now();
+
+  while(Date.now()-started<180000){
+
+    try{
+      const data=await api(
+        "/api/trading/open-contract?contract_id="+
+        encodeURIComponent(contractId)
+      );
+
+      if(data.success && data.contract){
+
+        const c=data.contract;
+
+        if(
+          c.is_sold ||
+          c.status==="won" ||
+          c.status==="lost"
+        ){
+
+          const result=
+            c.status==="won" || Number(c.profit)>0
+              ? "WIN"
+              : "LOSS";
+
+          const profit=Number(c.profit || 0);
+
+          msg(
+            result +
+            " " +
+            (profit>=0?"+":"") +
+            profit.toFixed(2),
+            result==="WIN" ? "success" : "error"
+          );
+
+          await loadAccount();
+          await loadHistory();
+
+          return;
+        }
+      }
+
+    }catch(e){
+      console.error("Open contract error:",e);
+    }
+
+    await new Promise(
+      resolve=>setTimeout(resolve,2000)
+    );
+  }
+}
+
+async function loadHistory(){
+  if(!sessionId) return;
+
+  try{
+    const data=await api("/api/trading/history");
+
+    const history=
+      Array.isArray(data.history)
+        ? data.history
+        : [];
+
+    const box=$("historyList");
+
+    if(!box) return;
+
+    if(history.length===0){
+      box.innerHTML=
+        '<div class="muted">No demo trades yet.</div>';
+      return;
+    }
+
+    box.innerHTML=history.map(item=>{
+
+      const profit=Number(item.profit || 0);
+
+      const result=
+        profit>=0 ? "WIN" : "LOSS";
+
+      return `
+        <div class="history-row">
+          <div>
+            <strong>${result}</strong>
+            <div class="muted">
+              ${item.contract_type || ""}
+            </div>
+          </div>
+
+          <div class="${profit>=0?"profit":"loss"}">
+            ${profit>=0?"+":""}${profit.toFixed(2)}
+          </div>
+        </div>
+      `;
+
+    }).join("");
+
+  }catch(e){
+    console.error("History error:",e);
+  }
+}
+
+async function disconnectDeriv(){
+
+  try{
+    await api("/api/trading/disconnect",{
+      method:"POST"
+    });
+  }catch(e){
+    console.error("Disconnect error:",e);
+  }
+
+  localStorage.removeItem(STORAGE_SESSION);
+
+  sessionId=null;
+
+  setUI(false);
+
+  msg(
+    "TradeZora disconnected from Deriv.",
+    "success"
+  );
+}
+
+async function initialize(){
+
+  try{
+
+    const saved=
+      localStorage.getItem(STORAGE_SESSION);
+
+    if(saved){
+      sessionId=saved;
+
+      setUI(true);
+
+      await loadAccount();
+      await loadMarkets();
+      await loadHistory();
+
+      startRefreshTimers();
+
+      return;
+    }
+
+    setUI(false);
+
+  }catch(e){
+
+    console.error(
+      "TradeZora initialization error:",
+      e
+    );
+
+    localStorage.removeItem(STORAGE_SESSION);
+
+    sessionId=null;
+
+    setUI(false);
+
+    msg(
+      e && e.message
+        ? e.message
+        : "Session expired. Please connect Deriv again.",
+      "error"
+    );
+  }
+}
+
+function startRefreshTimers(){
+
+  clearInterval(priceTimer);
+  clearInterval(accountTimer);
+  clearInterval(historyTimer);
+
+  priceTimer=
+    setInterval(refreshPrice,3000);
+
+  accountTimer=
+    setInterval(loadAccount,5000);
+
+  historyTimer=
+    setInterval(loadHistory,5000);
+}
+
+$("connectBtn").addEventListener(
+  "click",
+  connectDeriv
+);
+
+$("disconnectBtn").addEventListener(
+  "click",
+  disconnectDeriv
+);
+
+$("symbol").addEventListener(
+  "change",
+  marketChanged
+);
+
+$("overBtn").addEventListener(
+  "click",
+  ()=>setDirection("DIGITOVER")
+);
+
+$("underBtn").addEventListener(
+  "click",
+  ()=>setDirection("DIGITUNDER")
+);
+
+$("evenBtn").addEventListener(
+  "click",
+  ()=>setDirection("DIGITEVEN")
+);
+
+$("oddBtn").addEventListener(
+  "click",
+  ()=>setDirection("DIGITODD")
+);
+
+$("matchBtn").addEventListener(
+  "click",
+  ()=>setDirection("DIGITMATCH")
+);
+
+$("diffBtn").addEventListener(
+  "click",
+  ()=>setDirection("DIGITDIFF")
+);
+
+$("tradeBtn").addEventListener(
+  "click",
+  previewTrade
+);
+
+$("buyBtn").addEventListener(
+  "click",
+  buyTrade
+);
+
+setDirection("DIGITOVER");
+
+initialize();
+
+</script>
+
+</body>
+</html>
