@@ -1,281 +1,910 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#050807">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <title>TradeZora — Demo Terminal</title>
-  <link rel="stylesheet" href="dashboard.css?v=7">
+
+  <link
+    rel="stylesheet"
+    href="dashboard.css?v=9"
+  >
 </head>
 
 <body>
-  <div id="overlay" class="overlay"></div>
 
-  <!-- SIDE MENU -->
-  <aside id="sideMenu" class="side-menu" aria-label="TradeZora menu">
-    <div class="side-head">
-      <div class="side-brand">
-        <span class="brand-mark">TZ</span>
-        <span>TradeZora</span>
-      </div>
-      <button id="closeMenu" class="icon-btn close-btn" aria-label="Close menu">×</button>
-    </div>
+<header class="topbar">
 
-    <div class="profile">
-      <div id="avatar" class="avatar">T</div>
-      <div class="profile-info">
-        <strong id="profileName">Demo Trader</strong>
-        <span id="profileEmail">demo@tradezora.local</span>
-      </div>
-    </div>
+  <button
+    id="menuBtn"
+    class="icon-btn"
+    aria-label="Open menu"
+  >
+    ☰
+  </button>
 
-    <nav class="side-nav">
-      <a href="#terminal" class="side-link active" data-close-menu>
-        <span>▣</span> Trade
-      </a>
-      <a href="#markets" class="side-link" data-close-menu>
-        <span>◇</span> Markets
-      </a>
-      <a href="#positions" class="side-link" data-close-menu>
-        <span>▥</span> Positions
-      </a>
-      <a href="#history" class="side-link" data-close-menu>
-        <span>◷</span> History
-      </a>
-      <button class="side-link" type="button" onclick="location.href='auth.html'">
-        <span>⚙</span> Account Settings
-      </button>
-      <button id="depositBtn" class="side-link" type="button">
-        <span>＋</span> Deposit
-      </button>
-      <button class="side-link" type="button" onclick="alert('Withdrawals are disabled on the demo account.')">
-        <span>⇩</span> Withdraw
-      </button>
-      <button class="side-link" type="button" onclick="alert('Referral features are coming later.')">
-        <span>◇</span> Refer &amp; Earn
-      </button>
-      <button id="themeSwitch" class="side-link" type="button">
-        <span>☼</span> Dark Theme
-      </button>
-      <button class="side-link" type="button" onclick="alert('Help Centre is coming soon.')">
-        <span>?</span> Help Centre
-      </button>
-      <button class="side-link" type="button" onclick="alert('Responsible Trading tools are coming soon.')">
-        <span>◈</span> Responsible Trading
-      </button>
-      <button class="side-link" type="button" onclick="alert('Live Chat is not available in demo mode.')">
-        <span>●</span> Live Chat
-      </button>
-    </nav>
+  <a
+    class="mobile-logo"
+    href="index.html"
+  >
+    <span>Trade</span>Zora
+  </a>
 
-    <button id="logout" class="logout-btn" type="button">
-      Log out
-    </button>
-  </aside>
+  <div class="top-actions">
 
-  <!-- TOP BAR -->
-  <header class="topbar">
-    <button id="menuBtn" class="menu-btn" aria-label="Open menu">
-      <span></span><span></span><span></span>
+    <span class="demo-badge">
+      DEMO
+    </span>
+
+    <span id="balance">
+      $10,000.00
+    </span>
+
+    <button
+      class="deposit-btn"
+      id="depositBtn"
+    >
+      Deposit
     </button>
 
-    <a href="index.html" class="mobile-logo">TradeZora</a>
+    <button
+      class="icon-btn notification-btn"
+      aria-label="Notifications"
+    >
+      ●
+    </button>
 
-    <div class="top-spacer"></div>
+  </div>
 
-    <div class="demo-badge">DEMO</div>
+</header>
 
-    <div class="balance-box">
-      <small>BALANCE</small>
-      <strong id="balance">$10,000.00</strong>
-    </div>
 
-    <button class="notification-btn" type="button" aria-label="Notifications">●</button>
-  </header>
+<div
+  id="overlay"
+  class="overlay"
+></div>
 
-  <!-- MAIN -->
-  <main id="terminal" class="page">
-    <section id="markets" class="terminal">
 
-      <!-- CONTRACT TABS -->
-      <div class="market-tabs" role="tablist" aria-label="Contract type">
-        <button class="active" type="button" data-contract="match">Matches / Differs</button>
-        <button type="button" data-contract="even">Even / Odd</button>
-        <button type="button" data-contract="over">Over / Under</button>
-      </div>
+<aside
+  id="sideMenu"
+  class="side-menu"
+>
 
-      <!-- MARKET HEADER -->
-      <div class="market-head">
-        <div>
-          <span class="eyebrow">MARKET</span>
-          <select id="marketSelect" aria-label="Select market">
-            <option>Volatility 10 (1s)</option>
-            <option>Volatility 25 (1s)</option>
-            <option>Volatility 50 (1s)</option>
-            <option>Volatility 75 (1s)</option>
-            <option>Volatility 100 (1s)</option>
-          </select>
-        </div>
+  <div class="menu-head">
 
-        <div class="price-change">
-          <span>SIMULATED</span>
-          <strong id="pct">+0.000%</strong>
-        </div>
-      </div>
-
-      <!-- CHART -->
-      <section class="panel chart-panel">
-        <div class="chart-toolbar">
-          <span class="historical">Historical view</span>
-          <div class="chart-tools">
-            <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
-            <button id="resetZoom" type="button">Reset</button>
-            <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
-          </div>
-        </div>
-
-        <div class="chart-wrap">
-          <canvas id="priceChart"></canvas>
-          <div class="chart-label">SIMULATED DEMO MARKET</div>
-        </div>
-
-        <div class="probability-title">
-          <span>DIGIT PROBABILITY</span>
-          <small>Demo estimate — not a prediction</small>
-        </div>
-        <div id="probabilities" class="probabilities"></div>
-      </section>
-
-      <!-- TRADE CARD -->
-      <section class="panel trade-card">
-        <div id="mode" class="mode">
-          <button id="auto" class="active" type="button">AUTO</button>
-          <button id="manual" type="button">MANUAL</button>
-        </div>
-
-        <button id="scanner" class="scanner" type="button">
-          <span class="bot-icon">✦</span>
-          <span class="bot-content">
-            <strong>AI BOT</strong>
-            <small>Scan the simulated market for a demo signal</small>
-          </span>
-          <span class="bot-badge">DEMO</span>
-        </button>
-
-        <div class="control">
-          <label>STAKE</label>
-          <div class="stake">
-            <button id="stakeMinus" type="button" aria-label="Decrease stake">−</button>
-            <strong id="stake">$10.00</strong>
-            <button id="stakePlus" type="button" aria-label="Increase stake">+</button>
-          </div>
-        </div>
-
-        <div class="controls-grid">
-          <label>
-            Take Profit
-            <div class="input-wrap">
-              <span>$</span>
-              <input id="takeProfit" type="number" value="200" min="0">
-            </div>
-          </label>
-
-          <label>
-            Stop Loss
-            <div class="input-wrap">
-              <span>$</span>
-              <input id="stopLoss" type="number" value="999" min="0">
-            </div>
-          </label>
-
-          <label>
-            Multiplier
-            <select id="multiplier">
-              <option>1x</option>
-              <option selected>2x</option>
-              <option>5x</option>
-              <option>10x</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="session">
-          <h3>SESSION</h3>
-          <div class="session-grid">
-            <div>
-              <span>Record</span>
-              <strong id="sessionRecord">0W · 0L</strong>
-            </div>
-            <div>
-              <span>P/L</span>
-              <strong id="sessionPnl">+$0.00</strong>
-            </div>
-            <div>
-              <span>Mode</span>
-              <strong id="sessionMode">AUTO</strong>
-            </div>
-            <div>
-              <span>Stake</span>
-              <strong id="sessionStake">$10.00</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="contract-title">CHOOSE A CONTRACT DIGIT</div>
-        <div id="contractDigits" class="contract-digits"></div>
-
-        <div class="trade-buttons">
-          <button id="match" class="match-btn" type="button">
-            <strong>MATCH</strong><span>Demo</span>
-          </button>
-          <button id="differ" class="differ-btn" type="button">
-            <strong>DIFFER</strong><span>Demo</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- OPEN POSITIONS -->
-      <section id="positions" class="panel data-section">
-        <div class="section-head">
-          <h2>Open Positions</h2>
-          <button id="clearPositions" type="button">Clear</button>
-        </div>
-        <div id="positionsList"></div>
-      </section>
-
-      <!-- HISTORY -->
-      <section id="history" class="panel data-section">
-        <div class="section-head">
-          <h2>Trade History</h2>
-        </div>
-        <div id="historyList"></div>
-      </section>
-
-      <p class="demo-note">
-        TradeZora is currently a simulated demo terminal. No real funds, deposits,
-        withdrawals or live market execution are connected.
-      </p>
-    </section>
-  </main>
-
-  <!-- MOBILE NAV -->
-  <nav class="bottom-nav" aria-label="Bottom navigation">
-    <a class="active" href="#terminal">
-      <span class="nav-icon">▣</span>
-      <span>Trade</span>
+    <a
+      class="logo"
+      href="index.html"
+    >
+      <span>Trade</span>Zora
     </a>
+
+    <button
+      id="closeMenu"
+      class="icon-btn"
+      aria-label="Close menu"
+    >
+      ×
+    </button>
+
+  </div>
+
+
+  <div class="profile">
+
+    <div
+      class="avatar"
+      id="avatar"
+    >
+      T
+    </div>
+
+    <div>
+
+      <strong id="profileName">
+        Demo Trader
+      </strong>
+
+      <small id="profileEmail">
+        demo@tradezora.local
+      </small>
+
+    </div>
+
+  </div>
+
+
+  <nav class="menu-nav">
+
+    <a href="#trade">
+      ▣ Trade
+    </a>
+
+    <a href="#markets">
+      ◈ Markets
+    </a>
+
     <a href="#positions">
-      <span class="nav-icon">▥</span>
-      <span>Positions</span>
+      ◫ Positions
     </a>
+
     <a href="#history">
-      <span class="nav-icon">◷</span>
-      <span>History</span>
+      ◷ History
     </a>
+
+
+    <a href="#">
+      ⚙ Account Settings
+    </a>
+
+    <a href="#">
+      ＋ Deposit
+    </a>
+
+    <a href="#">
+      ⇩ Withdraw
+    </a>
+
+    <a href="#">
+      ♢ Refer & Earn
+    </a>
+
+
+    <button id="themeSwitch">
+      ☼ Dark Theme
+    </button>
+
+
+    <a href="#">
+      ? Help Centre
+    </a>
+
+    <a href="#">
+      ♧ Responsible Trading
+    </a>
+
+    <a href="#">
+      ◉ Live Chat
+    </a>
+
+
+    <!-- NEW RESET BUTTON -->
+
+    <button
+      id="resetDemo"
+      class="reset-demo"
+    >
+      ↻ Reset Demo
+    </button>
+
+
+    <button id="logout">
+      ↪ Log Out
+    </button>
+
   </nav>
 
-  <div id="toast" class="toast" role="status"></div>
+</aside>
 
-  <script src="dashboard.js?v=7"></script>
+
+<main
+  class="terminal"
+  id="trade"
+>
+
+
+  <!-- CONTRACT TABS -->
+
+  <div class="market-tabs">
+
+    <button
+      class="active"
+      data-contract="match"
+    >
+      Matches / Differs
+    </button>
+
+    <button
+      data-contract="even"
+    >
+      Even / Odd
+    </button>
+
+    <button
+      data-contract="over"
+    >
+      Over / Under
+    </button>
+
+  </div>
+
+
+  <section class="trade-layout">
+
+
+    <!-- CHART -->
+
+    <div class="chart-panel">
+
+      <div class="market-head">
+
+        <div>
+
+          <small>
+            Market
+          </small>
+
+          <select id="marketSelect">
+
+            <option>
+              Volatility 10 (1s)
+            </option>
+
+            <option>
+              Volatility 25 (1s)
+            </option>
+
+            <option>
+              Volatility 50 (1s)
+            </option>
+
+            <option>
+              Volatility 75 (1s)
+            </option>
+
+            <option>
+              Volatility 100 (1s)
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <span class="historical">
+          Historical demo
+        </span>
+
+      </div>
+
+
+      <div class="chart-wrap">
+
+        <canvas id="priceChart"></canvas>
+
+
+        <div class="zoom-tools">
+
+          <button id="zoomIn">
+            +
+          </button>
+
+          <button id="zoomOut">
+            −
+          </button>
+
+          <button id="resetZoom">
+            ↺
+          </button>
+
+        </div>
+
+
+        <span
+          id="pct"
+          class="pct"
+        >
+          +0.00%
+        </span>
+
+
+        <div class="chart-label">
+          SIMULATED MARKET
+        </div>
+
+      </div>
+
+
+      <div class="probability-title">
+
+        <span>
+          Digit probability
+        </span>
+
+        <small>
+          Demo calculation
+        </small>
+
+      </div>
+
+
+      <div
+        class="probabilities"
+        id="probabilities"
+      ></div>
+
+    </div>
+
+
+    <!-- TRADING CARD -->
+
+    <aside class="trade-card">
+
+
+      <!-- AUTO / MANUAL -->
+
+      <div class="mode">
+
+        <button
+          id="auto"
+          class="active"
+        >
+          AUTO
+        </button>
+
+        <button id="manual">
+          MANUAL
+        </button>
+
+      </div>
+
+
+      <!-- STAKE -->
+
+      <div class="control">
+
+        <label>
+          Stake
+        </label>
+
+        <div class="stake">
+
+          <button id="stakeMinus">
+            −
+          </button>
+
+          <strong id="stake">
+            $10.00
+          </strong>
+
+          <button id="stakePlus">
+            +
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- AI BOT -->
+
+      <button
+        id="scanner"
+        class="scanner"
+      >
+
+        <span class="bot-icon">
+          ✦
+        </span>
+
+        <span class="bot-content">
+
+          <strong>
+            AI BOT
+          </strong>
+
+          <small>
+            Scan market once
+          </small>
+
+        </span>
+
+        <span class="bot-badge">
+          DEMO
+        </span>
+
+      </button>
+
+
+      <!-- AI BOT RESULT -->
+
+      <div
+        id="botResult"
+        class="bot-result"
+        hidden
+      >
+
+        <div class="bot-result-head">
+
+          <strong>
+            🤖 AI BOT RESULT
+          </strong>
+
+          <button id="closeBotResult">
+            ×
+          </button>
+
+        </div>
+
+
+        <div
+          class="bot-status"
+          id="botStatus"
+        >
+          Analysis complete
+        </div>
+
+
+        <div class="bot-info">
+
+          <div>
+
+            <small>
+              Market
+            </small>
+
+            <strong id="botMarket">
+              —
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              Trade Type
+            </small>
+
+            <strong id="botTradeType">
+              —
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              Signal
+            </small>
+
+            <strong id="botSignal">
+              —
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              Digit
+            </small>
+
+            <strong id="botDigit">
+              —
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              Confidence
+            </small>
+
+            <strong id="botConfidence">
+              —
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <p id="botExplanation">
+
+          The AI BOT provides simulated demo
+          analysis only. You decide whether
+          to trade.
+
+        </p>
+
+      </div>
+
+
+      <!-- RISK CONTROLS -->
+
+      <div class="controls-grid">
+
+
+        <label>
+
+          Take Profit
+
+          <div class="input-wrap">
+
+            <span>
+              $
+            </span>
+
+            <input
+              id="takeProfit"
+              type="number"
+              value="200"
+              min="0"
+            >
+
+          </div>
+
+        </label>
+
+
+        <label>
+
+          Stop Loss
+
+          <div class="input-wrap">
+
+            <span>
+              $
+            </span>
+
+            <input
+              id="stopLoss"
+              type="number"
+              value="999"
+              min="0"
+            >
+
+          </div>
+
+        </label>
+
+
+        <label>
+
+          Multiplier
+
+          <select id="multiplier">
+
+            <option value="1">
+              1x
+            </option>
+
+            <option
+              value="2"
+              selected
+            >
+              2x
+            </option>
+
+            <option value="5">
+              5x
+            </option>
+
+          </select>
+
+        </label>
+
+      </div>
+
+
+      <!-- SESSION -->
+
+      <div class="session">
+
+        <div>
+
+          <span>
+            Session
+          </span>
+
+          <small id="sessionRecord">
+            0W · 0L
+          </small>
+
+        </div>
+
+        <strong id="sessionPnl">
+          +$0.00
+        </strong>
+
+      </div>
+
+
+      <!-- DIGITS -->
+
+      <div class="contract-title">
+        Choose a contract digit
+      </div>
+
+
+      <div
+        id="contractDigits"
+        class="contract-digits"
+      ></div>
+
+
+      <!-- TRADE BUTTONS -->
+
+      <div class="trade-buttons">
+
+        <button id="match">
+
+          <strong>
+            MATCH
+          </strong>
+
+          <span>
+            Demo
+          </span>
+
+        </button>
+
+
+        <button id="differ">
+
+          <strong>
+            DIFFER
+          </strong>
+
+          <span>
+            Demo
+          </span>
+
+        </button>
+
+      </div>
+
+
+    </aside>
+
+  </section>
+
+
+  <!-- OPEN POSITIONS -->
+
+  <section
+    id="positions"
+    class="data-section"
+  >
+
+    <div class="section-title">
+
+      <h2>
+        Open Positions
+      </h2>
+
+      <button id="clearPositions">
+        Clear
+      </button>
+
+    </div>
+
+
+    <div
+      id="positionsList"
+      class="empty"
+    >
+      No open positions.
+    </div>
+
+  </section>
+
+
+  <!-- HISTORY -->
+
+  <section
+    id="history"
+    class="data-section"
+  >
+
+    <div class="section-title">
+
+      <h2>
+        Trade History
+      </h2>
+
+    </div>
+
+
+    <div
+      id="historyList"
+      class="history-list"
+    >
+
+      <div class="empty">
+        No trades yet.
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<!-- BOTTOM NAV -->
+
+<nav class="bottom-nav">
+
+  <a
+    href="#trade"
+    class="active"
+  >
+
+    ▣
+
+    <span>
+      Trade
+    </span>
+
+  </a>
+
+
+  <a href="#positions">
+
+    ◫
+
+    <span>
+      Positions
+    </span>
+
+  </a>
+
+</nav>
+
+
+<!-- TRADEZORA ENTRY SCANNER MODAL -->
+<div id="scannerModal" class="scanner-modal" aria-hidden="true">
+  <div class="scanner-backdrop"></div>
+  <section class="scanner-dialog" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
+    <div class="scanner-dialog-head">
+      <div class="scanner-title-wrap">
+        <div class="scanner-title-icon">✦</div>
+        <div>
+          <h2 id="scannerTitle">Entry Scanner</h2>
+          <small>TradeZora Demo Scanner</small>
+        </div>
+      </div>
+      <button id="scannerClose" class="scanner-close" aria-label="Close scanner">×</button>
+    </div>
+
+    <div class="scanner-description">
+      Pick the market category you want to scan. The demo scanner checks simulated volatility and synthetic-style markets and surfaces a demo entry signal based on simulated tick patterns.
+    </div>
+
+    <label class="scanner-label" for="scannerMarket">Market</label>
+    <select id="scannerMarket" class="scanner-select">
+      <option>Matches / Differs</option>
+      <option>Even / Odd</option>
+      <option>Over / Under</option>
+    </select>
+
+    <div class="scanner-progress-head">
+      <strong id="scannerProgressText">Ready to scan</strong>
+      <span id="scannerCount">0/13</span>
+    </div>
+    <div class="scanner-progress-track">
+      <div id="scannerProgressBar" class="scanner-progress-bar"></div>
+    </div>
+
+    <button id="deepScanBtn" class="deep-scan-btn">
+      <span>⌕</span>
+      <strong>Deep Scan for Best Market</strong>
+    </button>
+
+    <button id="loadScannerBtn" class="load-scanner-btn" disabled>
+      Load Deep Scanner Bot
+    </button>
+  </section>
+</div>
+
+<div
+  id="toast"
+  class="toast"
+></div>
+
+
+<script src="dashboard.js?v=5"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("scannerModal");
+  const openBtn = document.getElementById("scanner");
+  const closeBtn = document.getElementById("scannerClose");
+  const backdrop = modal?.querySelector(".scanner-backdrop");
+  const deepBtn = document.getElementById("deepScanBtn");
+  const loadBtn = document.getElementById("loadScannerBtn");
+  const progressBar = document.getElementById("scannerProgressBar");
+  const progressText = document.getElementById("scannerProgressText");
+  const count = document.getElementById("scannerCount");
+  const market = document.getElementById("scannerMarket");
+
+  if (!modal || !openBtn || !deepBtn || !loadBtn) return;
+
+  let originalScannerClick = openBtn.onclick;
+  let scanning = false;
+  let completed = false;
+
+  function closeScanner() {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  function openScanner() {
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    progressBar.style.width = "0%";
+    progressText.textContent = "Ready to scan";
+    count.textContent = "0/13";
+    loadBtn.disabled = true;
+    loadBtn.textContent = "Load Deep Scanner Bot";
+    deepBtn.disabled = false;
+    completed = false;
+  }
+
+  closeBtn?.addEventListener("click", closeScanner);
+  backdrop?.addEventListener("click", closeScanner);
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && modal.classList.contains("open")) closeScanner();
+  });
+
+  // Open the new scanner instead of immediately running the old one.
+  openBtn.onclick = (event) => {
+    event?.preventDefault?.();
+    openScanner();
+  };
+
+  deepBtn.addEventListener("click", async () => {
+    if (scanning) return;
+    scanning = true;
+    completed = false;
+    deepBtn.disabled = true;
+    loadBtn.disabled = true;
+
+    const selected = market.value;
+    const marketNames = [
+      "Volatility 10 (1s)", "Volatility 25 (1s)", "Volatility 50 (1s)",
+      "Volatility 75 (1s)", "Volatility 100 (1s)", "Volatility 10",
+      "Volatility 25", "Volatility 50", "Volatility 75", "Volatility 100",
+      "Synthetic Index A", "Synthetic Index B", "Synthetic Index C"
+    ];
+
+    for (let i = 1; i <= 13; i++) {
+      await new Promise(resolve => setTimeout(resolve, 130));
+      const percent = Math.round((i / 13) * 100);
+      progressBar.style.width = percent + "%";
+      count.textContent = i + "/13";
+      progressText.textContent = "Scanning " + marketNames[i - 1] + "…";
+    }
+
+    progressText.textContent = selected + " scan complete";
+    loadBtn.disabled = false;
+    loadBtn.textContent = "Load Deep Scanner Bot";
+    completed = true;
+    scanning = false;
+  });
+
+  loadBtn.addEventListener("click", () => {
+    if (!completed) return;
+    closeScanner();
+    // Let the existing TradeZora demo AI logic produce the result card.
+    if (typeof originalScannerClick === "function") {
+      originalScannerClick.call(openBtn, new MouseEvent("click"));
+    } else {
+      openBtn.click();
+    }
+  });
+});
+</script>
+
 </body>
 </html>
