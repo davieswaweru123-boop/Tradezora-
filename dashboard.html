@@ -2,1732 +2,280 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  >
-
-  <title>TradeZora — Demo Trading</title>
-
-  <!-- Main dashboard CSS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#050807">
+  <title>TradeZora — Demo Terminal</title>
   <link rel="stylesheet" href="dashboard.css?v=7">
-
-  <style>
-    /* =====================================================
-       TRADEZORA ENTRY SCANNER
-       Built directly into this HTML so the popup works
-       even if scanner CSS has not been added yet.
-    ===================================================== */
-
-    .scanner-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      padding: 16px;
-
-      background: rgba(2, 4, 10, 0.78);
-
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-
-      transition: 0.22s ease;
-    }
-
-    .scanner-modal.active {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-    }
-
-    .scanner-box {
-      width: min(610px, 100%);
-      max-height: 90vh;
-
-      overflow-y: auto;
-
-      background: #0d1320;
-
-      border: 1px solid #252e44;
-
-      border-radius: 22px;
-
-      box-shadow:
-        0 30px 90px rgba(0,0,0,.75),
-        0 0 40px rgba(60,80,180,.08);
-
-      color: #fff;
-    }
-
-    .scanner-header {
-      display: flex;
-      align-items: center;
-
-      gap: 13px;
-
-      padding: 18px 20px;
-
-      border-bottom: 1px solid #242c3d;
-    }
-
-    .scanner-icon {
-      width: 45px;
-      height: 45px;
-
-      flex-shrink: 0;
-
-      display: grid;
-      place-items: center;
-
-      border-radius: 12px;
-
-      background:
-        linear-gradient(
-          135deg,
-          #8745ff,
-          #6537ee
-        );
-
-      color: white;
-
-      font-size: 24px;
-
-      box-shadow:
-        0 8px 25px rgba(113,64,255,.3);
-    }
-
-    .scanner-title {
-      flex: 1;
-    }
-
-    .scanner-title h2 {
-      margin: 0;
-
-      color: #f5f7ff;
-
-      font-size: 21px;
-
-      font-weight: 800;
-    }
-
-    .scanner-title small {
-      display: block;
-
-      margin-top: 3px;
-
-      color: #858da0;
-
-      font-size: 10px;
-    }
-
-    .scanner-close {
-      width: 38px;
-      height: 38px;
-
-      border: 0;
-
-      background: transparent;
-
-      color: #7d8495;
-
-      font-size: 29px;
-
-      cursor: pointer;
-    }
-
-    .scanner-close:hover {
-      color: white;
-    }
-
-    .scanner-body {
-      padding: 20px;
-    }
-
-    .scanner-description {
-      margin-bottom: 23px;
-
-      padding: 17px;
-
-      border-radius: 14px;
-
-      background: #192031;
-
-      color: #949db0;
-
-      font-size: 14px;
-
-      line-height: 1.6;
-    }
-
-    .scanner-description strong {
-      color: #f0f3fa;
-    }
-
-    .scanner-label {
-      display: block;
-
-      margin-bottom: 8px;
-
-      color: #f0f3fa;
-
-      font-size: 13px;
-
-      font-weight: 800;
-    }
-
-    .scanner-select {
-      width: 100%;
-      height: 55px;
-
-      padding: 0 15px;
-
-      border: 1px solid #222a3c;
-
-      border-radius: 12px;
-
-      outline: none;
-
-      background: #0b101b;
-
-      color: #f3f5fa;
-
-      font-size: 15px;
-    }
-
-    .scanner-progress-title {
-      display: flex;
-
-      justify-content: space-between;
-
-      margin-top: 22px;
-      margin-bottom: 9px;
-
-      color: #eef1f7;
-
-      font-size: 13px;
-
-      font-weight: 800;
-    }
-
-    .scanner-progress-count {
-      color: #687188;
-    }
-
-    .scanner-progress {
-      width: 100%;
-      height: 7px;
-
-      overflow: hidden;
-
-      border-radius: 20px;
-
-      background: #1b2232;
-    }
-
-    .scanner-progress-bar {
-      width: 0%;
-      height: 100%;
-
-      border-radius: 20px;
-
-      background:
-        linear-gradient(
-          90deg,
-          #6657ff,
-          #2d83ff
-        );
-
-      transition: width .18s ease;
-    }
-
-    .deep-scan-button {
-      width: 100%;
-      height: 57px;
-
-      margin-top: 21px;
-
-      border: 0;
-
-      border-radius: 13px;
-
-      background:
-        linear-gradient(
-          90deg,
-          #6355ff,
-          #2f83ff
-        );
-
-      color: white;
-
-      font-size: 15px;
-
-      font-weight: 900;
-
-      cursor: pointer;
-
-      box-shadow:
-        0 10px 25px rgba(58,90,255,.22);
-    }
-
-    .deep-scan-button:disabled {
-      opacity: .55;
-      cursor: wait;
-    }
-
-    .load-scanner-button {
-      width: 100%;
-      height: 55px;
-
-      margin-top: 10px;
-
-      border: 1px solid #252d40;
-
-      border-radius: 12px;
-
-      background: #151b29;
-
-      color: #626b80;
-
-      font-weight: 800;
-    }
-
-    .load-scanner-button.ready {
-      color: white;
-
-      border-color: #3d4a68;
-
-      background: #182236;
-
-      cursor: pointer;
-    }
-
-    @media (max-width: 650px) {
-
-      .scanner-modal {
-        padding: 14px;
-      }
-
-      .scanner-box {
-        width: 100%;
-        max-height: 92vh;
-
-        border-radius: 18px;
-      }
-
-      .scanner-header {
-        padding: 15px;
-      }
-
-      .scanner-body {
-        padding: 15px;
-      }
-
-      .scanner-title h2 {
-        font-size: 19px;
-      }
-
-      .scanner-description {
-        padding: 15px;
-
-        font-size: 13px;
-      }
-
-      .scanner-select {
-        height: 52px;
-      }
-
-      .deep-scan-button {
-        height: 54px;
-      }
-
-      .load-scanner-button {
-        height: 52px;
-      }
-    }
-  </style>
 </head>
 
-
 <body>
-
-  <!-- =====================================================
-       OVERLAY
-  ====================================================== -->
-
   <div id="overlay" class="overlay"></div>
 
-
-  <!-- =====================================================
-       SIDE MENU
-  ====================================================== -->
-
-  <aside id="sideMenu" class="side-menu">
-
+  <!-- SIDE MENU -->
+  <aside id="sideMenu" class="side-menu" aria-label="TradeZora menu">
     <div class="side-head">
-
       <div class="side-brand">
-        <div class="brand-mark">
-          TZ
-        </div>
-
+        <span class="brand-mark">TZ</span>
         <span>TradeZora</span>
       </div>
-
-      <button
-        id="closeMenu"
-        class="close-btn"
-        type="button"
-      >
-        ×
-      </button>
-
+      <button id="closeMenu" class="icon-btn close-btn" aria-label="Close menu">×</button>
     </div>
-
 
     <div class="profile">
-
-      <div id="avatar" class="avatar">
-        D
-      </div>
-
+      <div id="avatar" class="avatar">T</div>
       <div class="profile-info">
-
-        <strong id="profileName">
-          Demo Trader
-        </strong>
-
-        <span id="profileEmail">
-          demo@tradezora.local
-        </span>
-
+        <strong id="profileName">Demo Trader</strong>
+        <span id="profileEmail">demo@tradezora.local</span>
       </div>
-
     </div>
 
-
     <nav class="side-nav">
-
-      <a href="#trade">
-        <span>▣</span>
-        Trade
+      <a href="#terminal" class="side-link active" data-close-menu>
+        <span>▣</span> Trade
       </a>
-
-      <a href="#markets">
-        <span>◇</span>
-        Markets
+      <a href="#markets" class="side-link" data-close-menu>
+        <span>◇</span> Markets
       </a>
-
-      <a href="#positions">
-        <span>▥</span>
-        Positions
+      <a href="#positions" class="side-link" data-close-menu>
+        <span>▥</span> Positions
       </a>
-
-      <a href="#history">
-        <span>◷</span>
-        History
+      <a href="#history" class="side-link" data-close-menu>
+        <span>◷</span> History
       </a>
-
-      <a href="#">
-        <span>⚙</span>
-        Account Settings
-      </a>
-
-      <button
-        id="depositBtn"
-        type="button"
-      >
-        <span>＋</span>
-        Deposit
+      <button class="side-link" type="button" onclick="location.href='auth.html'">
+        <span>⚙</span> Account Settings
       </button>
-
-      <a href="#">
-        <span>⇩</span>
-        Withdraw
-      </a>
-
-      <a href="#">
-        <span>◇</span>
-        Refer & Earn
-      </a>
-
-      <button
-        id="themeSwitch"
-        type="button"
-      >
-        <span>☼</span>
-        Dark Theme
+      <button id="depositBtn" class="side-link" type="button">
+        <span>＋</span> Deposit
       </button>
-
-      <a href="#">
-        <span>?</span>
-        Help Centre
-      </a>
-
-      <a href="#">
-        <span>♧</span>
-        Responsible Trading
-      </a>
-
-      <a href="#">
-        <span>●</span>
-        Live Chat
-      </a>
-
+      <button class="side-link" type="button" onclick="alert('Withdrawals are disabled on the demo account.')">
+        <span>⇩</span> Withdraw
+      </button>
+      <button class="side-link" type="button" onclick="alert('Referral features are coming later.')">
+        <span>◇</span> Refer &amp; Earn
+      </button>
+      <button id="themeSwitch" class="side-link" type="button">
+        <span>☼</span> Dark Theme
+      </button>
+      <button class="side-link" type="button" onclick="alert('Help Centre is coming soon.')">
+        <span>?</span> Help Centre
+      </button>
+      <button class="side-link" type="button" onclick="alert('Responsible Trading tools are coming soon.')">
+        <span>◈</span> Responsible Trading
+      </button>
+      <button class="side-link" type="button" onclick="alert('Live Chat is not available in demo mode.')">
+        <span>●</span> Live Chat
+      </button>
     </nav>
 
-
-    <button
-      id="resetDemo"
-      class="reset-demo"
-      type="button"
-    >
-      ↻ &nbsp; Reset Demo
+    <button id="logout" class="logout-btn" type="button">
+      Log out
     </button>
-
-
-    <button
-      id="logout"
-      class="logout-btn"
-      type="button"
-    >
-      ↪ &nbsp; Log Out
-    </button>
-
   </aside>
 
-
-  <!-- =====================================================
-       TOP BAR
-  ====================================================== -->
-
+  <!-- TOP BAR -->
   <header class="topbar">
-
-    <button
-      id="menuBtn"
-      class="menu-btn"
-      type="button"
-      aria-label="Open menu"
-    >
-      <span></span>
-      <span></span>
-      <span></span>
+    <button id="menuBtn" class="menu-btn" aria-label="Open menu">
+      <span></span><span></span><span></span>
     </button>
 
-
-    <a
-      href="dashboard.html"
-      class="mobile-logo"
-    >
-      TradeZora
-    </a>
-
+    <a href="index.html" class="mobile-logo">TradeZora</a>
 
     <div class="top-spacer"></div>
 
-
-    <div class="demo-badge">
-      DEMO
-    </div>
-
+    <div class="demo-badge">DEMO</div>
 
     <div class="balance-box">
-
-      <small>
-        BALANCE
-      </small>
-
-      <strong id="balance">
-        $10,000.00
-      </strong>
-
+      <small>BALANCE</small>
+      <strong id="balance">$10,000.00</strong>
     </div>
 
-
-    <button
-      id="depositTop"
-      class="notification-btn"
-      type="button"
-      aria-label="Notifications"
-    >
-      •
-    </button>
-
+    <button class="notification-btn" type="button" aria-label="Notifications">●</button>
   </header>
 
+  <!-- MAIN -->
+  <main id="terminal" class="page">
+    <section id="markets" class="terminal">
 
-  <!-- =====================================================
-       MAIN
-  ====================================================== -->
-
-  <main class="page">
-
-    <section
-      id="trade"
-      class="terminal"
-    >
-
-
-      <!-- MARKET TYPE -->
-
-      <div
-        id="markets"
-        class="market-tabs"
-      >
-
-        <button
-          class="active"
-          data-contract="match"
-          type="button"
-        >
-          Matches / Differs
-        </button>
-
-        <button
-          data-contract="even"
-          type="button"
-        >
-          Even / Odd
-        </button>
-
-        <button
-          data-contract="over"
-          type="button"
-        >
-          Over / Under
-        </button>
-
+      <!-- CONTRACT TABS -->
+      <div class="market-tabs" role="tablist" aria-label="Contract type">
+        <button class="active" type="button" data-contract="match">Matches / Differs</button>
+        <button type="button" data-contract="even">Even / Odd</button>
+        <button type="button" data-contract="over">Over / Under</button>
       </div>
 
+      <!-- MARKET HEADER -->
+      <div class="market-head">
+        <div>
+          <span class="eyebrow">MARKET</span>
+          <select id="marketSelect" aria-label="Select market">
+            <option>Volatility 10 (1s)</option>
+            <option>Volatility 25 (1s)</option>
+            <option>Volatility 50 (1s)</option>
+            <option>Volatility 75 (1s)</option>
+            <option>Volatility 100 (1s)</option>
+          </select>
+        </div>
 
-      <!-- MARKET SELECTOR -->
-
-      <div
-        style="
-          display:flex;
-          align-items:center;
-          gap:8px;
-          margin-bottom:10px;
-          flex-wrap:wrap;
-        "
-      >
-
-        <label
-          for="marketSelect"
-          style="
-            font-weight:700;
-            color:#d9e4de;
-          "
-        >
-          Market
-        </label>
-
-        <select
-          id="marketSelect"
-          style="
-            padding:8px 12px;
-            border-radius:8px;
-            border:1px solid #173528;
-            background:#07100c;
-            color:white;
-          "
-        >
-
-          <option>
-            Volatility 10 (1s)
-          </option>
-
-          <option>
-            Volatility 25 (1s)
-          </option>
-
-          <option>
-            Volatility 50 (1s)
-          </option>
-
-          <option>
-            Volatility 75 (1s)
-          </option>
-
-          <option>
-            Volatility 100 (1s)
-          </option>
-
-        </select>
-
+        <div class="price-change">
+          <span>SIMULATED</span>
+          <strong id="pct">+0.000%</strong>
+        </div>
       </div>
-
 
       <!-- CHART -->
-
-      <div class="panel chart-panel">
-
-        <div
-          style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-bottom:8px;
-          "
-        >
-
-          <span
-            style="
-              color:#a6b3ac;
-              font-weight:700;
-            "
-          >
-            Market
-          </span>
-
-          <strong
-            id="pct"
-            style="color:#16e58a"
-          >
-            +0.000%
-          </strong>
-
+      <section class="panel chart-panel">
+        <div class="chart-toolbar">
+          <span class="historical">Historical view</span>
+          <div class="chart-tools">
+            <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
+            <button id="resetZoom" type="button">Reset</button>
+            <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+          </div>
         </div>
-
 
         <div class="chart-wrap">
-
-          <canvas
-            id="priceChart"
-          ></canvas>
-
-          <div
-            style="
-              position:absolute;
-              left:16px;
-              bottom:12px;
-              color:#52645b;
-              font-size:10px;
-              font-weight:700;
-            "
-          >
-            SIMULATED DEMO MARKET
-          </div>
-
+          <canvas id="priceChart"></canvas>
+          <div class="chart-label">SIMULATED DEMO MARKET</div>
         </div>
 
-
-        <!-- CHART CONTROLS -->
-
-        <div
-          style="
-            display:flex;
-            justify-content:flex-end;
-            gap:5px;
-            margin-top:8px;
-          "
-        >
-
-          <button
-            id="zoomOut"
-            type="button"
-          >
-            −
-          </button>
-
-          <button
-            id="resetZoom"
-            type="button"
-          >
-            Reset
-          </button>
-
-          <button
-            id="zoomIn"
-            type="button"
-          >
-            +
-          </button>
-
+        <div class="probability-title">
+          <span>DIGIT PROBABILITY</span>
+          <small>Demo estimate — not a prediction</small>
         </div>
+        <div id="probabilities" class="probabilities"></div>
+      </section>
 
-
-        <!-- PROBABILITIES -->
-
-        <div
-          style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-top:15px;
-            margin-bottom:7px;
-          "
-        >
-
-          <strong>
-            Digit probability
-          </strong>
-
-          <small
-            style="color:#718078"
-          >
-            Demo calculation
-          </small>
-
-        </div>
-
-        <div
-          id="probabilities"
-          class="probabilities"
-        ></div>
-
-      </div>
-
-
-      <!-- =================================================
-           TRADE CARD
-      ================================================== -->
-
+      <!-- TRADE CARD -->
       <section class="panel trade-card">
-
-
-        <!-- AUTO / MANUAL -->
-
-        <div class="mode">
-
-          <button
-            id="auto"
-            class="active"
-            type="button"
-          >
-            AUTO
-          </button>
-
-          <button
-            id="manual"
-            type="button"
-          >
-            MANUAL
-          </button>
-
+        <div id="mode" class="mode">
+          <button id="auto" class="active" type="button">AUTO</button>
+          <button id="manual" type="button">MANUAL</button>
         </div>
 
-
-        <!-- STAKE -->
-
-        <div
-          style="
-            margin-top:13px;
-            margin-bottom:6px;
-            color:#8d9a93;
-            font-size:12px;
-            font-weight:700;
-          "
-        >
-          Stake
-        </div>
-
-
-        <div class="stake">
-
-          <button
-            id="stakeMinus"
-            type="button"
-          >
-            −
-          </button>
-
-
-          <strong id="stake">
-            $10.00
-          </strong>
-
-
-          <button
-            id="stakePlus"
-            type="button"
-          >
-            +
-          </button>
-
-        </div>
-
-
-        <!-- =================================================
-             AI BOT
-        ================================================== -->
-
-        <button
-          id="scanner"
-          class="scanner"
-          type="button"
-        >
-
-          <span
-            style="
-              font-size:20px;
-            "
-          >
-            ✦
+        <button id="scanner" class="scanner" type="button">
+          <span class="bot-icon">✦</span>
+          <span class="bot-content">
+            <strong>AI BOT</strong>
+            <small>Scan the simulated market for a demo signal</small>
           </span>
-
-          <span style="flex:1">
-
-            <strong
-              style="
-                display:block;
-                color:#cfc4ff;
-                font-size:16px;
-              "
-            >
-              AI BOT
-            </strong>
-
-            <small
-              style="
-                display:block;
-                margin-top:3px;
-                color:#8d84a8;
-              "
-            >
-              Scan the simulated market
-            </small>
-
-          </span>
-
-          <span
-            style="
-              color:#827996;
-              font-size:10px;
-              font-weight:800;
-            "
-          >
-            DEMO
-          </span>
-
+          <span class="bot-badge">DEMO</span>
         </button>
 
-
-        <!-- =================================================
-             AI BOT RESULT
-        ================================================== -->
-
-        <div
-          id="botResult"
-          class="bot-result"
-          style="display:none"
-        >
-
-          <div class="bot-result-header">
-
-            <strong>
-              🤖 AI BOT RESULT
-            </strong>
-
-            <button
-              id="closeBotResult"
-              class="bot-result-close"
-              type="button"
-            >
-              ×
-            </button>
-
+        <div class="control">
+          <label>STAKE</label>
+          <div class="stake">
+            <button id="stakeMinus" type="button" aria-label="Decrease stake">−</button>
+            <strong id="stake">$10.00</strong>
+            <button id="stakePlus" type="button" aria-label="Increase stake">+</button>
           </div>
-
-
-          <div class="bot-result-body">
-
-            <div
-              id="botStatus"
-              style="
-                margin-bottom:8px;
-                color:#c9c0dc;
-              "
-            >
-              Analysis complete
-            </div>
-
-
-            <div class="bot-result-grid">
-
-              <div class="bot-stat">
-
-                <small>
-                  MARKET
-                </small>
-
-                <strong id="botMarket">
-                  —
-                </strong>
-
-              </div>
-
-
-              <div class="bot-stat">
-
-                <small>
-                  TRADE TYPE
-                </small>
-
-                <strong id="botTradeType">
-                  —
-                </strong>
-
-              </div>
-
-
-              <div class="bot-stat">
-
-                <small>
-                  SIGNAL
-                </small>
-
-                <strong id="botSignal">
-                  —
-                </strong>
-
-              </div>
-
-
-              <div class="bot-stat">
-
-                <small>
-                  DIGIT
-                </small>
-
-                <strong id="botDigit">
-                  —
-                </strong>
-
-              </div>
-
-
-              <div class="bot-stat">
-
-                <small>
-                  CONFIDENCE
-                </small>
-
-                <strong id="botConfidence">
-                  —
-                </strong>
-
-              </div>
-
-            </div>
-
-
-            <div
-              id="botExplanation"
-              class="bot-explanation"
-            >
-              No automatic trade is placed.
-            </div>
-
-          </div>
-
         </div>
-
-
-        <!-- =================================================
-             RISK CONTROLS
-        ================================================== -->
 
         <div class="controls-grid">
-
           <label>
-
-            <span
-              style="
-                color:#87958d;
-                font-size:12px;
-                font-weight:700;
-              "
-            >
-              Take Profit
-            </span>
-
-            <input
-              id="takeProfit"
-              type="number"
-              value="200"
-            >
-
+            Take Profit
+            <div class="input-wrap">
+              <span>$</span>
+              <input id="takeProfit" type="number" value="200" min="0">
+            </div>
           </label>
 
-
           <label>
-
-            <span
-              style="
-                color:#87958d;
-                font-size:12px;
-                font-weight:700;
-              "
-            >
-              Stop Loss
-            </span>
-
-            <input
-              id="stopLoss"
-              type="number"
-              value="999"
-            >
-
+            Stop Loss
+            <div class="input-wrap">
+              <span>$</span>
+              <input id="stopLoss" type="number" value="999" min="0">
+            </div>
           </label>
 
-
           <label>
-
-            <span
-              style="
-                color:#87958d;
-                font-size:12px;
-                font-weight:700;
-              "
-            >
-              Multiplier
-            </span>
-
+            Multiplier
             <select id="multiplier">
-
-              <option>
-                2x
-              </option>
-
-              <option>
-                3x
-              </option>
-
-              <option>
-                5x
-              </option>
-
-              <option>
-                10x
-              </option>
-
+              <option>1x</option>
+              <option selected>2x</option>
+              <option>5x</option>
+              <option>10x</option>
             </select>
-
           </label>
-
         </div>
-
-
-        <!-- =================================================
-             SESSION
-        ================================================== -->
 
         <div class="session">
-
-          <div
-            style="
-              margin-bottom:8px;
-              color:#8c9992;
-              font-size:12px;
-              font-weight:800;
-            "
-          >
-            SESSION
-          </div>
-
-
+          <h3>SESSION</h3>
           <div class="session-grid">
-
             <div>
-
-              <small
-                style="color:#77847d"
-              >
-                Record
-              </small>
-
-              <strong id="sessionRecord">
-                0W · 0L
-              </strong>
-
+              <span>Record</span>
+              <strong id="sessionRecord">0W · 0L</strong>
             </div>
-
-
             <div>
-
-              <small
-                style="color:#77847d"
-              >
-                P/L
-              </small>
-
-              <strong id="sessionPnl">
-                +$0.00
-              </strong>
-
+              <span>P/L</span>
+              <strong id="sessionPnl">+$0.00</strong>
             </div>
-
-
             <div>
-
-              <small
-                style="color:#77847d"
-              >
-                Mode
-              </small>
-
-              <strong id="sessionMode">
-                AUTO
-              </strong>
-
+              <span>Mode</span>
+              <strong id="sessionMode">AUTO</strong>
             </div>
-
-
             <div>
-
-              <small
-                style="color:#77847d"
-              >
-                Stake
-              </small>
-
-              <strong id="sessionStake">
-                $10.00
-              </strong>
-
+              <span>Stake</span>
+              <strong id="sessionStake">$10.00</strong>
             </div>
-
           </div>
-
         </div>
 
-
-        <!-- =================================================
-             CONTRACT DIGITS
-        ================================================== -->
-
-        <div
-          style="
-            margin-top:13px;
-            margin-bottom:7px;
-            color:#8d9a93;
-            font-size:12px;
-            font-weight:700;
-            text-transform:uppercase;
-          "
-        >
-          Choose a contract digit
-        </div>
-
-
-        <div
-          id="contractDigits"
-          class="contract-digits"
-        ></div>
-
-
-        <!-- =================================================
-             TRADE BUTTONS
-        ================================================== -->
+        <div class="contract-title">CHOOSE A CONTRACT DIGIT</div>
+        <div id="contractDigits" class="contract-digits"></div>
 
         <div class="trade-buttons">
-
-          <button
-            id="match"
-            class="match-btn"
-            type="button"
-          >
-            <strong>MATCH</strong>
-            <span>Demo</span>
+          <button id="match" class="match-btn" type="button">
+            <strong>MATCH</strong><span>Demo</span>
           </button>
-
-
-          <button
-            id="differ"
-            class="differ-btn"
-            type="button"
-          >
-            <strong>DIFFER</strong>
-            <span>Demo</span>
+          <button id="differ" class="differ-btn" type="button">
+            <strong>DIFFER</strong><span>Demo</span>
           </button>
-
         </div>
-
       </section>
 
-
-      <!-- =================================================
-           OPEN POSITIONS
-      ================================================== -->
-
-      <section
-        id="positions"
-        class="panel data-section"
-      >
-
+      <!-- OPEN POSITIONS -->
+      <section id="positions" class="panel data-section">
         <div class="section-head">
-
-          <h2>
-            Open Positions
-          </h2>
-
-          <button
-            id="clearPositions"
-            type="button"
-          >
-            Clear
-          </button>
-
+          <h2>Open Positions</h2>
+          <button id="clearPositions" type="button">Clear</button>
         </div>
-
-
-        <div
-          id="positionsList"
-          class="empty"
-        >
-          No open positions.
-        </div>
-
+        <div id="positionsList"></div>
       </section>
 
-
-      <!-- =================================================
-           HISTORY
-      ================================================== -->
-
-      <section
-        id="history"
-        class="panel data-section"
-      >
-
+      <!-- HISTORY -->
+      <section id="history" class="panel data-section">
         <div class="section-head">
-
-          <h2>
-            Trade History
-          </h2>
-
+          <h2>Trade History</h2>
         </div>
-
-
-        <div
-          id="historyList"
-          class="empty"
-        >
-          No trades yet.
-        </div>
-
+        <div id="historyList"></div>
       </section>
 
+      <p class="demo-note">
+        TradeZora is currently a simulated demo terminal. No real funds, deposits,
+        withdrawals or live market execution are connected.
+      </p>
     </section>
-
   </main>
 
-
-  <!-- =====================================================
-       ENTRY SCANNER POPUP
-  ====================================================== -->
-
-  <div
-    id="scannerModal"
-    class="scanner-modal"
-  >
-
-    <div class="scanner-box">
-
-
-      <div class="scanner-header">
-
-        <div class="scanner-icon">
-          ✧
-        </div>
-
-
-        <div class="scanner-title">
-
-          <h2>
-            Entry Scanner
-          </h2>
-
-          <small>
-            TradeZora Demo Scanner
-          </small>
-
-        </div>
-
-
-        <button
-          id="scannerClose"
-          class="scanner-close"
-          type="button"
-        >
-          ×
-        </button>
-
-      </div>
-
-
-      <div class="scanner-body">
-
-
-        <div class="scanner-description">
-
-          Pick the market category you want to scan.
-          The demo scanner checks simulated
-          <strong>volatility / synthetic-style</strong>
-          markets and surfaces a demo entry signal
-          based on simulated tick patterns.
-
-        </div>
-
-
-        <label
-          class="scanner-label"
-          for="scannerMarket"
-        >
-          Market
-        </label>
-
-
-        <select
-          id="scannerMarket"
-          class="scanner-select"
-        >
-
-          <option>
-            Even / Odd
-          </option>
-
-          <option>
-            Matches / Differs
-          </option>
-
-          <option>
-            Over / Under
-          </option>
-
-        </select>
-
-
-        <div class="scanner-progress-title">
-
-          <span>
-            Ready to scan
-          </span>
-
-          <span
-            id="scannerCount"
-            class="scanner-progress-count"
-          >
-            0/13
-          </span>
-
-        </div>
-
-
-        <div class="scanner-progress">
-
-          <div
-            id="scannerProgress"
-            class="scanner-progress-bar"
-          ></div>
-
-        </div>
-
-
-        <button
-          id="deepScanButton"
-          class="deep-scan-button"
-          type="button"
-        >
-          ⌕ &nbsp; Deep Scan for Best Market
-        </button>
-
-
-        <button
-          id="loadScannerButton"
-          class="load-scanner-button"
-          type="button"
-          disabled
-        >
-          Load Deep Scanner Bot
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =====================================================
-       BOTTOM NAV
-  ====================================================== -->
-
-  <nav class="bottom-nav">
-
-    <a
-      href="#trade"
-      class="active"
-    >
-
-      <span>
-        ▣
-      </span>
-
-      <span>
-        Trade
-      </span>
-
+  <!-- MOBILE NAV -->
+  <nav class="bottom-nav" aria-label="Bottom navigation">
+    <a class="active" href="#terminal">
+      <span class="nav-icon">▣</span>
+      <span>Trade</span>
     </a>
-
-
-    <a
-      href="#positions"
-    >
-
-      <span>
-        ▥
-      </span>
-
-      <span>
-        Positions
-      </span>
-
+    <a href="#positions">
+      <span class="nav-icon">▥</span>
+      <span>Positions</span>
     </a>
-
-
-    <a
-      href="#history"
-    >
-
-      <span>
-        ◷
-      </span>
-
-      <span>
-        History
-      </span>
-
+    <a href="#history">
+      <span class="nav-icon">◷</span>
+      <span>History</span>
     </a>
-
   </nav>
 
+  <div id="toast" class="toast" role="status"></div>
 
-  <!-- =====================================================
-       TOAST
-  ====================================================== -->
-
-  <div
-    id="toast"
-    class="toast"
-  ></div>
-
-
-  <!-- =====================================================
-       ENTRY SCANNER FUNCTIONALITY
-  ====================================================== -->
-
-  <script>
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      function () {
-
-        const scannerButton =
-          document.getElementById("scanner");
-
-        const modal =
-          document.getElementById("scannerModal");
-
-        const closeButton =
-          document.getElementById("scannerClose");
-
-        const scanButton =
-          document.getElementById("deepScanButton");
-
-        const loadButton =
-          document.getElementById("loadScannerButton");
-
-        const progress =
-          document.getElementById("scannerProgress");
-
-        const count =
-          document.getElementById("scannerCount");
-
-
-        if (!scannerButton || !modal) {
-          return;
-        }
-
-
-        /* Open scanner */
-
-        scannerButton.addEventListener(
-          "click",
-          function () {
-
-            modal.classList.add("active");
-
-          }
-        );
-
-
-        /* Close scanner */
-
-        closeButton.addEventListener(
-          "click",
-          function () {
-
-            modal.classList.remove("active");
-
-          }
-        );
-
-
-        /* Close by tapping outside */
-
-        modal.addEventListener(
-          "click",
-          function (event) {
-
-            if (event.target === modal) {
-
-              modal.classList.remove("active");
-
-            }
-
-          }
-        );
-
-
-        /* Deep scan */
-
-        scanButton.addEventListener(
-          "click",
-          function () {
-
-            scanButton.disabled = true;
-
-            loadButton.disabled = true;
-
-            loadButton.classList.remove("ready");
-
-            let current = 0;
-
-
-            count.textContent =
-              "0/13";
-
-            progress.style.width =
-              "0%";
-
-
-            const scannerTimer =
-              setInterval(
-                function () {
-
-                  current++;
-
-
-                  const percent =
-                    (current / 13) * 100;
-
-
-                  progress.style.width =
-                    percent + "%";
-
-
-                  count.textContent =
-                    current + "/13";
-
-
-                  if (current >= 13) {
-
-                    clearInterval(
-                      scannerTimer
-                    );
-
-
-                    scanButton.disabled =
-                      false;
-
-
-                    loadButton.disabled =
-                      false;
-
-
-                    loadButton.classList.add(
-                      "ready"
-                    );
-
-                  }
-
-                },
-                150
-              );
-
-          }
-        );
-
-
-        /* Load scanner bot */
-
-        loadButton.addEventListener(
-          "click",
-          function () {
-
-            if (loadButton.disabled) {
-              return;
-            }
-
-
-            modal.classList.remove(
-              "active"
-            );
-
-
-            const toast =
-              document.getElementById(
-                "toast"
-              );
-
-
-            if (toast) {
-
-              toast.textContent =
-                "Demo scanner loaded — no automatic trade placed.";
-
-              toast.classList.add(
-                "show"
-              );
-
-
-              setTimeout(
-                function () {
-
-                  toast.classList.remove(
-                    "show"
-                  );
-
-                },
-                2200
-              );
-
-            }
-
-          }
-        );
-
-      }
-    );
-
-  </script>
-
-
-  <!-- =====================================================
-       DASHBOARD JAVASCRIPT
-  ====================================================== -->
-
-  <script src="dashboard.js?v=7"></script>
-
+  <script src="dashboard_continuous.js?v=8"></script>
 </body>
 </html>
