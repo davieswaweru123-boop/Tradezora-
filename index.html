@@ -1,1799 +1,645 @@
-hi<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>TradeZora Terminal</title>
-
-<style>
-*{box-sizing:border-box}
-
-html,body{
-  margin:0;
-  min-height:100%;
-  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#080d16;
-  color:#e8eef8
-}
-
-body{padding-bottom:24px}
-
-.wrap{
-  max-width:520px;
-  margin:auto;
-  padding:10px 10px 24px
-}
-
-.top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:8px 4px 12px;
-  position:sticky;
-  top:0;
-  background:#080d16;
-  z-index:5
-}
-
-.brand{
-  font-size:23px;
-  font-weight:900;
-  letter-spacing:-.6px;
-  color:#fff
-}
-
-.status{
-  font-size:11px;
-  font-weight:700;
-  padding:7px 10px;
-  border-radius:999px;
-  background:#141c29;
-  color:#8491a6;
-  border:1px solid #222d3d
-}
-
-.connected{
-  background:#0c281c;
-  color:#54d18a;
-  border-color:#1d5637
-}
-
-.card{
-  background:#0f1724;
-  border:1px solid #1d2a3c;
-  border-radius:14px;
-  padding:13px;
-  margin-bottom:10px;
-  box-shadow:0 8px 30px rgba(0,0,0,.18)
-}
-
-.hero{
-  background:#101b2b;
-  border:1px solid #21334b;
-  border-radius:14px;
-  padding:14px;
-  margin-bottom:10px
-}
-
-.hero h1{
-  font-size:16px;
-  margin:0 0 4px
-}
-
-.hero p{
-  font-size:11px;
-  color:#8f9caf;
-  margin:0;
-  line-height:1.4
-}
-
-.balance-label{
-  font-size:10px;
-  text-transform:uppercase;
-  letter-spacing:.8px;
-  color:#7f8ca0
-}
-
-.balance{
-  font-size:29px;
-  font-weight:850;
-  letter-spacing:-1px;
-  margin:3px 0
-}
-
-.muted{
-  color:#7f8ca0;
-  font-size:11px
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px
-}
-
-.metric{
-  background:#0b121d;
-  border:1px solid #1b2636;
-  border-radius:10px;
-  padding:10px
-}
-
-.metric .label{
-  font-size:10px;
-  color:#718096;
-  margin-bottom:4px
-}
-
-.metric .value{
-  font-size:14px;
-  font-weight:750
-}
-
-.row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px
-}
-
-.field{
-  margin-bottom:9px
-}
-
-.field label{
-  display:block;
-  font-size:10px;
-  text-transform:uppercase;
-  letter-spacing:.5px;
-  color:#8794a8;
-  font-weight:750;
-  margin-bottom:5px
-}
-
-.field input,
-.field select{
-  width:100%;
-  padding:11px 10px;
-  border:1px solid #28364a;
-  border-radius:9px;
-  background:#0b121d;
-  color:#edf3fb;
-  font-size:14px;
-  outline:none
-}
-
-.price{
-  font-size:28px;
-  font-weight:850;
-  letter-spacing:-1px;
-  margin:4px 0 9px;
-  color:#fff
-}
-
-.btn{
-  width:100%;
-  border:0;
-  border-radius:9px;
-  padding:12px 14px;
-  font-size:14px;
-  font-weight:800;
-  cursor:pointer
-}
-
-.primary{
-  background:#267cff;
-  color:#fff
-}
-
-.rise{
-  background:#0fa968;
-  color:#fff
-}
-
-.fall{
-  background:#e14c5b;
-  color:#fff
-}
-
-.secondary{
-  background:#182232;
-  color:#b8c4d4;
-  margin-top:8px;
-  border:1px solid #26354a
-}
-
-.btn:disabled{
-  opacity:.5;
-  cursor:wait
-}
-
-.notice{
-  padding:9px 10px;
-  border-radius:9px;
-  background:#211d0e;
-  color:#d9c16a;
-  font-size:11px;
-  line-height:1.4
-}
-
-.error{
-  background:#2a1116;
-  color:#ff8995
-}
-
-.success{
-  background:#0c2419;
-  color:#6ee09b
-}
-
-.hidden{
-  display:none
-}
-
-.small{
-  font-size:10px;
-  color:#68758a;
-  line-height:1.4;
-  text-align:center;
-  margin:12px 4px
-}
-
-.trade-title{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px
-}
-
-.trade-title h2,
-.trade-title h3{
-  font-size:15px!important
-}
-
-.badge{
-  font-size:9px;
-  padding:5px 7px;
-  border-radius:999px;
-  background:#182437;
-  color:#80b7ff;
-  border:1px solid #294362
-}
-
-.contract{
-  background:#0b121d;
-  border:1px solid #1b2636;
-  border-radius:10px;
-  padding:10px;
-  margin-bottom:9px
-}
-
-.contract strong{
-  font-size:12px
-}
-
-.contract p{
-  margin:4px 0 0;
-  font-size:10px;
-  color:#718096;
-  line-height:1.4
-}
-
-.direction{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:7px
-}
-
-.direction .btn{
-  min-height:46px
-}
-
-.proposal{
-  background:#0b121d;
-  border:1px solid #25364d;
-  border-radius:10px;
-  padding:10px;
-  margin:9px 0;
-  font-size:11px;
-  line-height:1.7
-}
-
-.resultCard{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  background:#0b121d;
-  border:1px solid #1b2636;
-  border-radius:10px;
-  padding:10px;
-  margin-top:9px
-}
-
-.resultWin{
-  background:#0c2419;
-  border-color:#1d5b3a
-}
-
-.resultLoss{
-  background:#2a1116;
-  border-color:#6d2832
-}
-
-.resultBadge{
-  font-weight:850;
-  font-size:10px;
-  padding:5px 7px;
-  border-radius:999px;
-  background:#202a39
-}
-
-.resultWin .resultBadge{
-  background:#153b27;
-  color:#6ee09b
-}
-
-.resultLoss .resultBadge{
-  background:#4a1d24;
-  color:#ff8995
-}
-
-.profit{
-  font-size:18px;
-  font-weight:850
-}
-
-.historyItem{
-  background:#0b121d;
-  border:1px solid #1b2636;
-  border-radius:10px;
-  padding:10px;
-  margin-top:7px
-}
-
-.historyTop{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:8px
-}
-
-.historyMeta{
-  font-size:10px;
-  color:#718096;
-  margin-top:4px;
-  line-height:1.45
-}
-
-.historyProfit{
-  font-weight:850
-}
-
-.historyWin{
-  color:#6ee09b
-}
-
-.historyLoss{
-  color:#ff8995
-}
-
-.chartWrap{
-  background:#0b121d;
-  border:1px solid #1b2a3e;
-  border-radius:10px;
-  padding:8px;
-  margin:8px 0 10px
-}
-
-.chartHead{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:6px
-}
-
-.chartHead span{
-  font-size:9px;
-  color:#7f8ca0;
-  text-transform:uppercase;
-  letter-spacing:.6px
-}
-
-.chartHead b{
-  font-size:11px;
-  color:#b9c6d8
-}
-
-.chartCanvas{
-  display:block;
-  width:100%;
-  height:150px;
-  border-radius:8px;
-  background:#09101a
-}
-
-.sectionHead{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:9px
-}
-
-.sectionHead h3{
-  margin:0;
-  font-size:14px
-}
-
-.marketStrip{
-  display:flex;
-  gap:6px;
-  overflow:auto;
-  padding-bottom:5px;
-  margin-bottom:8px
-}
-
-.marketStrip span{
-  white-space:nowrap;
-  font-size:9px;
-  padding:5px 8px;
-  background:#141f2e;
-  border:1px solid #24334a;
-  border-radius:999px;
-  color:#91a0b5
-}
-
-@media(max-width:480px){
-  .wrap{
-    padding:7px 8px 20px
-  }
-
-  .row{
-    grid-template-columns:1fr 1fr
-  }
-
-  .balance{
-    font-size:27px
-  }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>TradeZora — Trade Smarter</title>
+  <meta
+    name="description"
+    content="TradeZora — a modern trading platform built for a smarter trading experience."
+  >
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-<main class="wrap">
+  <!-- ================= HEADER ================= -->
 
-<div class="top">
-  <div class="brand">TradeZora</div>
-  <div id="status" class="status">Not connected</div>
-</div>
+  <header class="navbar">
+    <div class="nav-container">
 
-<section class="hero">
-  <h1>TradeZora <span style="color:#4da3ff">Terminal</span></h1>
-  <p>Fast demo trading interface for Deriv markets. Demo account only.</p>
-  <div style="margin-top:7px;font-size:9px;color:#4da3ff">
-    FULL BUILD v4 • Digit Contracts
-  </div>
-</section>
+      <a href="#" class="logo">
+        <span class="logo-icon">↗</span>
+        <span>Trade<span class="logo-green">Zora</span></span>
+      </a>
 
-<section class="card">
-  <div class="balance-label">Demo Account Balance</div>
-  <div id="balance" class="balance">$0.00</div>
-  <div id="accountType" class="muted">Not connected</div>
-</section>
+      <nav class="desktop-nav">
+        <a href="#features">Features</a>
+        <a href="#markets">Markets</a>
+        <a href="#how-it-works">How it works</a>
+      </nav>
 
-<section class="card">
-  <button id="connectBtn" class="btn primary" type="button">
-    Connect Deriv
-  </button>
+      <div class="nav-actions">
+        <button class="theme-btn" aria-label="Toggle theme">
+          ☼
+        </button>
 
-  <button id="disconnectBtn" class="btn secondary hidden" type="button">
-    Disconnect Deriv
-  </button>
+        <a href="#" class="login-btn">Log in</a>
 
-  <div id="message" class="notice hidden" style="margin-top:11px"></div>
-</section>
+        <a href="#" class="get-started-btn">
+          Get Started
+          <span>→</span>
+        </a>
+      </div>
 
-<section id="accountCard" class="card hidden">
-  <div class="grid">
-    <div class="metric">
-      <div class="label">Total Equity</div>
-      <div id="equity" class="value">$0.00</div>
     </div>
+  </header>
 
-    <div class="metric">
-      <div class="label">Account ID</div>
-      <div id="accountId" class="value">—</div>
-    </div>
-  </div>
-</section>
 
-<section id="tradeCard" class="card hidden">
+  <!-- ================= HERO ================= -->
 
-<div class="sectionHead">
-  <h3>Trade</h3>
-  <span class="badge">DEMO ONLY</span>
-</div>
+  <main>
 
-<div class="marketStrip">
-  <span>Digits</span>
-  <span>Volatility</span>
-  <span>Crash/Boom</span>
-</div>
+    <section class="hero">
 
-<div class="trade-title">
-  <h2 style="margin:0;font-size:20px">Demo Trade</h2>
-  <span class="badge">LIVE</span>
-</div>
+      <div class="hero-glow glow-one"></div>
+      <div class="hero-glow glow-two"></div>
 
-<p class="muted">
-  Digit contracts: Over, Under, Even, Odd, Matches and Differs.
-</p>
+      <div class="hero-content">
 
-<div class="field">
-  <label>Market</label>
-  <select id="symbol">
-    <option value="">Loading markets…</option>
-  </select>
-</div>
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          Demo trading available
+        </div>
 
-<div class="contract">
-  <strong id="marketName">—</strong>
-  <p id="marketInfo">
-    Select a market to see its current price.
-  </p>
-</div>
+        <h1>
+          Trade Smarter.<br>
+          <span>Move Faster.</span>
+        </h1>
 
-<div class="price" id="price">—</div>
+        <p class="hero-text">
+          Explore global markets with a modern trading experience
+          designed to help you make informed decisions.
+        </p>
 
-<div class="chartWrap">
-  <div class="chartHead">
-    <span>Live price chart</span>
-    <b id="chartDelta">—</b>
-  </div>
+        <div class="hero-buttons">
 
-  <canvas id="priceChart" class="chartCanvas" height="150"></canvas>
-</div>
+          <a href="#" class="primary-btn">
+            Start Trading
+            <span>→</span>
+          </a>
 
-<div class="row">
+          <a href="#" class="secondary-btn">
+            <span class="play-icon">▶</span>
+            Try Free Demo
+          </a>
 
-  <div class="field">
-    <label>Stake</label>
-    <input
-      id="stake"
-      type="number"
-      min="0.35"
-      step="0.01"
-      value="1"
-    >
-  </div>
+        </div>
 
-  <div class="field">
-    <label>Duration (seconds)</label>
-    <input
-      id="duration"
-      type="number"
-      min="1"
-      step="1"
-      value="60"
-    >
-  </div>
+        <div class="hero-stats">
 
-</div>
-
-<div class="field">
-
-  <label>Contract Type</label>
-
-  <div class="direction">
-
-    <button
-      id="overBtn"
-      class="btn primary"
-      type="button"
-    >
-      Over
-    </button>
-
-    <button
-      id="underBtn"
-      class="btn fall"
-      type="button"
-    >
-      Under
-    </button>
-
-    <button
-      id="evenBtn"
-      class="btn rise"
-      type="button"
-    >
-      Even
-    </button>
-
-    <button
-      id="oddBtn"
-      class="btn fall"
-      type="button"
-    >
-      Odd
-    </button>
-
-    <button
-      id="matchBtn"
-      class="btn primary"
-      type="button"
-    >
-      Matches
-    </button>
-
-    <button
-      id="diffBtn"
-      class="btn fall"
-      type="button"
-    >
-      Differs
-    </button>
-
-  </div>
-
-</div>
-
-<div id="barrierField" class="field hidden">
-
-  <label>Barrier Digit</label>
-
-  <select id="barrier">
-
-    <option value="0">0</option>
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="4">4</option>
-    <option value="5" selected>5</option>
-    <option value="6">6</option>
-    <option value="7">7</option>
-    <option value="8">8</option>
-    <option value="9">9</option>
-
-  </select>
-
-</div>
-
-<button
-  id="tradeBtn"
-  class="btn primary"
-  type="button"
->
-  Preview Demo Trade
-</button>
-
-<div id="proposalBox" class="proposal hidden"></div>
-
-<button
-  id="buyBtn"
-  class="btn rise hidden"
-  type="button"
->
-  Place Demo Trade
-</button>
-
-<div
-  id="tradeResult"
-  class="notice hidden"
-  style="margin-top:11px"
-></div>
-
-</section>
-
-<section id="openCard" class="card hidden">
-
-  <h3 style="margin-top:0">Open Trade</h3>
-
-  <div id="openStatus" class="muted">
-    Waiting…
-  </div>
-
-  <div id="tradeOutcome" class="resultCard hidden"></div>
-
-</section>
-
-<section id="historyCard" class="card hidden">
-
-  <div class="trade-title">
-
-    <h3 style="margin:0">Trade History</h3>
-
-    <span id="historyCount" class="badge">
-      0 trades
-    </span>
-
-  </div>
-
-  <div
-    id="historyList"
-    class="muted"
-    style="margin-top:10px"
-  >
-    No completed trades yet.
-  </div>
-
-</section>
-
-<div class="small">
-  TradeZora uses your connected Deriv session.
-  This interface currently refuses real-account trading.
-</div>
-
-</main>
-
-<script>
-
-const BACKEND_URL =
-  "https://tradezora-backend-use-1.onrender.com";
-
-const FRONTEND_URL =
-  "https://davieswaweru123-boop.github.io/Tradezora-/";
-
-const STORAGE_SESSION =
-  "tradezora_session_id";
-
-let sessionId = null;
-
-let direction = "DIGITOVER";
-
-let symbols = [];
-
-let proposal = null;
-
-let priceTimer = null;
-
-let accountTimer = null;
-
-let historyTimer = null;
-
-let contractTimer = null;
-
-let currentContractId = null;
-
-let priceHistory = [];
-
-const $ = id => document.getElementById(id);
-
-
-/* -------------------------
-   UI MESSAGES
-------------------------- */
-
-function msg(text,type=""){
-
-  const b = $("message");
-
-  if(!text){
-
-    b.className = "notice hidden";
-    b.textContent = "";
-
-    return;
-  }
-
-  b.className = "notice " + type;
-  b.textContent = text;
-  b.classList.remove("hidden");
-}
-
-
-function resultMsg(text,type=""){
-
-  const b = $("tradeResult");
-
-  if(!text){
-
-    b.className = "notice hidden";
-    b.textContent = "";
-
-    return;
-  }
-
-  b.className = "notice " + type;
-  b.textContent = text;
-  b.classList.remove("hidden");
-}
-
-
-/* -------------------------
-   MONEY
-------------------------- */
-
-function money(v,c="USD"){
-
-  const n = Number(v);
-
-  return Number.isFinite(n)
-    ? new Intl.NumberFormat(
-        "en-US",
-        {
-          style:"currency",
-          currency:c,
-          maximumFractionDigits:2
-        }
-      ).format(n)
-    : "—";
-}
-
-
-/* -------------------------
-   CONNECTION UI
-------------------------- */
-
-function setUI(on){
-
-  $("status").textContent =
-    on ? "✓ Deriv Connected" : "Not connected";
-
-  $("status").className =
-    "status" + (on ? " connected" : "");
-
-  $("connectBtn")
-    .classList
-    .toggle("hidden",on);
-
-  $("disconnectBtn")
-    .classList
-    .toggle("hidden",!on);
-
-  $("accountCard")
-    .classList
-    .toggle("hidden",!on);
-
-  $("tradeCard")
-    .classList
-    .toggle("hidden",!on);
-}
-
-
-/* -------------------------
-   DERIV LOGIN
-------------------------- */
-
-async function connectDeriv(){
-
-  localStorage.removeItem(STORAGE_SESSION);
-
-  window.location.href =
-    BACKEND_URL + "/auth/login";
-}
-
-
-/* -------------------------
-   DISCONNECT
-------------------------- */
-
-async function disconnectDeriv(){
-
-  clearInterval(priceTimer);
-  clearInterval(accountTimer);
-  clearInterval(historyTimer);
-  clearInterval(contractTimer);
-
-  try{
-
-    if(sessionId){
-
-      await fetch(
-        BACKEND_URL + "/api/trading/disconnect",
-        {
-          method:"POST",
-          headers:{
-            "X-TradeZora-Session":sessionId
-          }
-        }
-      );
-
-    }
-
-  }catch(e){
-
-    console.warn("Disconnect request failed:",e);
-
-  }
-
-  localStorage.removeItem(STORAGE_SESSION);
-
-  sessionId = null;
-
-  proposal = null;
-
-  currentContractId = null;
-
-  priceHistory = [];
-
-  setUI(false);
-
-  $("balance").textContent = "$0.00";
-
-  $("accountType").textContent = "Not connected";
-
-  $("equity").textContent = "$0.00";
-
-  $("accountId").textContent = "—";
-
-  $("openCard").classList.add("hidden");
-
-  $("historyCard").classList.add("hidden");
-
-  $("proposalBox").classList.add("hidden");
-
-  $("buyBtn").classList.add("hidden");
-
-  resetChart();
-
-  msg("Deriv disconnected.","success");
-}
-
-
-/* -------------------------
-   OAUTH SESSION EXCHANGE
-------------------------- */
-
-async function exchange(code){
-
-  if(!code)
-    throw new Error(
-      "No Deriv connection code was returned."
-    );
-
-  const r = await fetch(
-    BACKEND_URL + "/api/session/exchange",
-    {
-      method:"POST",
-      mode:"cors",
-      cache:"no-store",
-      headers:{
-        "Content-Type":"application/json",
-        "Accept":"application/json"
-      },
-      body:JSON.stringify({
-        connection_code:code
-      })
-    }
-  );
-
-  const raw = await r.text();
-
-  let d = {};
-
-  try{
-    d = raw ? JSON.parse(raw) : {};
-  }catch(_){}
-
-  if(!r.ok){
-
-    const detail =
-      d.error ||
-      d.message ||
-      raw ||
-      ("HTTP " + r.status);
-
-    throw new Error(
-      "Session exchange failed (" +
-      r.status +
-      "): " +
-      detail
-    );
-  }
-
-  if(!d.session_id){
-
-    throw new Error(
-      "Backend replied without a session ID."
-    );
-  }
-
-  localStorage.setItem(
-    STORAGE_SESSION,
-    d.session_id
-  );
-
-  return d.session_id;
-}
-
-
-/* -------------------------
-   API
-------------------------- */
-
-async function api(path,opts={}){
-
-  const r = await fetch(
-    BACKEND_URL + path,
-    {
-      ...opts,
-
-      headers:{
-        ...(opts.headers || {}),
-        "X-TradeZora-Session":sessionId
-      }
-    }
-  );
-
-  const d =
-    await r.json().catch(()=>({}));
-
-  if(!r.ok)
-    throw Error(
-      d.error || "Request failed."
-    );
-
-  return d;
-}
-
-
-/* -------------------------
-   ACCOUNT
-------------------------- */
-
-async function loadAccount(){
-
-  const d =
-    await api("/api/account");
-
-  $("balance").textContent =
-    money(
-      d.balance,
-      d.currency || "USD"
-    );
-
-  $("equity").textContent =
-    money(
-      d.balance,
-      d.currency || "USD"
-    );
-
-  $("accountId").textContent =
-    d.account_id || "—";
-
-  $("accountType").textContent =
-    (d.account_type || "demo").toUpperCase() +
-    " • " +
-    (d.currency || "USD");
-
-  setUI(true);
-}
-
-
-/* -------------------------
-   MARKETS
-------------------------- */
-
-async function loadMarkets(){
-
-  const r =
-    await fetch(
-      BACKEND_URL +
-      "/api/trading/symbols"
-    );
-
-  const d =
-    await r.json().catch(()=>({}));
-
-  if(!r.ok)
-    throw Error(
-      d.error ||
-      "Could not load markets."
-    );
-
-  symbols =
-    d.symbols || [];
-
-  const s =
-    $("symbol");
-
-  s.innerHTML = "";
-
-  symbols.forEach(x=>{
-
-    const o =
-      document.createElement("option");
-
-    o.value =
-      x.underlying_symbol;
-
-    o.textContent =
-      x.underlying_symbol_name ||
-      x.underlying_symbol;
-
-    s.appendChild(o);
-
-  });
-
-  if(symbols.length){
-
-    s.selectedIndex = 0;
-
-    await marketChanged();
-
-  }else{
-
-    s.innerHTML =
-      '<option value="">No supported markets found</option>';
-
-  }
-}
-
-
-function selected(){
-
-  return symbols.find(
-    x =>
-      x.underlying_symbol ===
-      $("symbol").value
-  ) || null;
-
-}
-
-
-async function marketChanged(){
-
-  const x = selected();
-
-  if(!x)return;
-
-  resetChart();
-
-  $("marketName").textContent =
-    x.underlying_symbol_name ||
-    x.underlying_symbol;
-
-  $("marketInfo").textContent =
-    (x.market || "Supported market") +
-    " • " +
-    x.underlying_symbol;
-
-  await refreshPrice();
-}
-
-
-/* -------------------------
-   LIVE PRICE
-------------------------- */
-
-async function refreshPrice(){
-
-  const s =
-    $("symbol").value;
-
-  if(!s)return;
-
-  try{
-
-    const r =
-      await fetch(
-        BACKEND_URL +
-        "/api/trading/tick?symbol=" +
-        encodeURIComponent(s)
-      );
-
-    const d =
-      await r.json().catch(()=>({}));
-
-    if(!r.ok)
-      throw Error(
-        d.error ||
-        "Price unavailable"
-      );
-
-    const q =
-      Number(d.quote);
-
-    if(Number.isFinite(q)){
-
-      $("price").textContent =
-        String(q);
-
-      if(
-        !priceHistory.length ||
-        priceHistory[
-          priceHistory.length - 1
-        ] !== q
-      ){
-
-        priceHistory.push(q);
-
-      }
-
-      if(priceHistory.length > 60)
-        priceHistory.shift();
-
-      drawChart();
-
-    }else{
-
-      $("price").textContent = "—";
-
-    }
-
-  }catch(e){
-
-    $("price").textContent = "—";
-
-  }
-}
-
-
-/* -------------------------
-   CHART
-------------------------- */
-
-function resetChart(){
-
-  priceHistory = [];
-
-  $("chartDelta").textContent = "—";
-
-  drawChart();
-}
-
-
-function drawChart(){
-
-  const c =
-    $("priceChart");
-
-  if(!c)return;
-
-  const dpr =
-    window.devicePixelRatio || 1;
-
-  const w =
-    c.clientWidth || 300;
-
-  const h =
-    c.clientHeight || 150;
-
-  c.width =
-    Math.floor(w * dpr);
-
-  c.height =
-    Math.floor(h * dpr);
-
-  const ctx =
-    c.getContext("2d");
-
-  ctx.setTransform(
-    dpr,
-    0,
-    0,
-    dpr,
-    0,
-    0
-  );
-
-  ctx.clearRect(
-    0,
-    0,
-    w,
-    h
-  );
-
-  ctx.strokeStyle =
-    "#18263a";
-
-  ctx.lineWidth = 1;
-
-  for(let i=1;i<4;i++){
-
-    const y =
-      h * i / 4;
-
-    ctx.beginPath();
-
-    ctx.moveTo(0,y);
-
-    ctx.lineTo(w,y);
-
-    ctx.stroke();
-
-  }
-
-  if(priceHistory.length < 2)
-    return;
-
-  const min =
-    Math.min(...priceHistory);
-
-  const max =
-    Math.max(...priceHistory);
-
-  const range =
-    max - min || 1;
-
-  const pad = 10;
-
-  ctx.beginPath();
-
-  priceHistory.forEach((v,i)=>{
-
-    const x =
-      pad +
-      (
-        i /
-        (priceHistory.length - 1)
-      ) *
-      (w - pad * 2);
-
-    const y =
-      h -
-      pad -
-      (
-        (v - min) /
-        range
-      ) *
-      (h - pad * 2);
-
-    if(i === 0)
-      ctx.moveTo(x,y);
-    else
-      ctx.lineTo(x,y);
-
-  });
-
-  ctx.strokeStyle =
-    "#39d98a";
-
-  ctx.lineWidth = 2;
-
-  ctx.stroke();
-
-  const lookback =
-    Math.min(
-      20,
-      priceHistory.length - 1
-    );
-
-  const base =
-    priceHistory[
-      priceHistory.length -
-      1 -
-      lookback
-    ];
-
-  const last =
-  priceHistory[
-    priceHistory.length - 1
-  ];
-  
-const pct =
-  base
-    ? ((last - base) / base) * 100
-    : 0;
-
-$("chartDelta").textContent =
-  (pct >= 0 ? "+" : "") +
-  pct.toFixed(3) +
-  "%";
-
-drawChart();
-
-if($("livePrice")){
-  $("livePrice").textContent =
-    Number(price).toFixed(3);
-}
-
-if($("chartPrice")){
-  $("chartPrice").textContent =
-    Number(price).toFixed(3);
-}
-
-}catch(e){
-  console.error("Price refresh error:",e);
-}
-}
-
-async function previewTrade(){
-  if(!sessionId){
-    msg("Connect Deriv first.","error");
-    return;
-  }
-
-  const symbol=$("symbol").value;
-  const amount=Number($("amount").value);
-  const duration=Number($("duration").value);
-  const durationUnit=$("durationUnit").value;
-  const contractType=direction;
-
-  if(!symbol){
-    msg("Select a market.","error");
-    return;
-  }
-
-  if(!amount || amount<=0){
-    msg("Enter a valid stake amount.","error");
-    return;
-  }
-
-  if(!duration || duration<=0){
-    msg("Enter a valid duration.","error");
-    return;
-  }
-
-  const body={
-    underlying_symbol:symbol,
-    contract_type:contractType,
-    amount:amount,
-    duration:duration,
-    duration_unit:durationUnit
-  };
-
-  if(
-    contractType==="DIGITOVER" ||
-    contractType==="DIGITUNDER" ||
-    contractType==="DIGITMATCH" ||
-    contractType==="DIGITDIFF"
-  ){
-    body.barrier=Number($("barrier").value);
-  }
-
-  try{
-    $("tradeBtn").disabled=true;
-    $("tradeBtn").textContent="Loading...";
-
-    const data=await api("/api/trading/proposal",{
-      method:"POST",
-      body
-    });
-
-    if(!data.success || !data.proposal){
-      throw new Error(
-        data.error || "Could not get trade proposal."
-      );
-    }
-
-    const p=data.proposal;
-
-    $("proposalBox").classList.remove("hidden");
-
-    $("proposalContract").textContent=
-      contractNames[contractType] || contractType;
-
-    $("proposalStake").textContent=
-      Number(p.ask_price || amount).toFixed(2);
-
-    $("proposalPayout").textContent=
-      Number(p.payout || 0).toFixed(2);
-
-    $("proposalProfit").textContent=
-      Number(
-        (p.payout || 0) - (p.ask_price || amount)
-      ).toFixed(2);
-
-    $("proposalId").value=p.id || "";
-
-    $("proposalText").textContent =
-      contractNames[contractType] || contractType;
-
-    if(
-      contractType==="DIGITOVER" ||
-      contractType==="DIGITUNDER" ||
-      contractType==="DIGITMATCH" ||
-      contractType==="DIGITDIFF"
-    ){
-      $("proposalBarrier").textContent=
-        "Barrier: " + $("barrier").value;
-    }else{
-      $("proposalBarrier").textContent="";
-    }
-
-    msg("Demo trade proposal ready.","success");
-
-  }catch(e){
-    console.error("Proposal error:",e);
-    msg(
-      e.message || "Could not get trade proposal.",
-      "error"
-    );
-  }finally{
-    $("tradeBtn").disabled=false;
-    $("tradeBtn").textContent="Preview Demo Trade";
-  }
-}
-
-async function buyTrade(){
-  if(!sessionId){
-    msg("Connect Deriv first.","error");
-    return;
-  }
-
-  const proposalId=$("proposalId").value;
-
-  if(!proposalId){
-    msg("Preview a trade first.","error");
-    return;
-  }
-
-  try{
-    $("buyBtn").disabled=true;
-    $("buyBtn").textContent="Buying...";
-
-    const data=await api("/api/trading/buy",{
-      method:"POST",
-      body:{
-        proposal_id:proposalId
-      }
-    });
-
-    if(!data.success){
-      throw new Error(
-        data.error || "Demo trade could not be opened."
-      );
-    }
-
-    $("proposalBox").classList.add("hidden");
-
-    msg("Demo trade opened successfully.","success");
-
-    await loadAccount();
-    await watchOpenTrade(data.contract_id);
-
-  }catch(e){
-    console.error("Buy error:",e);
-    msg(
-      e.message || "Demo trade could not be opened.",
-      "error"
-    );
-  }finally{
-    $("buyBtn").disabled=false;
-    $("buyBtn").textContent="Buy Demo Trade";
-  }
-}
-
-async function watchOpenTrade(contractId){
-  if(!contractId) return;
-
-  const started=Date.now();
-
-  while(Date.now()-started<180000){
-
-    try{
-      const data=await api(
-        "/api/trading/open-contract?contract_id="+
-        encodeURIComponent(contractId)
-      );
-
-      if(data.success && data.contract){
-
-        const c=data.contract;
-
-        if(
-          c.is_sold ||
-          c.status==="won" ||
-          c.status==="lost"
-        ){
-
-          const result=
-            c.status==="won" || Number(c.profit)>0
-              ? "WIN"
-              : "LOSS";
-
-          const profit=Number(c.profit || 0);
-
-          msg(
-            result +
-            " " +
-            (profit>=0?"+":"") +
-            profit.toFixed(2),
-            result==="WIN" ? "success" : "error"
-          );
-
-          await loadAccount();
-          await loadHistory();
-
-          return;
-        }
-      }
-
-    }catch(e){
-      console.error("Open contract error:",e);
-    }
-
-    await new Promise(
-      resolve=>setTimeout(resolve,2000)
-    );
-  }
-}
-
-async function loadHistory(){
-  if(!sessionId) return;
-
-  try{
-    const data=await api("/api/trading/history");
-
-    const history=
-      Array.isArray(data.history)
-        ? data.history
-        : [];
-
-    const box=$("historyList");
-
-    if(!box) return;
-
-    if(history.length===0){
-      box.innerHTML=
-        '<div class="muted">No demo trades yet.</div>';
-      return;
-    }
-
-    box.innerHTML=history.map(item=>{
-
-      const profit=Number(item.profit || 0);
-
-      const result=
-        profit>=0 ? "WIN" : "LOSS";
-
-      return `
-        <div class="history-row">
-          <div>
-            <strong>${result}</strong>
-            <div class="muted">
-              ${item.contract_type || ""}
-            </div>
+          <div class="hero-stat">
+            <strong>$10</strong>
+            <span>Demo Starting Balance</span>
           </div>
 
-          <div class="${profit>=0?"profit":"loss"}">
-            ${profit>=0?"+":""}${profit.toFixed(2)}
+          <div class="hero-stat">
+            <strong>100+</strong>
+            <span>Markets</span>
+          </div>
+
+          <div class="hero-stat">
+            <strong>24/7</strong>
+            <span>Platform Access</span>
+          </div>
+
+          <div class="hero-stat">
+            <strong>Fast</strong>
+            <span>Platform Experience</span>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ================= MARKET TICKER ================= -->
+
+    <section class="ticker-section">
+
+      <div class="ticker">
+
+        <div class="ticker-item">
+          <span class="coin orange">₿</span>
+          <div>
+            <strong>BTC/USD</strong>
+            <small>Bitcoin</small>
+          </div>
+          <span class="positive">+2.34%</span>
+        </div>
+
+        <div class="ticker-item">
+          <span class="coin gold">Au</span>
+          <div>
+            <strong>XAU/USD</strong>
+            <small>Gold</small>
+          </div>
+          <span class="positive">+0.91%</span>
+        </div>
+
+        <div class="ticker-item">
+          <span class="coin blue">€</span>
+          <div>
+            <strong>EUR/USD</strong>
+            <small>Euro</small>
+          </div>
+          <span class="positive">+0.12%</span>
+        </div>
+
+        <div class="ticker-item">
+          <span class="coin green">£</span>
+          <div>
+            <strong>GBP/USD</strong>
+            <small>Pound</small>
+          </div>
+          <span class="negative">-0.08%</span>
+        </div>
+
+        <div class="ticker-item">
+          <span class="coin purple">S</span>
+          <div>
+            <strong>SPX</strong>
+            <small>S&P 500</small>
+          </div>
+          <span class="positive">+0.47%</span>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= FEATURES ================= -->
+
+    <section class="section" id="features">
+
+      <div class="section-heading">
+
+        <div class="section-label">
+          WHY TRADEZORA
+        </div>
+
+        <h2>
+          Built for a smarter<br>
+          trading experience
+        </h2>
+
+      </div>
+
+
+      <div class="feature-grid">
+
+        <article class="feature-card">
+
+          <div class="feature-icon orange-icon">ϟ</div>
+
+          <h3>Fast Experience</h3>
+
+          <p>
+            Navigate markets through a clean,
+            responsive trading interface.
+          </p>
+
+        </article>
+
+
+        <article class="feature-card">
+
+          <div class="feature-icon green-icon">◇</div>
+
+          <h3>Secure by Design</h3>
+
+          <p>
+            Your account experience is built with
+            security and privacy in mind.
+          </p>
+
+        </article>
+
+
+        <article class="feature-card">
+
+          <div class="feature-icon purple-icon">▱</div>
+
+          <h3>Multiple Markets</h3>
+
+          <p>
+            Explore forex, crypto, indices,
+            commodities and more.
+          </p>
+
+        </article>
+
+
+        <article class="feature-card">
+
+          <div class="feature-icon pink-icon">▣</div>
+
+          <h3>Simple Interface</h3>
+
+          <p>
+            Everything you need is organized
+            in one easy-to-use platform.
+          </p>
+
+        </article>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= TRADING PREVIEW ================= -->
+
+    <section class="section trading-section" id="markets">
+
+      <div class="section-heading">
+
+        <div class="section-label">
+          MARKETS
+        </div>
+
+        <h2>
+          Explore markets<br>
+          from one account
+        </h2>
+
+        <p>
+          Discover a variety of markets through
+          the TradeZora demo experience.
+        </p>
+
+      </div>
+
+
+      <div class="trading-card">
+
+        <div class="trading-header">
+
+          <div class="asset-info">
+
+            <div class="asset-icon btc">
+              ₿
+            </div>
+
+            <div>
+              <strong>BTC/USD</strong>
+              <span>Bitcoin</span>
+            </div>
+
+          </div>
+
+          <div class="price-info">
+            <strong>$43,256.78</strong>
+            <span>+2.34%</span>
+          </div>
+
+        </div>
+
+
+        <div class="chart">
+
+          <div class="chart-grid"></div>
+
+          <svg
+            viewBox="0 0 900 260"
+            preserveAspectRatio="none"
+            class="chart-line"
+          >
+            <defs>
+              <linearGradient
+                id="chartFill"
+                x1="0"
+                x2="0"
+                y1="0"
+                y2="1"
+              >
+                <stop offset="0%" stop-opacity=".35"/>
+                <stop offset="100%" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+
+            <path
+              d="M0 205
+                 C70 195 90 180 150 184
+                 C210 188 230 150 290 158
+                 C350 166 375 120 430 132
+                 C490 144 515 105 575 110
+                 C630 114 650 82 710 88
+                 C770 94 790 65 900 55
+                 L900 260
+                 L0 260 Z"
+              fill="url(#chartFill)"
+            />
+
+            <path
+              d="M0 205
+                 C70 195 90 180 150 184
+                 C210 188 230 150 290 158
+                 C350 166 375 120 430 132
+                 C490 144 515 105 575 110
+                 C630 114 650 82 710 88
+                 C770 94 790 65 900 55"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="5"
+              stroke-linecap="round"
+            />
+
+          </svg>
+
+          <div class="live-chart-badge">
+            ● LIVE DEMO
+          </div>
+
+        </div>
+
+
+        <div class="trade-buttons">
+
+          <button class="up-button">
+            ↗ UP
+            <span>Demo</span>
+          </button>
+
+          <button class="down-button">
+            ↘ DOWN
+            <span>Demo</span>
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= STATS ================= -->
+
+    <section class="stats-section">
+
+      <div class="stat-box">
+
+        <div class="stat-icon">♙</div>
+
+        <strong>Demo</strong>
+        <span>Trading Account</span>
+
+      </div>
+
+
+      <div class="stat-box">
+
+        <div class="stat-icon">▥</div>
+
+        <strong>100+</strong>
+        <span>Markets to Explore</span>
+
+      </div>
+
+
+      <div class="stat-box">
+
+        <div class="stat-icon">◎</div>
+
+        <strong>24/7</strong>
+        <span>Platform Access</span>
+
+      </div>
+
+
+      <div class="stat-box">
+
+        <div class="stat-icon">♧</div>
+
+        <strong>Simple</strong>
+        <span>Trading Interface</span>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= HOW IT WORKS ================= -->
+
+    <section class="section steps-section" id="how-it-works">
+
+      <div class="section-heading centered">
+
+        <div class="section-label">
+          GETTING STARTED
+        </div>
+
+        <h2>
+          Three steps to start
+        </h2>
+
+      </div>
+
+
+      <div class="steps-grid">
+
+        <article class="step-card">
+
+          <span class="step-number">01</span>
+
+          <div class="step-icon">
+            ♙
+          </div>
+
+          <h3>Create Account</h3>
+
+          <p>
+            Create your TradeZora account
+            and access your dashboard.
+          </p>
+
+        </article>
+
+
+        <article class="step-card">
+
+          <span class="step-number">02</span>
+
+          <div class="step-icon">
+            ◎
+          </div>
+
+          <h3>Try Demo</h3>
+
+          <p>
+            Explore the platform using
+            simulated trading funds.
+          </p>
+
+        </article>
+
+
+        <article class="step-card">
+
+          <span class="step-number">03</span>
+
+          <div class="step-icon">
+            ▣
+          </div>
+
+          <h3>Explore Markets</h3>
+
+          <p>
+            Select a market and experience
+            the TradeZora interface.
+          </p>
+
+        </article>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= MARKET FEATURES ================= -->
+
+    <section class="section market-features">
+
+      <div class="section-heading">
+
+        <div class="section-label">
+          THE TRADEZORA EXPERIENCE
+        </div>
+
+        <h2>
+          Everything in<br>
+          one place
+        </h2>
+
+        <p>
+          A clean platform designed to make
+          exploring markets straightforward.
+        </p>
+
+      </div>
+
+
+      <div class="market-feature-list">
+
+        <div class="market-feature">
+          <span class="list-icon">◷</span>
+
+          <div>
+            <strong>Market Overview</strong>
+            <p>Keep track of selected markets.</p>
           </div>
         </div>
-      `;
 
-    }).join("");
 
-  }catch(e){
-    console.error("History error:",e);
-  }
-}
+        <div class="market-feature">
+          <span class="list-icon">▣</span>
 
-async function disconnectDeriv(){
+          <div>
+            <strong>Demo Trading</strong>
+            <p>Practice using simulated funds.</p>
+          </div>
+        </div>
 
-  try{
-    await api("/api/trading/disconnect",{
-      method:"POST"
-    });
-  }catch(e){
-    console.error("Disconnect error:",e);
-  }
 
-  localStorage.removeItem(STORAGE_SESSION);
+        <div class="market-feature">
+          <span class="list-icon">◇</span>
 
-  sessionId=null;
+          <div>
+            <strong>Simple Controls</strong>
+            <p>Designed for a straightforward experience.</p>
+          </div>
+        </div>
 
-  setUI(false);
 
-  msg(
-    "TradeZora disconnected from Deriv.",
-    "success"
-  );
-}
+        <div class="market-feature">
+          <span class="list-icon">♧</span>
 
-async function initialize(){
+          <div>
+            <strong>Support</strong>
+            <p>Help and platform information in one place.</p>
+          </div>
+        </div>
 
-  try{
+      </div>
 
-    const saved=
-      localStorage.getItem(STORAGE_SESSION);
+    </section>
 
-    if(saved){
-      sessionId=saved;
 
-      setUI(true);
+    <!-- ================= CTA ================= -->
 
-      await loadAccount();
-      await loadMarkets();
-      await loadHistory();
+    <section class="cta-section">
 
-      startRefreshTimers();
+      <div class="cta-glow"></div>
 
-      return;
-    }
+      <div class="cta-content">
 
-    setUI(false);
+        <div class="section-label">
+          TRADEZORA
+        </div>
 
-  }catch(e){
+        <h2>
+          Ready to explore<br>
+          the markets?
+        </h2>
 
-    console.error(
-      "TradeZora initialization error:",
-      e
-    );
+        <p>
+          Start with the TradeZora demo experience
+          and discover the platform.
+        </p>
 
-    localStorage.removeItem(STORAGE_SESSION);
+        <div class="hero-buttons">
 
-    sessionId=null;
+          <a href="#" class="primary-btn">
+            Get Started
+            <span>→</span>
+          </a>
 
-    setUI(false);
+          <a href="#" class="secondary-btn">
+            Try Demo
+          </a>
 
-    msg(
-      e && e.message
-        ? e.message
-        : "Session expired. Please connect Deriv again.",
-      "error"
-    );
-  }
-}
+        </div>
 
-function startRefreshTimers(){
+      </div>
 
-  clearInterval(priceTimer);
-  clearInterval(accountTimer);
-  clearInterval(historyTimer);
+    </section>
 
-  priceTimer=
-    setInterval(refreshPrice,3000);
+  </main>
 
-  accountTimer=
-    setInterval(loadAccount,5000);
 
-  historyTimer=
-    setInterval(loadHistory,5000);
-}
+  <!-- ================= FOOTER ================= -->
 
-$("connectBtn").addEventListener(
-  "click",
-  connectDeriv
-);
+  <footer class="footer">
 
-$("disconnectBtn").addEventListener(
-  "click",
-  disconnectDeriv
-);
+    <div class="footer-container">
 
-$("symbol").addEventListener(
-  "change",
-  marketChanged
-);
+      <a href="#" class="logo">
+        <span class="logo-icon">↗</span>
+        <span>Trade<span class="logo-green">Zora</span></span>
+      </a>
 
-$("overBtn").addEventListener(
-  "click",
-  ()=>setDirection("DIGITOVER")
-);
+      <p>
+        © 2026 TradeZora. All rights reserved.
+      </p>
 
-$("underBtn").addEventListener(
-  "click",
-  ()=>setDirection("DIGITUNDER")
-);
+    </div>
 
-$("evenBtn").addEventListener(
-  "click",
-  ()=>setDirection("DIGITEVEN")
-);
+  </footer>
 
-$("oddBtn").addEventListener(
-  "click",
-  ()=>setDirection("DIGITODD")
-);
 
-$("matchBtn").addEventListener(
-  "click",
-  ()=>setDirection("DIGITMATCH")
-);
-
-$("diffBtn").addEventListener(
-  "click",
-  ()=>setDirection("DIGITDIFF")
-);
-
-$("tradeBtn").addEventListener(
-  "click",
-  previewTrade
-);
-
-$("buyBtn").addEventListener(
-  "click",
-  buyTrade
-);
-
-setDirection("DIGITOVER");
-
-initialize();
-
-</script>
+  <script src="app.js"></script>
 
 </body>
 </html>
