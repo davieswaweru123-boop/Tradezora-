@@ -1,90 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <title>TradeZora — Demo Terminal</title>
-  <link rel="stylesheet" href="dashboard.css?v=4">
+
+  <link
+    rel="stylesheet"
+    href="dashboard.css?v=5"
+  >
 </head>
 
 <body>
 
 <header class="topbar">
-  <button id="menuBtn" class="icon-btn">☰</button>
 
-  <a class="mobile-logo" href="index.html">
+  <button
+    id="menuBtn"
+    class="icon-btn"
+    aria-label="Open menu"
+  >
+    ☰
+  </button>
+
+  <a
+    class="mobile-logo"
+    href="index.html"
+  >
     <span>Trade</span>Zora
   </a>
 
   <div class="top-actions">
-    <span class="demo-badge">DEMO</span>
-    <span id="balance">$10,000.00</span>
-    <button class="deposit-btn" id="depositBtn">Deposit</button>
-    <button class="icon-btn notification-btn">●</button>
+
+    <span class="demo-badge">
+      DEMO
+    </span>
+
+    <span id="balance">
+      $10,000.00
+    </span>
+
+    <button
+      class="deposit-btn"
+      id="depositBtn"
+    >
+      Deposit
+    </button>
+
+    <button
+      class="icon-btn notification-btn"
+      aria-label="Notifications"
+    >
+      ●
+    </button>
+
   </div>
+
 </header>
 
 
-<!-- SIDE MENU -->
-<div id="overlay" class="overlay"></div>
+<div
+  id="overlay"
+  class="overlay"
+></div>
 
-<aside id="sideMenu" class="side-menu">
+
+<aside
+  id="sideMenu"
+  class="side-menu"
+>
 
   <div class="menu-head">
-    <a class="logo" href="index.html">
+
+    <a
+      class="logo"
+      href="index.html"
+    >
       <span>Trade</span>Zora
     </a>
 
-    <button id="closeMenu" class="icon-btn">×</button>
+    <button
+      id="closeMenu"
+      class="icon-btn"
+      aria-label="Close menu"
+    >
+      ×
+    </button>
+
   </div>
+
 
   <div class="profile">
-    <div class="avatar" id="avatar">T</div>
+
+    <div
+      class="avatar"
+      id="avatar"
+    >
+      T
+    </div>
 
     <div>
-      <strong id="profileName">Demo Trader</strong>
-      <small id="profileEmail">demo@tradezora.local</small>
+
+      <strong id="profileName">
+        Demo Trader
+      </strong>
+
+      <small id="profileEmail">
+        demo@tradezora.local
+      </small>
+
     </div>
+
   </div>
+
 
   <nav class="menu-nav">
 
-    <a href="#trade">▣ Trade</a>
-    <a href="#markets">◈ Markets</a>
-    <a href="#positions">◫ Positions</a>
-    <a href="#history">◷ History</a>
+    <a href="#trade">
+      ▣ Trade
+    </a>
 
-    <a href="#">⚙ Account Settings</a>
-    <a href="#">＋ Deposit</a>
-    <a href="#">⇩ Withdraw</a>
-    <a href="#">♢ Refer & Earn</a>
+    <a href="#markets">
+      ◈ Markets
+    </a>
 
-    <button id="themeSwitch">☼ Dark Theme</button>
+    <a href="#positions">
+      ◫ Positions
+    </a>
 
-    <a href="#">? Help Centre</a>
-    <a href="#">♧ Responsible Trading</a>
-    <a href="#">◉ Live Chat</a>
+    <a href="#history">
+      ◷ History
+    </a>
 
-    <button id="logout">↪ Log Out</button>
+
+    <a href="#">
+      ⚙ Account Settings
+    </a>
+
+    <a href="#">
+      ＋ Deposit
+    </a>
+
+    <a href="#">
+      ⇩ Withdraw
+    </a>
+
+    <a href="#">
+      ♢ Refer & Earn
+    </a>
+
+
+    <button id="themeSwitch">
+      ☼ Dark Theme
+    </button>
+
+
+    <a href="#">
+      ? Help Centre
+    </a>
+
+    <a href="#">
+      ♧ Responsible Trading
+    </a>
+
+    <a href="#">
+      ◉ Live Chat
+    </a>
+
+
+    <!-- NEW RESET BUTTON -->
+
+    <button
+      id="resetDemo"
+      class="reset-demo"
+    >
+      ↻ Reset Demo
+    </button>
+
+
+    <button id="logout">
+      ↪ Log Out
+    </button>
 
   </nav>
+
 </aside>
 
 
-<main class="terminal" id="trade">
+<main
+  class="terminal"
+  id="trade"
+>
+
 
   <!-- CONTRACT TABS -->
+
   <div class="market-tabs">
 
-    <button class="active" data-contract="match">
+    <button
+      class="active"
+      data-contract="match"
+    >
       Matches / Differs
     </button>
 
-    <button data-contract="even">
+    <button
+      data-contract="even"
+    >
       Even / Odd
     </button>
 
-    <button data-contract="over">
+    <button
+      data-contract="over"
+    >
       Over / Under
     </button>
 
@@ -93,22 +226,45 @@
 
   <section class="trade-layout">
 
+
     <!-- CHART -->
+
     <div class="chart-panel">
 
       <div class="market-head">
 
         <div>
-          <small>Market</small>
+
+          <small>
+            Market
+          </small>
 
           <select id="marketSelect">
-            <option>Volatility 10 (1s)</option>
-            <option>Volatility 25 (1s)</option>
-            <option>Volatility 50 (1s)</option>
-            <option>Volatility 75 (1s)</option>
-            <option>Volatility 100 (1s)</option>
+
+            <option>
+              Volatility 10 (1s)
+            </option>
+
+            <option>
+              Volatility 25 (1s)
+            </option>
+
+            <option>
+              Volatility 50 (1s)
+            </option>
+
+            <option>
+              Volatility 75 (1s)
+            </option>
+
+            <option>
+              Volatility 100 (1s)
+            </option>
+
           </select>
+
         </div>
+
 
         <span class="historical">
           Historical demo
@@ -121,15 +277,31 @@
 
         <canvas id="priceChart"></canvas>
 
+
         <div class="zoom-tools">
-          <button id="zoomIn">+</button>
-          <button id="zoomOut">−</button>
-          <button id="resetZoom">↺</button>
+
+          <button id="zoomIn">
+            +
+          </button>
+
+          <button id="zoomOut">
+            −
+          </button>
+
+          <button id="resetZoom">
+            ↺
+          </button>
+
         </div>
 
-        <span id="pct" class="pct">
+
+        <span
+          id="pct"
+          class="pct"
+        >
           +0.00%
         </span>
+
 
         <div class="chart-label">
           SIMULATED MARKET
@@ -138,24 +310,40 @@
       </div>
 
 
-      <!-- DIGIT PROBABILITIES -->
       <div class="probability-title">
-        <span>Digit probability</span>
-        <small>Demo calculation</small>
+
+        <span>
+          Digit probability
+        </span>
+
+        <small>
+          Demo calculation
+        </small>
+
       </div>
 
-      <div class="probabilities" id="probabilities"></div>
+
+      <div
+        class="probabilities"
+        id="probabilities"
+      ></div>
 
     </div>
 
 
-    <!-- TRADING PANEL -->
+    <!-- TRADING CARD -->
+
     <aside class="trade-card">
 
-      <!-- MODE -->
+
+      <!-- AUTO / MANUAL -->
+
       <div class="mode">
 
-        <button id="auto" class="active">
+        <button
+          id="auto"
+          class="active"
+        >
           AUTO
         </button>
 
@@ -167,17 +355,26 @@
 
 
       <!-- STAKE -->
+
       <div class="control">
 
-        <label>Stake</label>
+        <label>
+          Stake
+        </label>
 
         <div class="stake">
 
-          <button id="stakeMinus">−</button>
+          <button id="stakeMinus">
+            −
+          </button>
 
-          <strong id="stake">$10.00</strong>
+          <strong id="stake">
+            $10.00
+          </strong>
 
-          <button id="stakePlus">+</button>
+          <button id="stakePlus">
+            +
+          </button>
 
         </div>
 
@@ -185,13 +382,26 @@
 
 
       <!-- AI BOT -->
-      <button id="scanner" class="scanner">
 
-        <span class="bot-icon">✦</span>
+      <button
+        id="scanner"
+        class="scanner"
+      >
+
+        <span class="bot-icon">
+          ✦
+        </span>
 
         <span class="bot-content">
-          <strong>AI BOT</strong>
-          <small>Analyze market</small>
+
+          <strong>
+            AI BOT
+          </strong>
+
+          <small>
+            Scan market once
+          </small>
+
         </span>
 
         <span class="bot-badge">
@@ -201,48 +411,185 @@
       </button>
 
 
+      <!-- AI BOT RESULT -->
+
+      <div
+        id="botResult"
+        class="bot-result"
+        hidden
+      >
+
+        <div class="bot-result-head">
+
+          <strong>
+            🤖 AI BOT RESULT
+          </strong>
+
+          <button id="closeBotResult">
+            ×
+          </button>
+
+        </div>
+
+
+        <div
+          class="bot-status"
+          id="botStatus"
+        >
+          Analysis complete
+        </div>
+
+
+        <div class="bot-info">
+
+          <div>
+
+            <small>
+              Market
+            </small>
+
+            <strong id="botMarket">
+              —
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              Trade Type
+            </small>
+
+            <strong id="botTradeType">
+              —
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              Signal
+            </small>
+
+            <strong id="botSignal">
+              —
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              Digit
+            </small>
+
+            <strong id="botDigit">
+              —
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              Confidence
+            </small>
+
+            <strong id="botConfidence">
+              —
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <p id="botExplanation">
+
+          The AI BOT provides simulated demo
+          analysis only. You decide whether
+          to trade.
+
+        </p>
+
+      </div>
+
+
       <!-- RISK CONTROLS -->
+
       <div class="controls-grid">
 
+
         <label>
+
           Take Profit
 
           <div class="input-wrap">
-            <span>$</span>
+
+            <span>
+              $
+            </span>
+
             <input
               id="takeProfit"
               type="number"
               value="200"
               min="0"
             >
+
           </div>
 
         </label>
 
 
         <label>
+
           Stop Loss
 
           <div class="input-wrap">
-            <span>$</span>
+
+            <span>
+              $
+            </span>
+
             <input
               id="stopLoss"
               type="number"
               value="999"
               min="0"
             >
+
           </div>
 
         </label>
 
 
         <label>
+
           Multiplier
 
           <select id="multiplier">
-            <option value="1">1x</option>
-            <option value="2" selected>2x</option>
-            <option value="5">5x</option>
+
+            <option value="1">
+              1x
+            </option>
+
+            <option
+              value="2"
+              selected
+            >
+              2x
+            </option>
+
+            <option value="5">
+              5x
+            </option>
+
           </select>
 
         </label>
@@ -251,13 +598,19 @@
 
 
       <!-- SESSION -->
+
       <div class="session">
 
         <div>
-          <span>Session</span>
+
+          <span>
+            Session
+          </span>
+
           <small id="sessionRecord">
             0W · 0L
           </small>
+
         </div>
 
         <strong id="sessionPnl">
@@ -267,40 +620,68 @@
       </div>
 
 
-      <!-- CONTRACT -->
+      <!-- DIGITS -->
+
       <div class="contract-title">
         Choose a contract digit
       </div>
 
-      <div id="contractDigits" class="contract-digits"></div>
+
+      <div
+        id="contractDigits"
+        class="contract-digits"
+      ></div>
 
 
       <!-- TRADE BUTTONS -->
+
       <div class="trade-buttons">
 
         <button id="match">
-          <strong>MATCH</strong>
-          <span>Demo</span>
+
+          <strong>
+            MATCH
+          </strong>
+
+          <span>
+            Demo
+          </span>
+
         </button>
 
+
         <button id="differ">
-          <strong>DIFFER</strong>
-          <span>Demo</span>
+
+          <strong>
+            DIFFER
+          </strong>
+
+          <span>
+            Demo
+          </span>
+
         </button>
 
       </div>
+
 
     </aside>
 
   </section>
 
 
-  <!-- POSITIONS -->
-  <section id="positions" class="data-section">
+  <!-- OPEN POSITIONS -->
+
+  <section
+    id="positions"
+    class="data-section"
+  >
 
     <div class="section-title">
 
-      <h2>Open Positions</h2>
+      <h2>
+        Open Positions
+      </h2>
 
       <button id="clearPositions">
         Clear
@@ -308,7 +689,11 @@
 
     </div>
 
-    <div id="positionsList" class="empty">
+
+    <div
+      id="positionsList"
+      class="empty"
+    >
       No open positions.
     </div>
 
@@ -316,15 +701,25 @@
 
 
   <!-- HISTORY -->
-  <section id="history" class="data-section">
+
+  <section
+    id="history"
+    class="data-section"
+  >
 
     <div class="section-title">
 
-      <h2>Trade History</h2>
+      <h2>
+        Trade History
+      </h2>
 
     </div>
 
-    <div id="historyList" class="history-list">
+
+    <div
+      id="historyList"
+      class="history-list"
+    >
 
       <div class="empty">
         No trades yet.
@@ -337,27 +732,44 @@
 </main>
 
 
-<!-- MOBILE NAV -->
+<!-- BOTTOM NAV -->
+
 <nav class="bottom-nav">
 
-  <a href="#trade" class="active">
+  <a
+    href="#trade"
+    class="active"
+  >
+
     ▣
-    <span>Trade</span>
+
+    <span>
+      Trade
+    </span>
+
   </a>
 
+
   <a href="#positions">
+
     ◫
-    <span>Positions</span>
+
+    <span>
+      Positions
+    </span>
+
   </a>
 
 </nav>
 
 
-<div id="toast" class="toast"></div>
+<div
+  id="toast"
+  class="toast"
+></div>
 
 
-<!-- IMPORTANT: CACHE BUST -->
-<script src="dashboard.js?v=4"></script>
+<script src="dashboard.js?v=5"></script>
 
 </body>
 </html>
