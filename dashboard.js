@@ -1,348 +1,1124 @@
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
 
-const $=s=>document.querySelector(s),
-user=JSON.parse(localStorage.getItem("tradezoraDemoUser")||"null");
+  const $ = (selector) => document.querySelector(selector);
 
-if(!user){
-location.href="auth.html";
-return;
-}
+  /* =========================
+     DEMO ACCOUNT
+  ========================= */
 
-/* DEMO BALANCE */
-let balance=10000;
-localStorage.setItem("tradezoraDemoBalance","10000");
+  const user = JSON.parse(
+    localStorage.getItem("tradezoraDemoUser") || "null"
+  );
 
-let stake=Number(localStorage.getItem("tradezoraDemoStake")||10),
-price=1000,
-history=[],
-positions=[],
-digit=0,
-pnl=0;
+  if (!user) {
+    location.href = "auth.html";
+    return;
+  }
 
-$("#profileName").textContent=user.name||"Demo Trader";
-$("#profileEmail").textContent=user.email||"";
-$("#avatar").textContent=(user.name||"T")[0].toUpperCase();
+  /*
+    Keep the existing user's balance if they already have one.
+    New demo accounts receive $10,000.
+  */
+  let storedBalance = localStorage.getItem("tradezoraDemoBalance");
 
-function money(n){
-return"$"+n.toFixed(2);
-}
+  if (storedBalance === null) {
+    storedBalance = "10000";
+    localStorage.setItem("tradezoraDemoBalance", storedBalance);
+  }
 
-function toast(t){
-const e=$("#toast");
-if(!e)return;
-e.textContent=t;
-e.classList.add("show");
-setTimeout(()=>e.classList.remove("show"),1800);
-}
+  let balance = Number(storedBalance);
 
-function renderBalance(){
-$("#balance").textContent=money(balance);
-$("#stake").textContent=money(stake);
-$("#sessionPnl").textContent=(pnl>=0?"+":"")+money(pnl).replace("$","$");
-}
+  let stake = Number(
+    localStorage.getItem("tradezoraDemoStake") || 10
+  );
 
-renderBalance();
+  let price = 1000;
 
+  let history = [];
+  let positions = [];
 
-/* MENU */
+  let selectedDigit = 0;
 
-const menu=$("#sideMenu"),
-overlay=$("#overlay");
+  let pnl = 0;
+  let wins = 0;
+  let losses = 0;
 
-$("#menuBtn").onclick=()=>{
-menu.classList.add("open");
-overlay.classList.add("show");
-};
+  let contractType = "match";
 
-$("#closeMenu").onclick=()=>{
-menu.classList.remove("open");
-overlay.classList.remove("show");
-};
+  let mode = "AUTO";
 
-overlay.onclick=$("#closeMenu").onclick;
 
-$("#logout").onclick=()=>{
-localStorage.removeItem("tradezoraDemoUser");
-location.href="auth.html";
-};
+  /* =========================
+     PROFILE
+  ========================= */
 
-$("#depositBtn").onclick=()=>{
-toast("Demo account only — real deposits are disabled.");
-};
+  $("#profileName").textContent =
+    user.name || "Demo Trader";
 
-$("#themeSwitch").onclick=()=>{
-toast("Dark theme is active.");
-};
+  $("#profileEmail").textContent =
+    user.email || "demo@tradezora.local";
 
+  $("#avatar").textContent =
+    (user.name || "T")[0].toUpperCase();
 
-/* DIGITS */
 
-const digits=$("#digits"),
-contracts=$("#contractDigits");
+  /* =========================
+     HELPERS
+  ========================= */
 
-for(let i=0;i<10;i++){
+  function money(value) {
+    return "$" + Number(value).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
 
-const a=document.createElement("button"),
-b=document.createElement("button");
 
-a.textContent=i;
-b.textContent=i;
+  function toast(message) {
 
-a.onclick=()=>{
-digit=i;
-[...digits.children].forEach(x=>x.classList.remove("active"));
-a.classList.add("active");
-};
+    const element = $("#toast");
 
-b.onclick=()=>{
-digit=i;
-[...contracts.children].forEach(x=>x.classList.remove("active"));
-b.classList.add("active");
-};
+    if (!element) return;
 
-digits.appendChild(a);
-contracts.appendChild(b);
-}
+    element.textContent = message;
 
-digits.children[0].classList.add("active");
-contracts.children[0].classList.add("active");
+    element.classList.add("show");
 
+    setTimeout(() => {
+      element.classList.remove("show");
+    }, 1800);
+  }
 
-/* STAKE */
 
-$("#stakeMinus").onclick=()=>{
-stake=Math.max(1,stake-1);
-localStorage.setItem("tradezoraDemoStake",stake);
-renderBalance();
-};
+  function renderBalance() {
 
-$("#stakePlus").onclick=()=>{
-stake=Math.min(100,balance||100,stake+1);
-localStorage.setItem("tradezoraDemoStake",stake);
-renderBalance();
-};
+    $("#balance").textContent = money(balance);
 
-$("#scanner").onclick=()=>{
-toast("AI Scanner is a demo interface.");
-};
+    $("#stake").textContent = money(stake);
 
+    const pnlElement = $("#sessionPnl");
 
-/* CHART */
+    pnlElement.textContent =
+      (pnl >= 0 ? "+" : "") + money(pnl);
 
-let chart=$("#priceChart"),
-ctx=chart.getContext("2d"),
-series=Array.from(
-{length:80},
-()=>price+(Math.random()-.5)*100
-);
+    pnlElement.style.color =
+      pnl >= 0 ? "#16e58a" : "#ff5d6c";
 
-function resize(){
+    $("#sessionRecord").textContent =
+      `${wins}W · ${losses}L`;
+  }
 
-const r=chart.getBoundingClientRect(),
-d=devicePixelRatio||1;
 
-chart.width=r.width*d;
-chart.height=r.height*d;
+  renderBalance();
 
-ctx.setTransform(d,0,0,d,0,0);
 
-draw();
-}
+  /* =========================
+     SIDE MENU
+  ========================= */
 
-function draw(){
+  const menu = $("#sideMenu");
+  const overlay = $("#overlay");
 
-const w=chart.clientWidth,
-h=chart.clientHeight;
+  $("#menuBtn").onclick = () => {
 
-ctx.clearRect(0,0,w,h);
+    menu.classList.add("open");
+    overlay.classList.add("show");
 
-const min=Math.min(...series)-20,
-max=Math.max(...series)+20;
+  };
 
-ctx.beginPath();
 
-series.forEach((v,i)=>{
+  $("#closeMenu").onclick = () => {
 
-const x=i*(w/(series.length-1)),
-y=h-((v-min)/(max-min))*h*.82-h*.05;
+    menu.classList.remove("open");
+    overlay.classList.remove("show");
 
-i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+  };
 
-});
 
-ctx.strokeStyle="#16e58a";
-ctx.lineWidth=2;
-ctx.stroke();
-}
+  overlay.onclick = $("#closeMenu").onclick;
 
-window.addEventListener("resize",resize);
 
-resize();
+  /* =========================
+     LOGOUT
+  ========================= */
 
+  $("#logout").onclick = () => {
 
-/* SIMULATED PRICE */
+    localStorage.removeItem("tradezoraDemoUser");
 
-setInterval(()=>{
+    location.href = "auth.html";
 
-const old=price;
+  };
 
-price+=(Math.random()-.48)*18;
 
-series.push(price);
-series.shift();
+  /* =========================
+     DEPOSIT
+  ========================= */
 
-$("#pct").textContent=
-(price>=old?"+":"")+
-((price-old)/old*100).toFixed(3)+"%";
+  $("#depositBtn").onclick = () => {
 
-$("#pct").style.color=
-price>=old?"#16e58a":"#ff5d6c";
+    toast("Demo account only — real deposits are disabled.");
 
-draw();
+  };
 
-},1200);
 
+  /* =========================
+     THEME
+  ========================= */
 
-/* CHART CONTROLS */
+  $("#themeSwitch").onclick = () => {
 
-$("#zoomIn").onclick=()=>{
-toast("Chart zoom control is demo-only.");
-};
+    toast("Dark theme is active.");
 
-$("#zoomOut").onclick=()=>{
-toast("Chart zoom control is demo-only.");
-};
+  };
 
-$("#resetZoom").onclick=()=>{
-toast("Chart reset.");
-};
 
+  /* =========================
+     DIGIT PROBABILITIES
+  ========================= */
 
-/* POSITIONS + HISTORY */
+  const probabilityContainer = $("#probabilities");
 
-function renderLists(){
 
-const p=$("#positionsList"),
-h=$("#historyList");
+  function generateProbabilities() {
 
-p.innerHTML=positions.length
-?positions.map(x=>`
-<div class="position">
-<span>${x.type} • ${money(x.stake)} • digit ${x.digit}</span>
-<strong>Open</strong>
-</div>
-`).join("")
-:'<div class="empty">No open positions.</div>';
+    if (!probabilityContainer) return;
 
-h.innerHTML=history.length
-?history.slice().reverse().map(x=>`
-<div class="history-item">
-<span>${x.type} • ${money(x.stake)} • ${x.digit}</span>
-<strong class="${x.win?'win':'loss'}">
-${x.win?"WIN +"+money(x.profit):"LOSS -"+money(x.stake)}
-</strong>
-</div>
-`).join("")
-:'<div class="empty">No trades yet.</div>';
+    const values = [];
 
-}
+    let remaining = 100;
 
+    for (let i = 0; i < 10; i++) {
 
-/* TRADE */
+      if (i === 9) {
 
-function trade(type){
+        values.push(Number(remaining.toFixed(1)));
 
-if(stake>balance){
-toast("Not enough demo balance.");
-return;
-}
+      } else {
 
-balance-=stake;
+        const value =
+          Math.max(
+            4,
+            Math.min(
+              17,
+              7 + (Math.random() - 0.5) * 6
+            )
+          );
 
-localStorage.setItem(
-"tradezoraDemoBalance",
-balance
-);
+        values.push(Number(value.toFixed(1)));
 
-const pos={
-id:Date.now(),
-type,
-stake,
-digit
-};
+        remaining -= value;
 
-positions.push(pos);
+      }
 
-renderBalance();
-renderLists();
+    }
 
-toast(type+" demo position opened.");
 
-setTimeout(()=>{
+    /*
+      Normalize probabilities so total = 100.
+    */
 
-const idx=positions.findIndex(
-x=>x.id===pos.id
-);
+    const total =
+      values.reduce((a, b) => a + b, 0);
 
-if(idx<0)return;
+    const normalized =
+      values.map(v => (v / total) * 100);
 
-const win=
-Math.floor(Math.random()*10)===digit;
 
-const profit=win?stake*.85:0;
+    probabilityContainer.innerHTML = "";
 
-if(win){
 
-balance+=stake+profit;
-pnl+=profit;
+    normalized.forEach((probability, digit) => {
 
-}else{
+      const element =
+        document.createElement("div");
 
-pnl-=stake;
+      element.className = "probability";
 
-}
+      if (digit === selectedDigit) {
+        element.style.borderColor = "#16e58a";
+        element.style.background = "#0c2117";
+      }
 
-positions.splice(idx,1);
+      element.innerHTML = `
+        <span class="digit-number">${digit}</span>
+        <span class="percent">${probability.toFixed(1)}%</span>
+      `;
 
-history.push({
-...pos,
-win,
-profit
-});
+      probabilityContainer.appendChild(element);
 
-localStorage.setItem(
-"tradezoraDemoBalance",
-balance
-);
+    });
 
-renderBalance();
-renderLists();
+  }
 
-toast(
-win
-?"Demo trade won."
-:"Demo trade lost."
-);
 
-},5000);
+  generateProbabilities();
 
-}
 
+  /* =========================
+     CONTRACT DIGITS
+  ========================= */
 
-$("#match").onclick=()=>{
-trade("MATCH");
-};
+  const contractDigits =
+    $("#contractDigits");
 
-$("#differ").onclick=()=>{
-trade("DIFFER");
-};
 
-$("#clearPositions").onclick=()=>{
-positions=[];
-renderLists();
-toast("Open positions cleared from view.");
-};
+  for (let i = 0; i < 10; i++) {
 
-renderLists();
+    const button =
+      document.createElement("button");
+
+    button.textContent = i;
+
+    button.dataset.digit = i;
+
+    button.onclick = () => {
+
+      selectedDigit = i;
+
+      [...contractDigits.children]
+        .forEach(element =>
+          element.classList.remove("active")
+        );
+
+      button.classList.add("active");
+
+      generateProbabilities();
+
+      toast(`Digit ${i} selected.`);
+
+    };
+
+    contractDigits.appendChild(button);
+
+  }
+
+
+  contractDigits.children[0].classList.add("active");
+
+
+  /* =========================
+     CONTRACT TABS
+  ========================= */
+
+  const contractTabs =
+    document.querySelectorAll(
+      ".market-tabs button"
+    );
+
+
+  contractTabs.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      contractTabs.forEach(tab =>
+        tab.classList.remove("active")
+      );
+
+      button.classList.add("active");
+
+      contractType =
+        button.dataset.contract || "match";
+
+
+      if (contractType === "even") {
+
+        $("#match").innerHTML =
+          "<strong>EVEN</strong><span>Demo</span>";
+
+        $("#differ").innerHTML =
+          "<strong>ODD</strong><span>Demo</span>";
+
+      }
+
+      else if (contractType === "over") {
+
+        $("#match").innerHTML =
+          "<strong>OVER</strong><span>Demo</span>";
+
+        $("#differ").innerHTML =
+          "<strong>UNDER</strong><span>Demo</span>";
+
+      }
+
+      else {
+
+        $("#match").innerHTML =
+          "<strong>MATCH</strong><span>Demo</span>";
+
+        $("#differ").innerHTML =
+          "<strong>DIFFER</strong><span>Demo</span>";
+
+      }
+
+    });
+
+  });
+
+
+  /* =========================
+     AUTO / MANUAL
+  ========================= */
+
+  $("#auto").onclick = () => {
+
+    mode = "AUTO";
+
+    $("#auto").classList.add("active");
+    $("#manual").classList.remove("active");
+
+    toast("AUTO mode selected.");
+
+  };
+
+
+  $("#manual").onclick = () => {
+
+    mode = "MANUAL";
+
+    $("#manual").classList.add("active");
+    $("#auto").classList.remove("active");
+
+    toast("MANUAL mode selected.");
+
+  };
+
+
+  /* =========================
+     STAKE
+  ========================= */
+
+  $("#stakeMinus").onclick = () => {
+
+    stake = Math.max(
+      1,
+      stake - 1
+    );
+
+    localStorage.setItem(
+      "tradezoraDemoStake",
+      stake
+    );
+
+    renderBalance();
+
+  };
+
+
+  $("#stakePlus").onclick = () => {
+
+    stake = Math.min(
+      1000,
+      balance,
+      stake + 1
+    );
+
+    localStorage.setItem(
+      "tradezoraDemoStake",
+      stake
+    );
+
+    renderBalance();
+
+  };
+
+
+  /* =========================
+     AI BOT
+  ========================= */
+
+  $("#scanner").onclick = () => {
+
+    const button = $("#scanner");
+
+    button.disabled = true;
+
+    toast("AI BOT analyzing demo market...");
+
+
+    setTimeout(() => {
+
+      const suggestedDigit =
+        Math.floor(Math.random() * 10);
+
+      selectedDigit = suggestedDigit;
+
+
+      [...contractDigits.children]
+        .forEach(element =>
+          element.classList.remove("active")
+        );
+
+      contractDigits
+        .children[suggestedDigit]
+        .classList.add("active");
+
+
+      generateProbabilities();
+
+      toast(
+        `AI BOT demo signal: digit ${suggestedDigit}`
+      );
+
+      button.disabled = false;
+
+    }, 1200);
+
+  };
+
+
+  /* =========================
+     CHART
+  ========================= */
+
+  const chart =
+    $("#priceChart");
+
+  const ctx =
+    chart.getContext("2d");
+
+
+  let series =
+    Array.from(
+      { length: 100 },
+      () =>
+        price +
+        (Math.random() - 0.5) * 120
+    );
+
+
+  let chartZoom = 1;
+
+
+  function resizeChart() {
+
+    const rect =
+      chart.getBoundingClientRect();
+
+    const ratio =
+      window.devicePixelRatio || 1;
+
+    chart.width =
+      rect.width * ratio;
+
+    chart.height =
+      rect.height * ratio;
+
+    ctx.setTransform(
+      ratio,
+      0,
+      0,
+      ratio,
+      0,
+      0
+    );
+
+    drawChart();
+
+  }
+
+
+  function drawChart() {
+
+    const width =
+      chart.clientWidth;
+
+    const height =
+      chart.clientHeight;
+
+    if (!width || !height) return;
+
+
+    ctx.clearRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    const visibleCount =
+      Math.max(
+        30,
+        Math.floor(
+          series.length / chartZoom
+        )
+      );
+
+
+    const visible =
+      series.slice(-visibleCount);
+
+
+    const min =
+      Math.min(...visible) - 20;
+
+    const max =
+      Math.max(...visible) + 20;
+
+
+    /*
+      Main line
+    */
+
+    ctx.beginPath();
+
+
+    visible.forEach((value, index) => {
+
+      const x =
+        index *
+        (width / (visible.length - 1));
+
+
+      const y =
+        height -
+        ((value - min) /
+          (max - min)) *
+          height *
+          0.82 -
+        height * 0.05;
+
+
+      if (index === 0) {
+
+        ctx.moveTo(x, y);
+
+      } else {
+
+        ctx.lineTo(x, y);
+
+      }
+
+    });
+
+
+    ctx.strokeStyle =
+      "#16e58a";
+
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+
+    /*
+      Glow line
+    */
+
+    ctx.beginPath();
+
+
+    visible.forEach((value, index) => {
+
+      const x =
+        index *
+        (width / (visible.length - 1));
+
+      const y =
+        height -
+        ((value - min) /
+          (max - min)) *
+          height *
+          0.82 -
+        height * 0.05;
+
+
+      if (index === 0) {
+
+        ctx.moveTo(x, y);
+
+      } else {
+
+        ctx.lineTo(x, y);
+
+      }
+
+    });
+
+
+    ctx.strokeStyle =
+      "rgba(22,229,138,0.18)";
+
+    ctx.lineWidth = 7;
+
+    ctx.stroke();
+
+  }
+
+
+  window.addEventListener(
+    "resize",
+    resizeChart
+  );
+
+  resizeChart();
+
+
+  /* =========================
+     SIMULATED MARKET
+  ========================= */
+
+  setInterval(() => {
+
+    const oldPrice = price;
+
+    price +=
+      (Math.random() - 0.48) * 18;
+
+
+    series.push(price);
+
+    series.shift();
+
+
+    const change =
+      ((price - oldPrice) /
+        oldPrice) *
+      100;
+
+
+    $("#pct").textContent =
+      (change >= 0 ? "+" : "") +
+      change.toFixed(3) +
+      "%";
+
+
+    $("#pct").style.color =
+      change >= 0
+        ? "#16e58a"
+        : "#ff5d6c";
+
+
+    generateProbabilities();
+
+    drawChart();
+
+  }, 1200);
+
+
+  /* =========================
+     CHART CONTROLS
+  ========================= */
+
+  $("#zoomIn").onclick = () => {
+
+    chartZoom =
+      Math.min(
+        3,
+        chartZoom + 0.5
+      );
+
+    drawChart();
+
+  };
+
+
+  $("#zoomOut").onclick = () => {
+
+    chartZoom =
+      Math.max(
+        1,
+        chartZoom - 0.5
+      );
+
+    drawChart();
+
+  };
+
+
+  $("#resetZoom").onclick = () => {
+
+    chartZoom = 1;
+
+    drawChart();
+
+    toast("Chart reset.");
+
+  };
+
+
+  /* =========================
+     MARKET SELECTOR
+  ========================= */
+
+  $("#marketSelect").onchange = () => {
+
+    const market =
+      $("#marketSelect").value;
+
+    toast(
+      `${market} selected.`
+    );
+
+  };
+
+
+  /* =========================
+     RENDER POSITIONS / HISTORY
+  ========================= */
+
+  function renderLists() {
+
+    const positionsList =
+      $("#positionsList");
+
+    const historyList =
+      $("#historyList");
+
+
+    if (positions.length) {
+
+      positionsList.innerHTML =
+        positions.map(position => `
+
+          <div class="position">
+
+            <span>
+              ${position.type}
+              • ${money(position.stake)}
+              • digit ${position.digit}
+            </span>
+
+            <strong>
+              Open
+            </strong>
+
+          </div>
+
+        `).join("");
+
+    } else {
+
+      positionsList.innerHTML =
+        `<div class="empty">
+          No open positions.
+        </div>`;
+
+    }
+
+
+    if (history.length) {
+
+      historyList.innerHTML =
+        history
+          .slice()
+          .reverse()
+          .map(trade => `
+
+            <div class="history-item">
+
+              <span>
+                ${trade.type}
+                • ${money(trade.stake)}
+                • ${trade.digit}
+              </span>
+
+              <strong
+                class="${trade.win ? "win" : "loss"}"
+              >
+                ${
+                  trade.win
+                    ? "WIN +" + money(trade.profit)
+                    : "LOSS -" + money(trade.stake)
+                }
+              </strong>
+
+            </div>
+
+          `)
+          .join("");
+
+    } else {
+
+      historyList.innerHTML =
+        `<div class="empty">
+          No trades yet.
+        </div>`;
+
+    }
+
+  }
+
+
+  /* =========================
+     TRADE ENGINE
+  ========================= */
+
+  function trade(type) {
+
+    if (stake <= 0) {
+
+      toast("Enter a valid stake.");
+
+      return;
+
+    }
+
+
+    if (stake > balance) {
+
+      toast("Not enough demo balance.");
+
+      return;
+
+    }
+
+
+    /*
+      Deduct stake immediately.
+    */
+
+    balance -= stake;
+
+
+    localStorage.setItem(
+      "tradezoraDemoBalance",
+      balance
+    );
+
+
+    const position = {
+
+      id: Date.now(),
+
+      type,
+
+      stake,
+
+      digit: selectedDigit,
+
+      contract: contractType,
+
+      mode
+
+    };
+
+
+    positions.push(position);
+
+
+    renderBalance();
+
+    renderLists();
+
+
+    toast(
+      `${type} demo position opened.`
+    );
+
+
+    /*
+      Simulate contract result after 5 seconds.
+    */
+
+    setTimeout(() => {
+
+      const index =
+        positions.findIndex(
+          item =>
+            item.id === position.id
+        );
+
+
+      if (index < 0) return;
+
+
+      /*
+        Generate a final simulated digit.
+      */
+
+      const finalDigit =
+        Math.floor(
+          Math.random() * 10
+        );
+
+
+      let win = false;
+
+
+      if (contractType === "match") {
+
+        win =
+          finalDigit === selectedDigit &&
+          type === "MATCH"
+          ||
+          finalDigit !== selectedDigit &&
+          type === "DIFFER";
+
+      }
+
+      else if (contractType === "even") {
+
+        const even =
+          finalDigit % 2 === 0;
+
+        win =
+          (even && type === "EVEN") ||
+          (!even && type === "ODD");
+
+      }
+
+      else if (contractType === "over") {
+
+        const over =
+          finalDigit > 5;
+
+        win =
+          (over && type === "OVER") ||
+          (!over && type === "UNDER");
+
+      }
+
+
+      /*
+        Demo payout.
+      */
+
+      const profit =
+        win
+          ? stake * 0.85
+          : 0;
+
+
+      if (win) {
+
+        balance +=
+          stake + profit;
+
+        pnl += profit;
+
+        wins++;
+
+      } else {
+
+        pnl -= stake;
+
+        losses++;
+
+      }
+
+
+      positions.splice(
+        index,
+        1
+      );
+
+
+      history.push({
+
+        ...position,
+
+        finalDigit,
+
+        win,
+
+        profit
+
+      });
+
+
+      /*
+        Keep history manageable.
+      */
+
+      if (history.length > 50) {
+
+        history.shift();
+
+      }
+
+
+      localStorage.setItem(
+        "tradezoraDemoBalance",
+        balance
+      );
+
+
+      renderBalance();
+
+      renderLists();
+
+
+      toast(
+        win
+          ? `Demo trade won — digit ${finalDigit}`
+          : `Demo trade lost — digit ${finalDigit}`
+      );
+
+
+    }, 5000);
+
+  }
+
+
+  /* =========================
+     TRADE BUTTONS
+  ========================= */
+
+  $("#match").onclick = () => {
+
+    let type = "MATCH";
+
+    if (contractType === "even") {
+      type = "EVEN";
+    }
+
+    if (contractType === "over") {
+      type = "OVER";
+    }
+
+    trade(type);
+
+  };
+
+
+  $("#differ").onclick = () => {
+
+    let type = "DIFFER";
+
+    if (contractType === "even") {
+      type = "ODD";
+    }
+
+    if (contractType === "over") {
+      type = "UNDER";
+    }
+
+    trade(type);
+
+  };
+
+
+  /* =========================
+     CLEAR POSITIONS
+  ========================= */
+
+  $("#clearPositions").onclick = () => {
+
+    positions = [];
+
+    renderLists();
+
+    toast(
+      "Open positions cleared from view."
+    );
+
+  };
+
+
+  /* =========================
+     INITIAL RENDER
+  ========================= */
+
+  renderLists();
+
+  renderBalance();
+
+  generateProbabilities();
+
+
+  console.log(
+    "TradeZora demo terminal initialized."
+  );
 
 });
