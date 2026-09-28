@@ -1123,129 +1123,75 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 /* =========================================================
-   TRADEZORA ENTRY SCANNER — DEMO MODULE
-   This module adds the working scanner flow without any
-   Deriv/API connection and without automatic trading.
+   TRADEZORA ENTRY SCANNER — DEMO MODULE v2
+   Demo only: simulated market search, no Deriv/API connection,
+   no automatic trading, and no guaranteed outcome.
 ========================================================= */
 (function () {
   function initTradeZoraScanner() {
     const trigger = document.querySelector('#scanner');
     if (!trigger) return;
 
-    /* Remove a previously injected version if the script is reloaded. */
     const old = document.querySelector('#tzScannerModal');
     if (old) old.remove();
+    const oldStyle = document.querySelector('#tzScannerStyles');
+    if (oldStyle) oldStyle.remove();
 
     const style = document.createElement('style');
     style.id = 'tzScannerStyles';
     style.textContent = `
       #tzScannerModal {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 18px;
-        background: rgba(2, 5, 10, .78);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        position:fixed; inset:0; z-index:9999;
+        display:none; align-items:center; justify-content:center;
+        padding:12px; background:rgba(2,5,10,.78);
+        backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
       }
-      #tzScannerModal.tz-open { display: flex; }
+      #tzScannerModal.tz-open { display:flex; }
       #tzScannerCard {
-        width: min(100%, 640px);
-        max-height: min(92vh, 760px);
-        overflow-y: auto;
-        background: #0b1120;
-        border: 1px solid #26334e;
-        border-radius: 24px;
-        box-shadow: 0 24px 80px rgba(0,0,0,.55);
-        color: #f4f7ff;
+        width:min(100%, 470px); max-height:min(86vh, 620px);
+        overflow-y:auto; background:#0b1120; color:#f4f7ff;
+        border:1px solid #26334e; border-radius:20px;
+        box-shadow:0 20px 60px rgba(0,0,0,.55);
       }
-      .tz-s-head {
-        display:flex; align-items:center; gap:16px;
-        padding:28px 28px 24px;
-        border-bottom:1px solid #222c40;
-      }
-      .tz-s-icon {
-        width:78px; height:78px; flex:0 0 78px;
-        display:grid; place-items:center;
-        border-radius:20px;
-        background:linear-gradient(135deg,#7b35ff,#3f72ff);
-        box-shadow:0 12px 30px rgba(96,58,255,.28);
-        font-size:40px; font-weight:800;
-      }
+      .tz-s-head { display:flex; align-items:center; gap:11px; padding:17px 18px 14px; border-bottom:1px solid #222c40; }
+      .tz-s-icon { width:52px; height:52px; flex:0 0 52px; display:grid; place-items:center; border-radius:15px; background:linear-gradient(135deg,#7b35ff,#3f72ff); box-shadow:0 8px 22px rgba(96,58,255,.25); font-size:27px; font-weight:800; }
       .tz-s-title { min-width:0; flex:1; }
-      .tz-s-title h2 { margin:0; font-size:30px; line-height:1.05; }
-      .tz-s-title p { margin:8px 0 0; color:#7e879b; font-size:16px; }
-      #tzScannerClose {
-        width:42px; height:42px; flex:0 0 42px;
-        border:0; background:transparent; color:#7d879d;
-        font-size:34px; cursor:pointer; line-height:1;
-      }
-      .tz-s-body { padding:28px; }
-      .tz-s-info {
-        background:#182133; border-radius:22px; padding:25px 26px;
-        color:#9da7bc; font-size:18px; line-height:1.65;
-        margin-bottom:28px;
-      }
+      .tz-s-title h2 { margin:0; font-size:22px; line-height:1.05; }
+      .tz-s-title p { margin:5px 0 0; color:#7e879b; font-size:12px; }
+      #tzScannerClose { width:36px; height:36px; flex:0 0 36px; border:0; background:transparent; color:#7d879d; font-size:29px; cursor:pointer; line-height:1; }
+      .tz-s-body { padding:17px 18px 18px; }
+      .tz-s-info { background:#182133; border-radius:16px; padding:15px 16px; color:#9da7bc; font-size:13px; line-height:1.55; margin-bottom:18px; }
       .tz-s-info strong { color:#f2f5ff; }
-      .tz-s-label { display:block; margin:0 0 12px; font-size:18px; font-weight:800; }
-      #tzScannerMarket {
-        width:100%; box-sizing:border-box;
-        background:#0b101b; color:#eef2fb;
-        border:1px solid #273248; border-radius:18px;
-        padding:17px 18px; font-size:18px; outline:none;
-      }
-      .tz-s-ready {
-        display:flex; justify-content:space-between; align-items:center;
-        margin:36px 0 12px; font-size:18px; font-weight:800;
-      }
-      #tzScanCount { color:#707b91; }
-      .tz-progress {
-        height:12px; background:#1b2638; border-radius:99px; overflow:hidden;
-      }
-      #tzProgressBar {
-        width:0%; height:100%; border-radius:99px;
-        background:linear-gradient(90deg,#6451ff,#278fff);
-        transition:width .12s linear;
-      }
-      #tzScanButton, #tzLoadButton {
-        width:100%; border-radius:18px; padding:20px 16px;
-        font-size:20px; font-weight:900; cursor:pointer;
-        margin-top:28px;
-      }
-      #tzScanButton {
-        border:0; color:#fff;
-        background:linear-gradient(100deg,#5e4cff,#278fff);
-        box-shadow:0 12px 28px rgba(54,91,255,.22);
-      }
-      #tzScanButton:disabled { opacity:.65; cursor:wait; }
-      #tzLoadButton {
-        border:1px solid #41516d; color:#f4f7ff; background:#172236;
-      }
-      #tzLoadButton:disabled { opacity:.45; cursor:not-allowed; }
-      .tz-result {
-        display:none; margin-top:22px; padding:18px;
-        border:1px solid #293651; border-radius:18px; background:#111a2a;
-      }
+      .tz-s-label { display:block; margin:0 0 8px; font-size:14px; font-weight:800; }
+      #tzScannerMarket { width:100%; box-sizing:border-box; background:#0b101b; color:#eef2fb; border:1px solid #273248; border-radius:13px; padding:12px 13px; font-size:14px; outline:none; }
+      .tz-s-ready { display:flex; justify-content:space-between; align-items:center; margin:22px 0 9px; font-size:14px; font-weight:800; }
+      #tzScanCount { color:#8b96ad; }
+      .tz-progress { height:8px; background:#1b2638; border-radius:99px; overflow:hidden; }
+      #tzProgressBar { width:0%; height:100%; border-radius:99px; background:linear-gradient(90deg,#6451ff,#278fff); transition:width .08s linear; }
+      #tzScanStatus { margin-top:8px; min-height:18px; color:#8290a9; font-size:11px; text-align:center; }
+      #tzScanButton, #tzLoadButton { width:100%; border-radius:14px; padding:14px 13px; font-size:15px; font-weight:900; cursor:pointer; margin-top:17px; }
+      #tzScanButton { border:0; color:#fff; background:linear-gradient(100deg,#5e4cff,#278fff); box-shadow:0 9px 22px rgba(54,91,255,.20); }
+      #tzScanButton:disabled { opacity:.62; cursor:wait; }
+      #tzLoadButton { border:1px solid #41516d; color:#f4f7ff; background:#172236; }
+      #tzLoadButton:disabled { opacity:.42; cursor:not-allowed; }
+      .tz-result { display:none; margin-top:14px; padding:13px; border:1px solid #293651; border-radius:14px; background:#111a2a; }
       .tz-result.tz-show { display:block; }
-      .tz-result-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-      .tz-result-item { padding:12px; border-radius:12px; background:#0a101b; }
-      .tz-result-item small { display:block; color:#778197; margin-bottom:5px; }
-      .tz-result-item strong { font-size:16px; }
-      .tz-s-note { margin-top:16px; color:#68748a; font-size:12px; line-height:1.5; }
+      .tz-result-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+      .tz-result-item { padding:9px; border-radius:10px; background:#0a101b; }
+      .tz-result-item small { display:block; color:#778197; margin-bottom:4px; font-size:10px; }
+      .tz-result-item strong { font-size:13px; }
+      .tz-s-note { margin-top:12px; color:#68748a; font-size:10px; line-height:1.45; }
       @media (max-width:650px) {
-        #tzScannerModal { padding:12px; align-items:center; }
-        #tzScannerCard { border-radius:22px; max-height:90vh; }
-        .tz-s-head { padding:22px 18px 20px; gap:13px; }
-        .tz-s-icon { width:64px; height:64px; flex-basis:64px; border-radius:17px; font-size:31px; }
-        .tz-s-title h2 { font-size:27px; }
-        .tz-s-title p { font-size:14px; }
-        .tz-s-body { padding:18px; }
-        .tz-s-info { padding:21px; font-size:17px; }
-        .tz-s-ready { margin-top:28px; }
-        #tzScanButton, #tzLoadButton { font-size:18px; padding:18px 14px; }
+        #tzScannerModal { padding:10px; }
+        #tzScannerCard { width:min(100%, 430px); max-height:82vh; border-radius:18px; }
+        .tz-s-head { padding:14px 15px 12px; }
+        .tz-s-icon { width:46px; height:46px; flex-basis:46px; border-radius:13px; font-size:24px; }
+        .tz-s-title h2 { font-size:20px; }
+        .tz-s-title p { font-size:11px; }
+        .tz-s-body { padding:14px 15px 16px; }
+        .tz-s-info { padding:13px 14px; font-size:12px; margin-bottom:15px; }
+        .tz-s-ready { margin-top:18px; }
+        #tzScanButton, #tzLoadButton { margin-top:14px; padding:13px 12px; font-size:14px; }
       }
     `;
     document.head.appendChild(style);
@@ -1264,20 +1210,17 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="tz-s-body">
           <div class="tz-s-info">
-            Pick the market category you want to scan. The demo scanner checks simulated
-            <strong>volatility / synthetic-style</strong> markets and surfaces a demo entry
-            signal based on simulated tick patterns.
+            Choose a market category. The demo scanner will <strong>search several simulated volatility markets</strong> and select a simulated setup. It does not connect to Deriv.
           </div>
 
-          <label class="tz-s-label" for="tzScannerMarket">Market</label>
+          <label class="tz-s-label" for="tzScannerMarket">Market category</label>
           <select id="tzScannerMarket">
+            <option value="AUTO">Search all volatility markets</option>
             <option value="Volatility 10 (1s)">Volatility 10 (1s)</option>
             <option value="Volatility 25 (1s)">Volatility 25 (1s)</option>
             <option value="Volatility 50 (1s)">Volatility 50 (1s)</option>
             <option value="Volatility 75 (1s)">Volatility 75 (1s)</option>
             <option value="Volatility 100 (1s)">Volatility 100 (1s)</option>
-            <option value="Even / Odd">Even / Odd</option>
-            <option value="Over / Under">Over / Under</option>
           </select>
 
           <div class="tz-s-ready">
@@ -1285,104 +1228,133 @@ document.addEventListener("DOMContentLoaded", () => {
             <span id="tzScanCount">0%</span>
           </div>
           <div class="tz-progress"><div id="tzProgressBar"></div></div>
+          <div id="tzScanStatus">Press Deep Scan to search for a simulated setup.</div>
 
           <button id="tzScanButton">⌕ &nbsp; Deep Scan for Best Market</button>
 
           <div id="tzResult" class="tz-result">
             <div class="tz-result-grid">
               <div class="tz-result-item"><small>Market</small><strong id="tzResultMarket">—</strong></div>
-              <div class="tz-result-item"><small>Signal</small><strong id="tzResultSignal">—</strong></div>
+              <div class="tz-result-item"><small>Contract</small><strong id="tzResultSignal">—</strong></div>
               <div class="tz-result-item"><small>Digit</small><strong id="tzResultDigit">—</strong></div>
               <div class="tz-result-item"><small>Demo confidence</small><strong id="tzResultConfidence">—</strong></div>
             </div>
           </div>
 
           <button id="tzLoadButton" disabled>Load Deep Scanner Bot</button>
-          <div class="tz-s-note">Demo only. The scanner does not connect to Deriv, place trades automatically, or guarantee an outcome.</div>
+          <div class="tz-s-note">Demo only. Loading applies the simulated market, contract and digit to the terminal. It does not place a trade.</div>
         </div>
       </div>
     `;
     document.body.appendChild(modal);
 
-    const close = () => modal.classList.remove('tz-open');
-    const open = () => {
-      modal.classList.add('tz-open');
-      resetScanUI();
-    };
-
-    function resetScanUI() {
-      document.querySelector('#tzReadyText').textContent = 'Ready to scan';
-      document.querySelector('#tzScanCount').textContent = '0%';
-      document.querySelector('#tzProgressBar').style.width = '0%';
-      document.querySelector('#tzResult').classList.remove('tz-show');
-      document.querySelector('#tzLoadButton').disabled = true;
-      document.querySelector('#tzScanButton').disabled = false;
-    }
-
-    trigger.onclick = function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      open();
-    };
-
-    document.querySelector('#tzScannerClose').onclick = close;
-    modal.addEventListener('click', (event) => {
-      if (event.target === modal) close();
-    });
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') close();
-    });
-
+    const $s = (id) => document.querySelector(id);
     let scanResult = null;
+    let scanRunning = false;
 
-    document.querySelector('#tzScanButton').onclick = async () => {
-      const scanButton = document.querySelector('#tzScanButton');
-      const loadButton = document.querySelector('#tzLoadButton');
-      const count = document.querySelector('#tzScanCount');
-      const bar = document.querySelector('#tzProgressBar');
-      const readyText = document.querySelector('#tzReadyText');
-      const resultBox = document.querySelector('#tzResult');
+    const close = () => modal.classList.remove('tz-open');
+    const resetScanUI = () => {
+      scanResult = null;
+      scanRunning = false;
+      $s('#tzReadyText').textContent = 'Ready to scan';
+      $s('#tzScanCount').textContent = '0%';
+      $s('#tzProgressBar').style.width = '0%';
+      $s('#tzScanStatus').textContent = 'Press Deep Scan to search for a simulated setup.';
+      $s('#tzResult').classList.remove('tz-show');
+      $s('#tzLoadButton').disabled = true;
+      $s('#tzScanButton').disabled = false;
+    };
+    const open = () => { modal.classList.add('tz-open'); resetScanUI(); };
+
+    trigger.onclick = (event) => { event.preventDefault(); event.stopPropagation(); open(); };
+    $s('#tzScannerClose').onclick = close;
+    modal.addEventListener('click', (event) => { if (event.target === modal) close(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
+
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const marketOptions = [
+      'Volatility 10 (1s)', 'Volatility 25 (1s)', 'Volatility 50 (1s)',
+      'Volatility 75 (1s)', 'Volatility 100 (1s)'
+    ];
+    const signals = ['MATCH', 'DIFFER', 'EVEN', 'ODD', 'OVER', 'UNDER'];
+
+    $s('#tzScanButton').onclick = async () => {
+      if (scanRunning) return;
+      scanRunning = true;
+
+      const scanButton = $s('#tzScanButton');
+      const loadButton = $s('#tzLoadButton');
+      const count = $s('#tzScanCount');
+      const bar = $s('#tzProgressBar');
+      const readyText = $s('#tzReadyText');
+      const status = $s('#tzScanStatus');
+      const resultBox = $s('#tzResult');
+      const selectedCategory = $s('#tzScannerMarket').value;
 
       scanButton.disabled = true;
       loadButton.disabled = true;
       resultBox.classList.remove('tz-show');
-      readyText.textContent = 'Deep scanning';
+      readyText.textContent = 'Searching markets';
 
-      for (let i = 1; i <= 13; i++) {
-        await new Promise(resolve => setTimeout(resolve, 130));
-        count.textContent = `${i}/13`;
-        bar.style.width = `${(i / 13) * 100}%`;
+      const marketsToCheck = selectedCategory === 'AUTO' ? marketOptions : [selectedCategory];
+      const marketScores = [];
+      const totalSteps = 100;
+
+      for (let percent = 1; percent <= totalSteps; percent++) {
+        // Deliberately paced demo scan so the search feels visible rather than instant.
+        await wait(85);
+
+        const marketIndex = Math.min(
+          marketsToCheck.length - 1,
+          Math.floor(((percent - 1) / totalSteps) * marketsToCheck.length)
+        );
+        const market = marketsToCheck[marketIndex];
+        const marketProgress = Math.round(((percent - marketIndex * (100 / marketsToCheck.length)) / (100 / marketsToCheck.length)) * 100);
+        const safeProgress = Math.max(1, Math.min(100, marketProgress));
+
+        count.textContent = `${percent}%`;
+        bar.style.width = `${percent}%`;
+        status.textContent = `Searching ${market} · ${safeProgress}%`;
+
+        // Simulated score only — not real market analysis.
+        if (percent % 20 === 0 || percent === 1) {
+          marketScores.push({ market, score: 50 + Math.floor(Math.random() * 50) });
+        }
       }
 
-      const marketOptions = [
-        'Volatility 10 (1s)',
-        'Volatility 25 (1s)',
-        'Volatility 50 (1s)',
-        'Volatility 75 (1s)',
-        'Volatility 100 (1s)'
-      ];
-      const selectedCategory = document.querySelector('#tzScannerMarket').value;
-      const market = marketOptions.includes(selectedCategory)
-        ? selectedCategory
-        : marketOptions[Math.floor(Math.random() * marketOptions.length)];
-      const signals = ['MATCH', 'DIFFER', 'EVEN', 'ODD', 'OVER', 'UNDER'];
+      readyText.textContent = 'Best simulated market found';
+      status.textContent = 'Comparing simulated tick patterns…';
+      await wait(700);
+
+      let market;
+      if (selectedCategory !== 'AUTO') {
+        market = selectedCategory;
+      } else {
+        market = (marketScores.sort((a, b) => b.score - a.score)[0] || { market: marketOptions[0] }).market;
+      }
+
       const signal = signals[Math.floor(Math.random() * signals.length)];
       const digit = Math.floor(Math.random() * 10);
       const confidence = 80 + Math.floor(Math.random() * 16);
-
       scanResult = { market, signal, digit, confidence };
-      readyText.textContent = 'Scan complete';
-      document.querySelector('#tzResultMarket').textContent = market;
-      document.querySelector('#tzResultSignal').textContent = signal;
-      document.querySelector('#tzResultDigit').textContent = digit;
-      document.querySelector('#tzResultConfidence').textContent = `${confidence}%`;
+
+      $s('#tzResultMarket').textContent = market;
+      $s('#tzResultSignal').textContent = signal;
+      $s('#tzResultDigit').textContent = digit;
+      $s('#tzResultConfidence').textContent = `${confidence}%`;
       resultBox.classList.add('tz-show');
+      status.textContent = 'Simulated contract ready to load.';
+      readyText.textContent = 'Scan complete';
       loadButton.disabled = false;
+      scanRunning = false;
     };
 
-    document.querySelector('#tzLoadButton').onclick = () => {
-      if (!scanResult) return;
+    $s('#tzLoadButton').onclick = async () => {
+      if (!scanResult || scanRunning) return;
+      scanRunning = true;
+      $s('#tzLoadButton').disabled = true;
+      $s('#tzScanStatus').textContent = 'Loading contract into terminal…';
+      await wait(450);
 
       const marketSelect = document.querySelector('#marketSelect');
       if (marketSelect) {
@@ -1395,10 +1367,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      const digitButton = document.querySelector(`#contractDigits button[data-digit="${scanResult.digit}"]`) ||
-        [...document.querySelectorAll('#contractDigits button')].find(button => button.textContent.trim() === String(scanResult.digit));
-      if (digitButton) digitButton.click();
-
       const contractMap = {
         MATCH: 'match', DIFFER: 'match',
         EVEN: 'even', ODD: 'even',
@@ -1409,8 +1377,17 @@ document.addEventListener("DOMContentLoaded", () => {
         .find(button => (button.dataset.contract || '').toLowerCase() === wantedContract);
       if (contractTab) contractTab.click();
 
+      const digitButton = document.querySelector(`#contractDigits button[data-digit="${scanResult.digit}"]`) ||
+        [...document.querySelectorAll('#contractDigits button')].find(button => button.textContent.trim() === String(scanResult.digit));
+      if (digitButton) digitButton.click();
+
+      // Put the simulated contract details on the dashboard without placing a trade.
+      const contractLabel = document.querySelector('#selectedContract, #contractType, [data-selected-contract]');
+      if (contractLabel) contractLabel.textContent = scanResult.signal;
+
       close();
-      showScannerToast(`Deep Scanner loaded: ${scanResult.signal}, digit ${scanResult.digit}`);
+      showScannerToast(`Loaded ${scanResult.market} · ${scanResult.signal} · Digit ${scanResult.digit}`);
+      scanRunning = false;
     };
 
     function showScannerToast(message) {
@@ -1418,14 +1395,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (existing) {
         existing.textContent = message;
         existing.classList.add('show');
-        setTimeout(() => existing.classList.remove('show'), 2200);
+        setTimeout(() => existing.classList.remove('show'), 2600);
         return;
       }
       const t = document.createElement('div');
       t.textContent = message;
-      t.style.cssText = 'position:fixed;left:50%;bottom:78px;transform:translateX(-50%);z-index:10001;background:#102019;color:#e8fff3;border:1px solid #20543b;padding:11px 14px;border-radius:10px;font:700 12px system-ui;white-space:nowrap;';
+      t.style.cssText = 'position:fixed;left:50%;bottom:78px;transform:translateX(-50%);z-index:10001;background:#102019;color:#e8fff3;border:1px solid #20543b;padding:11px 14px;border-radius:10px;font:700 12px system-ui;white-space:nowrap;max-width:90vw;text-align:center;';
       document.body.appendChild(t);
-      setTimeout(() => t.remove(), 2200);
+      setTimeout(() => t.remove(), 2600);
     }
   }
 
