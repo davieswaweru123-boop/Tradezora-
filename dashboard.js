@@ -47,6 +47,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let mode = "AUTO";
 
+  // Continuous demo trading state. Only one contract stream can run at a time.
+  let continuousTrading = {
+    running: false,
+    type: null,
+    contract: null,
+    digit: null,
+    stake: null,
+    button: null,
+    timer: null
+  };
+
 
   /* =========================
      PROFILE
@@ -310,6 +321,10 @@ document.addEventListener("DOMContentLoaded", () => {
   contractTabs.forEach(button => {
 
     button.addEventListener("click", () => {
+
+      if (continuousTrading.running) {
+        stopContinuousTrading(false);
+      }
 
       contractTabs.forEach(tab =>
         tab.classList.remove("active")
@@ -844,31 +859,42 @@ document.addEventListener("DOMContentLoaded", () => {
      TRADE ENGINE
   ========================= */
 
-  function trade(type) {
+  function trade(type, options = {}) {
 
-    if (stake <= 0) {
+    const tradeStake = Number(
+      options.stake ?? stake
+    );
+
+    const tradeContract =
+      options.contract || contractType;
+
+    const tradeDigit = Number(
+      options.digit ?? selectedDigit
+    );
+
+    const tradeMode =
+      options.mode || mode;
+
+    if (tradeStake <= 0) {
 
       toast("Enter a valid stake.");
 
-      return;
+      return false;
 
     }
 
 
-    if (stake > balance) {
+    if (tradeStake > balance) {
 
       toast("Not enough demo balance.");
 
-      return;
+      return false;
 
     }
 
 
-    /*
-      Deduct stake immediately.
-    */
-
-    balance -= stake;
+    // Deduct the stake immediately.
+    balance -= tradeStake;
 
 
     localStorage.setItem(
@@ -879,17 +905,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const position = {
 
-      id: Date.now(),
+      id: Date.now() + Math.random(),
 
       type,
 
-      stake,
+      stake: tradeStake,
 
-      digit: selectedDigit,
+      digit: tradeDigit,
 
-      contract: contractType,
+      contract: tradeContract,
 
-      mode
+      mode: tradeMode
 
     };
 
@@ -907,25 +933,17 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-    /*
-      Simulate contract result after 5 seconds.
-    */
-
+    // Simulate the contract result after 5 seconds.
     setTimeout(() => {
 
       const index =
         positions.findIndex(
-          item =>
-            item.id === position.id
+          item => item.id === position.id
         );
 
 
       if (index < 0) return;
 
-
-      /*
-        Generate a final simulated digit.
-      */
 
       const finalDigit =
         Math.floor(
@@ -936,18 +954,15 @@ document.addEventListener("DOMContentLoaded", () => {
       let win = false;
 
 
-      if (contractType === "match") {
+      if (tradeContract === "match") {
 
         win =
-          finalDigit === selectedDigit &&
-          type === "MATCH"
-          ||
-          finalDigit !== selectedDigit &&
-          type === "DIFFER";
+          (finalDigit === tradeDigit && type === "MATCH") ||
+          (finalDigit !== tradeDigit && type === "DIFFER");
 
       }
 
-      else if (contractType === "even") {
+      else if (tradeContract === "even") {
 
         const even =
           finalDigit % 2 === 0;
@@ -958,7 +973,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       }
 
-      else if (contractType === "over") {
+      else if (tradeContract === "over") {
 
         const over =
           finalDigit > 5;
@@ -970,20 +985,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
 
-      /*
-        Demo payout.
-      */
-
       const profit =
         win
-          ? stake * 0.85
+          ? tradeStake * 0.85
           : 0;
 
 
       if (win) {
 
         balance +=
-          stake + profit;
+          tradeStake + profit;
 
         pnl += profit;
 
@@ -991,7 +1002,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       } else {
 
-        pnl -= stake;
+        pnl -= tradeStake;
 
         losses++;
 
@@ -1016,10 +1027,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       });
 
-
-      /*
-        Keep history manageable.
-      */
 
       if (history.length > 50) {
 
@@ -1048,6 +1055,162 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }, 5000);
 
+    return true;
+
+  }
+
+
+  /* =========================
+     CONTINUOUS DEMO TRADING
+  ========================= */
+
+  function buttonContractLabel(type) {
+
+    if (type === "EVEN") return "EVEN";
+    if (type === "ODD") return "ODD";
+    if (type === "OVER") return "OVER";
+    if (type === "UNDER") return "UNDER";
+    if (type === "DIFFER") return "DIFFER";
+
+    return "MATCH";
+
+  }
+
+
+  function setTradeButtonState(button, type, running) {
+
+    if (!button) return;
+
+    const label = buttonContractLabel(type);
+
+    button.innerHTML = running
+      ? `<strong>STOP ${label}</strong><span>Running</span>`
+      : `<strong>${label}</strong><span>Demo</span>`;
+
+    button.classList.toggle("continuous-active", running);
+    button.setAttribute(
+      "aria-label",
+      running ? `Stop continuous ${label} trading` : `Start ${label} trade`
+    );
+
+  }
+
+
+  function stopContinuousTrading(showToast = true) {
+
+    if (!continuousTrading.running) return;
+
+    if (continuousTrading.timer) {
+      clearTimeout(continuousTrading.timer);
+    }
+
+    const button = continuousTrading.button;
+    const type = continuousTrading.type;
+
+    continuousTrading = {
+      running: false,
+      type: null,
+      contract: null,
+      digit: null,
+      stake: null,
+      button: null,
+      timer: null
+    };
+
+    setTradeButtonState(button, type || "MATCH", false);
+
+    if (showToast) {
+      toast("Continuous trading stopped.");
+    }
+
+  }
+
+
+  function startContinuousTrading(type, button) {
+
+    // Pressing the active button again stops the stream.
+    if (
+      continuousTrading.running &&
+      continuousTrading.button === button
+    ) {
+      stopContinuousTrading(true);
+      return;
+    }
+
+    // Only one continuous stream runs at once.
+    if (continuousTrading.running) {
+      stopContinuousTrading(false);
+    }
+
+    const streamContract = contractType;
+    const streamDigit = selectedDigit;
+    const streamStake = Number(stake);
+
+    if (streamStake <= 0 || streamStake > balance) {
+      toast("Not enough demo balance for continuous trading.");
+      return;
+    }
+
+    continuousTrading = {
+      running: true,
+      type,
+      contract: streamContract,
+      digit: streamDigit,
+      stake: streamStake,
+      button,
+      timer: null
+    };
+
+    setTradeButtonState(button, type, true);
+
+    toast(`Continuous ${buttonContractLabel(type)} trading started.`);
+
+    // Open the first demo trade immediately.
+    const opened = trade(type, {
+      contract: streamContract,
+      digit: streamDigit,
+      stake: streamStake,
+      mode
+    });
+
+    if (!opened) {
+      stopContinuousTrading(false);
+      return;
+    }
+
+    scheduleNextContinuousTrade();
+
+  }
+
+
+  function scheduleNextContinuousTrade() {
+
+    if (!continuousTrading.running) return;
+
+    // Wait slightly longer than the 5-second demo result so trades don't overlap.
+    continuousTrading.timer = setTimeout(() => {
+
+      if (!continuousTrading.running) return;
+
+      const opened = trade(
+        continuousTrading.type,
+        {
+          contract: continuousTrading.contract,
+          digit: continuousTrading.digit,
+          stake: continuousTrading.stake,
+          mode
+        }
+      );
+
+      if (!opened) {
+        stopContinuousTrading(true);
+        return;
+      }
+
+      scheduleNextContinuousTrade();
+
+    }, 6500);
+
   }
 
 
@@ -1067,7 +1230,7 @@ document.addEventListener("DOMContentLoaded", () => {
       type = "OVER";
     }
 
-    trade(type);
+    startContinuousTrading(type, $("#match"));
 
   };
 
@@ -1084,7 +1247,7 @@ document.addEventListener("DOMContentLoaded", () => {
       type = "UNDER";
     }
 
-    trade(type);
+    startContinuousTrading(type, $("#differ"));
 
   };
 
@@ -1109,6 +1272,18 @@ document.addEventListener("DOMContentLoaded", () => {
   /* =========================
      INITIAL RENDER
   ========================= */
+
+  // Small visual cue for a running continuous button.
+  const continuousStyle = document.createElement("style");
+  continuousStyle.textContent = `
+    .market-actions button.continuous-active,
+    #match.continuous-active,
+    #differ.continuous-active {
+      border-color: #16e58a !important;
+      box-shadow: 0 0 0 2px rgba(22,229,138,.16), 0 8px 24px rgba(22,229,138,.12);
+    }
+  `;
+  document.head.appendChild(continuousStyle);
 
   renderLists();
 
