@@ -1,250 +1,291 @@
+/* =========================================================
+   TRADEZORA — DEMO INTERACTIONS
+========================================================= */
 
-async function loadDerivAccount() {
-  const box = $("derivAccountInfo");
-  if (!box) return;
+document.addEventListener("DOMContentLoaded", () => {
 
-  const sessionId = localStorage.getItem("tradezora_session_id");
-  if (!sessionId) return;
+  /* =======================================================
+     THEME BUTTON
+  ======================================================= */
 
-  box.style.display = "block";
-  box.textContent = "Loading Deriv account...";
+  const themeButton = document.querySelector(".theme-btn");
 
-  try {
-    const response = await fetch(
-      "https://tradezora-backend-use-1.onrender.com/api/account",
-      { headers: { "X-TradeZora-Session": sessionId } }
-    );
-    const data = await response.json();
+  if (themeButton) {
+    themeButton.addEventListener("click", () => {
 
-    if (!response.ok) throw new Error(data.error || "Account request failed.");
+      document.body.classList.toggle("light-mode");
 
-    const account = data?.data?.[0] || data?.accounts?.[0] || data?.account || null;
-    if (!account) {
-      box.textContent = "✓ Deriv connected — account details received.";
+      themeButton.textContent =
+        document.body.classList.contains("light-mode")
+          ? "☾"
+          : "☼";
+
+    });
+  }
+
+
+  /* =======================================================
+     DEMO MARKET PRICES
+  ======================================================= */
+
+  const markets = [
+    {
+      name: "BTC/USD",
+      price: 43256.78,
+      change: 2.34
+    },
+    {
+      name: "XAU/USD",
+      price: 2328.42,
+      change: 0.91
+    },
+    {
+      name: "EUR/USD",
+      price: 1.0842,
+      change: 0.12
+    },
+    {
+      name: "GBP/USD",
+      price: 1.2718,
+      change: -0.08
+    },
+    {
+      name: "SPX",
+      price: 5234.18,
+      change: 0.47
+    }
+  ];
+
+
+  /* =======================================================
+     MARKET PRICE SIMULATION
+  ======================================================= */
+
+  const priceElement =
+    document.querySelector(".price-info strong");
+
+  const changeElement =
+    document.querySelector(".price-info span");
+
+
+  function updateDemoPrice() {
+
+    if (!priceElement || !changeElement) {
       return;
     }
 
-    const balance = account.balance ?? account.available_balance ?? null;
-    const currency = account.currency || "USD";
-    const accountId = account.account_id || account.id || account.loginid || "";
-    const type = account.account_type || (account.demo_account ? "demo" : "");
+    const market = markets[0];
 
-    if (balance !== null && $("balance")) {
-      $("balance").textContent = `${Number(balance).toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      })} ${currency}`;
+    const movement =
+      (Math.random() - 0.5) * 40;
+
+    market.price += movement;
+
+    market.change =
+      market.change +
+      (Math.random() - 0.5) * 0.05;
+
+
+    priceElement.textContent =
+      "$" +
+      market.price.toLocaleString(
+        "en-US",
+        {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }
+      );
+
+
+    const sign =
+      market.change >= 0
+        ? "+"
+        : "";
+
+    changeElement.textContent =
+      sign +
+      market.change.toFixed(2) +
+      "%";
+
+
+    changeElement.style.color =
+      market.change >= 0
+        ? "#16e58a"
+        : "#ff5d6c";
+  }
+
+
+  setInterval(updateDemoPrice, 2500);
+
+
+  /* =======================================================
+     DEMO TRADE BUTTONS
+  ======================================================= */
+
+  const upButton =
+    document.querySelector(".up-button");
+
+  const downButton =
+    document.querySelector(".down-button");
+
+
+  function demoTrade(direction) {
+
+    const originalText =
+      direction === "UP"
+        ? "↗ UP"
+        : "↘ DOWN";
+
+    const button =
+      direction === "UP"
+        ? upButton
+        : downButton;
+
+
+    if (!button) {
+      return;
     }
 
-    const label = type === "demo" ? "Demo" : type === "real" ? "Real" : "Connected";
-    const balanceText = balance !== null
-      ? `Balance: ${Number(balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${currency}`
-      : "Account details received.";
 
-    box.innerHTML =
-      "<strong>Deriv Account Connected</strong><br>" +
-      (accountId ? "Account: " + accountId + "<br>" : "") +
-      balanceText + "<br>" +
-      "Type: " + label;
-  } catch (err) {
-    box.textContent = "✓ Deriv connected, but account data could not be loaded yet.";
-    console.error("Deriv account load failed:", err);
+    button.innerHTML =
+      direction === "UP"
+        ? "✓ UP <span>Selected</span>"
+        : "✓ DOWN <span>Selected</span>";
+
+
+    button.style.transform =
+      "scale(0.97)";
+
+
+    setTimeout(() => {
+
+      button.innerHTML =
+        originalText +
+        " <span>Demo</span>";
+
+      button.style.transform =
+        "";
+
+    }, 1200);
+
   }
-}
 
-async function exchangeConnectionCode() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get("connection_code");
 
-  if (!code) return false;
+  if (upButton) {
 
-  try {
-    const response = await fetch(
-      "https://tradezora-backend-use-1.onrender.com/api/session/exchange",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ connection_code: code })
-      }
+    upButton.addEventListener(
+      "click",
+      () => demoTrade("UP")
     );
 
-    const data = await response.json();
-
-    if (response.ok && data.session_id) {
-      localStorage.setItem("tradezora_session_id", data.session_id);
-      return true;
-    }
-
-    console.error("Session exchange failed:", data);
-  } catch (err) {
-    console.error("Session exchange failed:", err);
   }
 
-  return false;
-}
 
-function updateDerivStatus() {
-  const status = $("derivStatus");
-  if (!status) return;
+  if (downButton) {
 
-  const params = new URLSearchParams(window.location.search);
-  const connected = params.get("connected") === "1";
+    downButton.addEventListener(
+      "click",
+      () => demoTrade("DOWN")
+    );
 
-  if (connected || localStorage.getItem("tradezora_deriv_connected") === "1") {
-    localStorage.setItem("tradezora_deriv_connected", "1");
-    status.textContent = "✓ Deriv Connected";
-    status.style.background = "#e9f8ef";
-    status.style.color = "#187a43";
-  }
-}
-
-const DERIV_LOGIN_URL =
-  "https://tradezora-backend-use-1.onrender.com/auth/login";
-
-const markets = [
-  ["Volatility 100 Index", "5772.41", "+0.62%", "upv"],
-  ["Volatility 75 Index", "339.52", "+0.48%", "upv"],
-  ["Volatility 10 Index", "7356.20", "+0.31%", "upv"],
-  ["Boom 500 Index", "487.36", "+0.74%", "upv"],
-  ["Crash 500 Index", "522.41", "-0.53%", "dnv"],
-  ["EUR/USD", "1.0684", "+0.12%", "upv"],
-  ["GBP/USD", "1.2523", "+0.21%", "upv"],
-  ["USD/JPY", "149.82", "-0.08%", "dnv"],
-  ["Gold", "2,659.48", "+0.36%", "upv"],
-  ["Silver", "31.24", "+0.42%", "upv"]
-];
-
-const $ = (id) => document.getElementById(id);
-const toastEl = $("toast");
-
-function toast(message) {
-  if (!toastEl) {
-    alert(message);
-    return;
   }
 
-  toastEl.textContent = message;
-  toastEl.classList.add("show");
 
-  clearTimeout(window.__tradezoraToastTimer);
-  window.__tradezoraToastTimer = setTimeout(() => {
-    toastEl.classList.remove("show");
-  }, 2200);
-}
+  /* =======================================================
+     SMOOTH SCROLLING
+  ======================================================= */
 
-function connectDeriv() {
-  // Full-page navigation avoids popup blockers on mobile browsers.
-  window.location.assign(DERIV_LOGIN_URL);
-}
+  document
+    .querySelectorAll('a[href^="#"]')
+    .forEach(link => {
 
-function renderMarkets(query = "") {
-  const list = $("marketList");
-  if (!list) return;
+      link.addEventListener(
+        "click",
+        event => {
 
-  const q = query.trim().toLowerCase();
+          const targetId =
+            link.getAttribute("href");
 
-  list.innerHTML = markets
-    .filter((market) => market[0].toLowerCase().includes(q))
-    .map(
-      (market) => `
-        <div class="market">
-          <div>
-            <b>${market[0]}</b>
-            <small>${market[1]}</small>
-          </div>
-          <span class="${market[3]}">${market[2]}</span>
-        </div>
-      `
+          if (
+            !targetId ||
+            targetId === "#"
+          ) {
+            return;
+          }
+
+
+          const target =
+            document.querySelector(targetId);
+
+
+          if (target) {
+
+            event.preventDefault();
+
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "start"
+            });
+
+          }
+
+        }
+      );
+
+    });
+
+
+  /* =======================================================
+     BUTTON DEMO HANDLING
+  ======================================================= */
+
+  document
+    .querySelectorAll(
+      ".primary-btn, .secondary-btn, .get-started-btn"
     )
-    .join("");
-}
+    .forEach(button => {
 
-function trade(direction) {
-  const stakeElement = $("stake");
-  const stake = Math.max(
-    0,
-    parseFloat(stakeElement?.value || "1") || 1
+      button.addEventListener(
+        "click",
+        event => {
+
+          const href =
+            button.getAttribute("href");
+
+
+          if (
+            !href ||
+            href === "#"
+          ) {
+
+            event.preventDefault();
+
+            const hero =
+              document.querySelector("#markets");
+
+
+            if (hero) {
+
+              hero.scrollIntoView({
+                behavior: "smooth"
+              });
+
+            }
+
+          }
+
+        }
+      );
+
+    });
+
+
+  /* =======================================================
+     CONSOLE MESSAGE
+  ======================================================= */
+
+  console.log(
+    "TradeZora demo platform initialized."
   );
 
-  const payout = stake * 1.9;
-
-  if ($("payout")) {
-    $("payout").textContent = `$${payout.toFixed(2)}`;
-  }
-
-  if ($("openPnl")) {
-    $("openPnl").textContent = "$0.00";
-  }
-
-  toast(`Demo ${direction} trade placed — $${stake.toFixed(2)}`);
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-  updateDerivStatus();
-  const exchanged = await exchangeConnectionCode();
-  await loadDerivAccount();
-
-  if (exchanged || new URLSearchParams(window.location.search).get("connected") === "1") {
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-
-  renderMarkets();
-
-  $("connectBtn")?.addEventListener("click", connectDeriv);
-  $("mobileConnectBtn")?.addEventListener("click", connectDeriv);
-
-  $("marketSearch")?.addEventListener("input", (event) => {
-    renderMarkets(event.target.value);
-  });
-
-  $("realBtn")?.addEventListener("click", () => {
-    toast(
-      "Real trading requires an authenticated Deriv account and explicit confirmation."
-    );
-  });
-
-  $("createBtn")?.addEventListener("click", () => {
-    toast("Strategy builder coming next.");
-  });
-
-  $("stopAll")?.addEventListener("click", () => {
-    if ($("bot")) $("bot").checked = false;
-    toast("All automation stopped.");
-  });
-
-  $("stopBtn")?.addEventListener("click", () => {
-    if ($("bot")) $("bot").checked = false;
-    toast("Strategy stopped.");
-  });
-
-  $("pauseBtn")?.addEventListener("click", () => {
-    toast("Strategy paused.");
-  });
-
-  $("bot")?.addEventListener("change", (event) => {
-    toast(
-      event.target.checked
-        ? "Demo automation started."
-        : "Demo automation stopped."
-    );
-  });
-
-  $("upBtn")?.addEventListener("click", () => trade("UP"));
-  $("downBtn")?.addEventListener("click", () => trade("DOWN"));
-
-  $("stake")?.addEventListener("input", (event) => {
-    const value = parseFloat(event.target.value) || 0;
-    if ($("payout")) {
-      $("payout").textContent = `$${(value * 1.9).toFixed(2)}`;
-    }
-  });
-
-  document.querySelectorAll("[data-toast]").forEach((element) => {
-    element.addEventListener("click", (event) => {
-      event.preventDefault();
-      toast(element.dataset.toast);
-    });
-  });
-
-  console.log("TradeZora frontend loaded.");
 });
