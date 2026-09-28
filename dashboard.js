@@ -15,10 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  /*
-    Keep the existing user's balance if they already have one.
-    New demo accounts receive $10,000.
-  */
   let storedBalance = localStorage.getItem("tradezoraDemoBalance");
 
   if (storedBalance === null) {
@@ -32,21 +28,22 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.getItem("tradezoraDemoStake") || 10
   );
 
-  let price = 1000;
+  let pnl = 0;
+  let wins = 0;
+  let losses = 0;
 
   let history = [];
   let positions = [];
 
   let selectedDigit = 0;
-
-  let pnl = 0;
-  let wins = 0;
-  let losses = 0;
-
   let contractType = "match";
-
   let mode = "AUTO";
 
+  let currentMarket = "Volatility 10 (1s)";
+  let price = 1000;
+
+  let chartTimer = null;
+  let tradeTimers = [];
 
   /* =========================
      PROFILE
@@ -74,6 +71,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
+  function signedMoney(value) {
+    return value >= 0
+      ? "+" + money(value)
+      : "-" + money(Math.abs(value));
+  }
+
+
   function toast(message) {
 
     const element = $("#toast");
@@ -81,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!element) return;
 
     element.textContent = message;
-
     element.classList.add("show");
 
     setTimeout(() => {
@@ -93,23 +96,23 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderBalance() {
 
     $("#balance").textContent = money(balance);
-
     $("#stake").textContent = money(stake);
 
     const pnlElement = $("#sessionPnl");
 
-    pnlElement.textContent =
-      (pnl >= 0 ? "+" : "") + money(pnl);
+    if (pnlElement) {
+      pnlElement.textContent = signedMoney(pnl);
+      pnlElement.style.color =
+        pnl >= 0 ? "#16e58a" : "#ff5d6c";
+    }
 
-    pnlElement.style.color =
-      pnl >= 0 ? "#16e58a" : "#ff5d6c";
+    const record = $("#sessionRecord");
 
-    $("#sessionRecord").textContent =
-      `${wins}W · ${losses}L`;
+    if (record) {
+      record.textContent =
+        `${wins}W · ${losses}L`;
+    }
   }
-
-
-  renderBalance();
 
 
   /* =========================
@@ -120,18 +123,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const overlay = $("#overlay");
 
   $("#menuBtn").onclick = () => {
-
     menu.classList.add("open");
     overlay.classList.add("show");
-
   };
 
 
   $("#closeMenu").onclick = () => {
-
     menu.classList.remove("open");
     overlay.classList.remove("show");
-
   };
 
 
@@ -144,10 +143,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("#logout").onclick = () => {
 
+    cancelAllTradeTimers();
+
     localStorage.removeItem("tradezoraDemoUser");
 
     location.href = "auth.html";
-
   };
 
 
@@ -156,9 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ========================= */
 
   $("#depositBtn").onclick = () => {
-
     toast("Demo account only — real deposits are disabled.");
-
   };
 
 
@@ -167,10 +165,133 @@ document.addEventListener("DOMContentLoaded", () => {
   ========================= */
 
   $("#themeSwitch").onclick = () => {
-
     toast("Dark theme is active.");
-
   };
+
+
+  /* =========================
+     RESET DEMO BUTTON
+  ========================= */
+
+  function createResetButton() {
+
+    let resetButton = $("#resetDemo");
+
+    if (resetButton) return resetButton;
+
+    resetButton = document.createElement("button");
+
+    resetButton.id = "resetDemo";
+    resetButton.className = "reset-demo";
+    resetButton.textContent = "↻ Reset Demo";
+
+    const logout = $("#logout");
+
+    if (logout && logout.parentNode) {
+      logout.parentNode.insertBefore(resetButton, logout);
+    }
+
+    return resetButton;
+  }
+
+
+  const resetDemoButton = createResetButton();
+
+
+  function cancelAllTradeTimers() {
+
+    tradeTimers.forEach(timer => {
+      clearTimeout(timer);
+    });
+
+    tradeTimers = [];
+  }
+
+
+  function resetDemo() {
+
+    const confirmed = confirm(
+      "Reset the entire TradeZora demo?\n\n" +
+      "This will restore the $10,000 demo balance " +
+      "and clear positions, history and session results."
+    );
+
+    if (!confirmed) return;
+
+    cancelAllTradeTimers();
+
+    balance = 10000;
+    stake = 10;
+
+    pnl = 0;
+    wins = 0;
+    losses = 0;
+
+    history = [];
+    positions = [];
+
+    selectedDigit = 0;
+    contractType = "match";
+    mode = "AUTO";
+
+    currentMarket = "Volatility 10 (1s)";
+    price = 1000;
+
+    localStorage.setItem(
+      "tradezoraDemoBalance",
+      "10000"
+    );
+
+    localStorage.setItem(
+      "tradezoraDemoStake",
+      "10"
+    );
+
+    const marketSelect = $("#marketSelect");
+
+    if (marketSelect) {
+      marketSelect.value = "Volatility 10 (1s)";
+    }
+
+    contractTabs.forEach(tab => {
+      tab.classList.remove("active");
+
+      if (tab.dataset.contract === "match") {
+        tab.classList.add("active");
+      }
+    });
+
+    $("#match").innerHTML =
+      "<strong>MATCH</strong><span>Demo</span>";
+
+    $("#differ").innerHTML =
+      "<strong>DIFFER</strong><span>Demo</span>";
+
+    $("#auto").classList.add("active");
+    $("#manual").classList.remove("active");
+
+    if (contractDigits.children.length) {
+
+      [...contractDigits.children].forEach(
+        button => button.classList.remove("active")
+      );
+
+      contractDigits.children[0].classList.add("active");
+    }
+
+    clearBotResult();
+
+    resetChart();
+
+    renderBalance();
+    renderLists();
+    generateProbabilities();
+
+    toast("Demo account reset to $10,000.");
+  }
+
+
+  resetDemoButton.onclick = resetDemo;
 
 
   /* =========================
@@ -185,38 +306,33 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!probabilityContainer) return;
 
     const values = [];
-
     let remaining = 100;
 
     for (let i = 0; i < 10; i++) {
 
       if (i === 9) {
 
-        values.push(Number(remaining.toFixed(1)));
+        values.push(
+          Number(remaining.toFixed(1))
+        );
 
       } else {
 
-        const value =
-          Math.max(
-            4,
-            Math.min(
-              17,
-              7 + (Math.random() - 0.5) * 6
-            )
-          );
+        const value = Math.max(
+          4,
+          Math.min(
+            17,
+            7 + (Math.random() - 0.5) * 6
+          )
+        );
 
-        values.push(Number(value.toFixed(1)));
+        values.push(
+          Number(value.toFixed(1))
+        );
 
         remaining -= value;
-
       }
-
     }
-
-
-    /*
-      Normalize probabilities so total = 100.
-    */
 
     const total =
       values.reduce((a, b) => a + b, 0);
@@ -224,9 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const normalized =
       values.map(v => (v / total) * 100);
 
-
     probabilityContainer.innerHTML = "";
-
 
     normalized.forEach((probability, digit) => {
 
@@ -246,13 +360,8 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       probabilityContainer.appendChild(element);
-
     });
-
   }
-
-
-  generateProbabilities();
 
 
   /* =========================
@@ -269,7 +378,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.createElement("button");
 
     button.textContent = i;
-
     button.dataset.digit = i;
 
     button.onclick = () => {
@@ -286,11 +394,9 @@ document.addEventListener("DOMContentLoaded", () => {
       generateProbabilities();
 
       toast(`Digit ${i} selected.`);
-
     };
 
     contractDigits.appendChild(button);
-
   }
 
 
@@ -320,40 +426,45 @@ document.addEventListener("DOMContentLoaded", () => {
       contractType =
         button.dataset.contract || "match";
 
+      updateContractButtons();
 
-      if (contractType === "even") {
-
-        $("#match").innerHTML =
-          "<strong>EVEN</strong><span>Demo</span>";
-
-        $("#differ").innerHTML =
-          "<strong>ODD</strong><span>Demo</span>";
-
-      }
-
-      else if (contractType === "over") {
-
-        $("#match").innerHTML =
-          "<strong>OVER</strong><span>Demo</span>";
-
-        $("#differ").innerHTML =
-          "<strong>UNDER</strong><span>Demo</span>";
-
-      }
-
-      else {
-
-        $("#match").innerHTML =
-          "<strong>MATCH</strong><span>Demo</span>";
-
-        $("#differ").innerHTML =
-          "<strong>DIFFER</strong><span>Demo</span>";
-
-      }
-
+      generateProbabilities();
     });
 
   });
+
+
+  function updateContractButtons() {
+
+    if (contractType === "even") {
+
+      $("#match").innerHTML =
+        "<strong>EVEN</strong><span>Demo</span>";
+
+      $("#differ").innerHTML =
+        "<strong>ODD</strong><span>Demo</span>";
+
+    }
+
+    else if (contractType === "over") {
+
+      $("#match").innerHTML =
+        "<strong>OVER</strong><span>Demo</span>";
+
+      $("#differ").innerHTML =
+        "<strong>UNDER</strong><span>Demo</span>";
+
+    }
+
+    else {
+
+      $("#match").innerHTML =
+        "<strong>MATCH</strong><span>Demo</span>";
+
+      $("#differ").innerHTML =
+        "<strong>DIFFER</strong><span>Demo</span>";
+    }
+  }
 
 
   /* =========================
@@ -368,7 +479,6 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#manual").classList.remove("active");
 
     toast("AUTO mode selected.");
-
   };
 
 
@@ -380,7 +490,6 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#auto").classList.remove("active");
 
     toast("MANUAL mode selected.");
-
   };
 
 
@@ -401,7 +510,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     renderBalance();
-
   };
 
 
@@ -419,7 +527,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     renderBalance();
-
   };
 
 
@@ -427,65 +534,337 @@ document.addEventListener("DOMContentLoaded", () => {
      AI BOT
   ========================= */
 
-  $("#scanner").onclick = () => {
+  const demoMarkets = [
+    "Volatility 10 (1s)",
+    "Volatility 25 (1s)",
+    "Volatility 50 (1s)",
+    "Volatility 75 (1s)",
+    "Volatility 100 (1s)"
+  ];
+
+
+  let botRunning = false;
+
+
+  function createBotResultPanel() {
+
+    let panel = $("#botResult");
+
+    if (panel) return panel;
+
+    panel = document.createElement("div");
+
+    panel.id = "botResult";
+    panel.className = "bot-result";
+
+    panel.hidden = true;
+
+    panel.innerHTML = `
+      <div class="bot-result-head">
+        <strong>🤖 AI BOT RESULT</strong>
+        <button id="closeBotResult">×</button>
+      </div>
+
+      <div class="bot-status" id="botStatus">
+        Analysis complete
+      </div>
+
+      <div class="bot-info">
+
+        <div>
+          <small>Market</small>
+          <strong id="botMarket">—</strong>
+        </div>
+
+        <div>
+          <small>Trade Type</small>
+          <strong id="botTradeType">—</strong>
+        </div>
+
+        <div>
+          <small>Signal</small>
+          <strong id="botSignal">—</strong>
+        </div>
+
+        <div>
+          <small>Digit</small>
+          <strong id="botDigit">—</strong>
+        </div>
+
+        <div>
+          <small>Confidence</small>
+          <strong id="botConfidence">—</strong>
+        </div>
+
+      </div>
+
+      <p id="botExplanation">
+        The AI BOT provides simulated demo analysis only.
+        You decide whether to trade.
+      </p>
+    `;
+
+    const scanner = $("#scanner");
+
+    scanner.parentNode.insertBefore(
+      panel,
+      scanner.nextSibling
+    );
+
+    $("#closeBotResult").onclick = () => {
+      clearBotResult();
+    };
+
+    return panel;
+  }
+
+
+  function clearBotResult() {
+
+    const panel = $("#botResult");
+
+    if (!panel) return;
+
+    panel.hidden = true;
+  }
+
+
+  function marketBasePrice(market) {
+
+    const prices = {
+      "Volatility 10 (1s)": 1000,
+      "Volatility 25 (1s)": 2500,
+      "Volatility 50 (1s)": 5000,
+      "Volatility 75 (1s)": 7500,
+      "Volatility 100 (1s)": 10000
+    };
+
+    return prices[market] || 1000;
+  }
+
+
+  function loadMarket(market) {
+
+    currentMarket = market;
+
+    const selector = $("#marketSelect");
+
+    if (selector) {
+      selector.value = market;
+    }
+
+    price = marketBasePrice(market);
+
+    resetChart();
+
+    toast(`${market} loaded into terminal.`);
+  }
+
+
+  function randomContract() {
+
+    const contracts = [
+      "MATCH",
+      "DIFFER",
+      "EVEN",
+      "ODD",
+      "OVER",
+      "UNDER"
+    ];
+
+    return contracts[
+      Math.floor(Math.random() * contracts.length)
+    ];
+  }
+
+
+  function applyBotContract(type) {
+
+    if (
+      type === "MATCH" ||
+      type === "DIFFER"
+    ) {
+
+      contractType = "match";
+
+    } else if (
+      type === "EVEN" ||
+      type === "ODD"
+    ) {
+
+      contractType = "even";
+
+    } else {
+
+      contractType = "over";
+    }
+
+    contractTabs.forEach(tab => {
+
+      tab.classList.remove("active");
+
+      if (
+        tab.dataset.contract === contractType
+      ) {
+        tab.classList.add("active");
+      }
+    });
+
+    updateContractButtons();
+  }
+
+
+  async function runAIBot() {
+
+    if (botRunning) return;
+
+    botRunning = true;
 
     const button = $("#scanner");
 
     button.disabled = true;
 
-    toast("AI BOT analyzing demo market...");
+    clearBotResult();
 
+    toast("AI BOT scanning demo markets...");
 
-    setTimeout(() => {
+    const panel = createBotResultPanel();
 
-      const suggestedDigit =
-        Math.floor(Math.random() * 10);
+    panel.hidden = false;
 
-      selectedDigit = suggestedDigit;
+    $("#botStatus").textContent =
+      "Scanning available demo markets...";
 
+    $("#botMarket").textContent = "Scanning...";
+    $("#botTradeType").textContent = "—";
+    $("#botSignal").textContent = "—";
+    $("#botDigit").textContent = "—";
+    $("#botConfidence").textContent = "—";
 
-      [...contractDigits.children]
-        .forEach(element =>
-          element.classList.remove("active")
-        );
+    await wait(700);
 
-      contractDigits
-        .children[suggestedDigit]
-        .classList.add("active");
+    for (const market of demoMarkets) {
 
+      $("#botStatus").textContent =
+        `Scanning ${market}...`;
 
-      generateProbabilities();
+      $("#botMarket").textContent = market;
 
-      toast(
-        `AI BOT demo signal: digit ${suggestedDigit}`
+      await wait(350);
+    }
+
+    /* Select market */
+
+    const selectedMarket =
+      demoMarkets[
+        Math.floor(
+          Math.random() * demoMarkets.length
+        )
+      ];
+
+    loadMarket(selectedMarket);
+
+    $("#botMarket").textContent =
+      selectedMarket;
+
+    $("#botStatus").textContent =
+      "Market selected. Loading data...";
+
+    await wait(700);
+
+    /* Select contract */
+
+    const selectedContract =
+      randomContract();
+
+    applyBotContract(selectedContract);
+
+    $("#botTradeType").textContent =
+      selectedContract;
+
+    await wait(500);
+
+    /* Select digit */
+
+    const suggestedDigit =
+      Math.floor(Math.random() * 10);
+
+    selectedDigit = suggestedDigit;
+
+    [...contractDigits.children]
+      .forEach(element =>
+        element.classList.remove("active")
       );
 
-      button.disabled = false;
+    contractDigits
+      .children[suggestedDigit]
+      .classList.add("active");
 
-    }, 1200);
+    generateProbabilities();
 
-  };
+    $("#botDigit").textContent =
+      suggestedDigit;
+
+    $("#botSignal").textContent =
+      selectedContract === "MATCH"
+        ? `Match ${suggestedDigit}`
+        : selectedContract;
+
+    await wait(600);
+
+    /* Simulated confidence */
+
+    const confidence =
+      Math.floor(
+        Math.random() * 16
+      ) + 80;
+
+    $("#botConfidence").textContent =
+      `${confidence}%`;
+
+    $("#botStatus").textContent =
+      "Analysis complete";
+
+    $("#botExplanation").textContent =
+      `The demo AI BOT selected ${selectedMarket}, ` +
+      `identified ${selectedContract} as the simulated signal ` +
+      `and selected digit ${suggestedDigit}. ` +
+      `Confidence shown is simulated demo confidence, ` +
+      `not a real probability of winning. ` +
+      `No trade was placed automatically.`;
+
+    toast("AI BOT analysis complete.");
+
+    button.disabled = false;
+
+    botRunning = false;
+  }
+
+
+  function wait(milliseconds) {
+
+    return new Promise(resolve =>
+      setTimeout(resolve, milliseconds)
+    );
+  }
+
+
+  $("#scanner").onclick = runAIBot;
 
 
   /* =========================
      CHART
   ========================= */
 
-  const chart =
-    $("#priceChart");
+  const chart = $("#priceChart");
+  const ctx = chart.getContext("2d");
 
-  const ctx =
-    chart.getContext("2d");
-
-
-  let series =
-    Array.from(
-      { length: 100 },
-      () =>
-        price +
-        (Math.random() - 0.5) * 120
-    );
-
+  let series = Array.from(
+    { length: 100 },
+    () =>
+      price +
+      (Math.random() - 0.5) * 120
+  );
 
   let chartZoom = 1;
 
@@ -514,7 +893,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     drawChart();
-
   }
 
 
@@ -528,14 +906,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!width || !height) return;
 
-
     ctx.clearRect(
       0,
       0,
       width,
       height
     );
-
 
     const visibleCount =
       Math.max(
@@ -545,10 +921,8 @@ document.addEventListener("DOMContentLoaded", () => {
         )
       );
 
-
     const visible =
       series.slice(-visibleCount);
-
 
     const min =
       Math.min(...visible) - 20;
@@ -556,13 +930,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const max =
       Math.max(...visible) + 20;
 
-
-    /*
-      Main line
-    */
-
     ctx.beginPath();
-
 
     visible.forEach((value, index) => {
 
@@ -570,28 +938,20 @@ document.addEventListener("DOMContentLoaded", () => {
         index *
         (width / (visible.length - 1));
 
-
       const y =
         height -
         ((value - min) /
           (max - min)) *
-          height *
-          0.82 -
+        height *
+        0.82 -
         height * 0.05;
 
-
       if (index === 0) {
-
         ctx.moveTo(x, y);
-
       } else {
-
         ctx.lineTo(x, y);
-
       }
-
     });
-
 
     ctx.strokeStyle =
       "#16e58a";
@@ -600,13 +960,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ctx.stroke();
 
-
-    /*
-      Glow line
-    */
+    /* Glow */
 
     ctx.beginPath();
-
 
     visible.forEach((value, index) => {
 
@@ -618,23 +974,16 @@ document.addEventListener("DOMContentLoaded", () => {
         height -
         ((value - min) /
           (max - min)) *
-          height *
-          0.82 -
+        height *
+        0.82 -
         height * 0.05;
 
-
       if (index === 0) {
-
         ctx.moveTo(x, y);
-
       } else {
-
         ctx.lineTo(x, y);
-
       }
-
     });
-
 
     ctx.strokeStyle =
       "rgba(22,229,138,0.18)";
@@ -642,7 +991,21 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.lineWidth = 7;
 
     ctx.stroke();
+  }
 
+
+  function resetChart() {
+
+    series = Array.from(
+      { length: 100 },
+      () =>
+        price +
+        (Math.random() - 0.5) * 120
+    );
+
+    chartZoom = 1;
+
+    drawChart();
   }
 
 
@@ -658,36 +1021,30 @@ document.addEventListener("DOMContentLoaded", () => {
      SIMULATED MARKET
   ========================= */
 
-  setInterval(() => {
+  chartTimer = setInterval(() => {
 
     const oldPrice = price;
 
     price +=
       (Math.random() - 0.48) * 18;
 
-
     series.push(price);
-
     series.shift();
-
 
     const change =
       ((price - oldPrice) /
         oldPrice) *
       100;
 
-
     $("#pct").textContent =
       (change >= 0 ? "+" : "") +
       change.toFixed(3) +
       "%";
 
-
     $("#pct").style.color =
       change >= 0
         ? "#16e58a"
         : "#ff5d6c";
-
 
     generateProbabilities();
 
@@ -709,7 +1066,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
     drawChart();
-
   };
 
 
@@ -722,7 +1078,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
     drawChart();
-
   };
 
 
@@ -733,7 +1088,6 @@ document.addEventListener("DOMContentLoaded", () => {
     drawChart();
 
     toast("Chart reset.");
-
   };
 
 
@@ -746,10 +1100,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const market =
       $("#marketSelect").value;
 
-    toast(
-      `${market} selected.`
-    );
-
+    loadMarket(market);
   };
 
 
@@ -777,6 +1128,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${position.type}
               • ${money(position.stake)}
               • digit ${position.digit}
+              • ${position.market}
             </span>
 
             <strong>
@@ -793,7 +1145,6 @@ document.addEventListener("DOMContentLoaded", () => {
         `<div class="empty">
           No open positions.
         </div>`;
-
     }
 
 
@@ -810,7 +1161,8 @@ document.addEventListener("DOMContentLoaded", () => {
               <span>
                 ${trade.type}
                 • ${money(trade.stake)}
-                • ${trade.digit}
+                • digit ${trade.digit}
+                • ${trade.market}
               </span>
 
               <strong
@@ -834,9 +1186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `<div class="empty">
           No trades yet.
         </div>`;
-
     }
-
   }
 
 
@@ -849,27 +1199,41 @@ document.addEventListener("DOMContentLoaded", () => {
     if (stake <= 0) {
 
       toast("Enter a valid stake.");
-
       return;
-
     }
 
 
     if (stake > balance) {
 
       toast("Not enough demo balance.");
-
       return;
-
     }
 
 
     /*
-      Deduct stake immediately.
+      IMPORTANT:
+      Save the contract information NOW.
+      Changing the terminal later will not
+      change an already-open position.
     */
 
-    balance -= stake;
+    const tradeContract =
+      contractType;
 
+    const tradeDigit =
+      selectedDigit;
+
+    const tradeMarket =
+      currentMarket;
+
+    const tradeStake =
+      stake;
+
+    const tradeMode =
+      mode;
+
+
+    balance -= tradeStake;
 
     localStorage.setItem(
       "tradezoraDemoBalance",
@@ -883,35 +1247,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
       type,
 
-      stake,
+      stake: tradeStake,
 
-      digit: selectedDigit,
+      digit: tradeDigit,
 
-      contract: contractType,
+      contract: tradeContract,
 
-      mode
+      market: tradeMarket,
 
+      mode: tradeMode
     };
 
 
     positions.push(position);
 
-
     renderBalance();
-
     renderLists();
-
 
     toast(
       `${type} demo position opened.`
     );
 
 
-    /*
-      Simulate contract result after 5 seconds.
-    */
+    const timer = setTimeout(() => {
 
-    setTimeout(() => {
+      tradeTimers =
+        tradeTimers.filter(
+          item => item !== timer
+        );
 
       const index =
         positions.findIndex(
@@ -919,13 +1282,8 @@ document.addEventListener("DOMContentLoaded", () => {
             item.id === position.id
         );
 
-
       if (index < 0) return;
 
-
-      /*
-        Generate a final simulated digit.
-      */
 
       const finalDigit =
         Math.floor(
@@ -936,54 +1294,64 @@ document.addEventListener("DOMContentLoaded", () => {
       let win = false;
 
 
-      if (contractType === "match") {
+      if (tradeContract === "match") {
 
         win =
-          finalDigit === selectedDigit &&
-          type === "MATCH"
-          ||
-          finalDigit !== selectedDigit &&
-          type === "DIFFER";
-
+          (
+            finalDigit === tradeDigit &&
+            type === "MATCH"
+          ) ||
+          (
+            finalDigit !== tradeDigit &&
+            type === "DIFFER"
+          );
       }
 
-      else if (contractType === "even") {
+
+      else if (tradeContract === "even") {
 
         const even =
           finalDigit % 2 === 0;
 
         win =
-          (even && type === "EVEN") ||
-          (!even && type === "ODD");
-
+          (
+            even &&
+            type === "EVEN"
+          ) ||
+          (
+            !even &&
+            type === "ODD"
+          );
       }
 
-      else if (contractType === "over") {
+
+      else if (tradeContract === "over") {
 
         const over =
           finalDigit > 5;
 
         win =
-          (over && type === "OVER") ||
-          (!over && type === "UNDER");
-
+          (
+            over &&
+            type === "OVER"
+          ) ||
+          (
+            !over &&
+            type === "UNDER"
+          );
       }
 
 
-      /*
-        Demo payout.
-      */
-
       const profit =
         win
-          ? stake * 0.85
+          ? tradeStake * 0.85
           : 0;
 
 
       if (win) {
 
         balance +=
-          stake + profit;
+          tradeStake + profit;
 
         pnl += profit;
 
@@ -991,10 +1359,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       } else {
 
-        pnl -= stake;
+        pnl -= tradeStake;
 
         losses++;
-
       }
 
 
@@ -1013,18 +1380,11 @@ document.addEventListener("DOMContentLoaded", () => {
         win,
 
         profit
-
       });
 
 
-      /*
-        Keep history manageable.
-      */
-
       if (history.length > 50) {
-
         history.shift();
-
       }
 
 
@@ -1035,7 +1395,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       renderBalance();
-
       renderLists();
 
 
@@ -1045,9 +1404,10 @@ document.addEventListener("DOMContentLoaded", () => {
           : `Demo trade lost — digit ${finalDigit}`
       );
 
-
     }, 5000);
 
+
+    tradeTimers.push(timer);
   }
 
 
@@ -1068,7 +1428,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     trade(type);
-
   };
 
 
@@ -1085,7 +1444,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     trade(type);
-
   };
 
 
@@ -1095,14 +1453,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("#clearPositions").onclick = () => {
 
+    if (!positions.length) {
+      toast("No open positions.");
+      return;
+    }
+
     positions = [];
 
     renderLists();
 
-    toast(
-      "Open positions cleared from view."
-    );
-
+    toast("Open positions cleared from view.");
   };
 
 
@@ -1110,11 +1470,13 @@ document.addEventListener("DOMContentLoaded", () => {
      INITIAL RENDER
   ========================= */
 
-  renderLists();
-
   renderBalance();
 
+  renderLists();
+
   generateProbabilities();
+
+  updateContractButtons();
 
 
   console.log(
