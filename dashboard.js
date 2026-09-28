@@ -779,14 +779,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderLists() {
 
-    const positionsList =
-      $("#positionsList");
+    const positionsList = $("#positionsList");
+    const historyList = $("#historyList");
 
-    const historyList =
-      $("#historyList");
+    // Positions and History now have their own pages.
+    // Keep this function safe when those containers are not on Trade page.
+    if (!positionsList && !historyList) return;
 
-
-    if (positions.length) {
+    if (positionsList && positions.length) {
 
       positionsList.innerHTML =
         positions.map(position => `
@@ -807,7 +807,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         `).join("");
 
-    } else {
+    } else if (positionsList) {
 
       positionsList.innerHTML =
         `<div class="empty">
@@ -817,7 +817,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    if (history.length) {
+    if (historyList && history.length) {
 
       historyList.innerHTML =
         history
@@ -848,7 +848,7 @@ document.addEventListener("DOMContentLoaded", () => {
           `)
           .join("");
 
-    } else {
+    } else if (historyList) {
 
       historyList.innerHTML =
         `<div class="empty">
@@ -1266,18 +1266,15 @@ document.addEventListener("DOMContentLoaded", () => {
      CLEAR POSITIONS
   ========================= */
 
-  $("#clearPositions").onclick = () => {
-
-    positions = [];
-    saveTradeState();
-
-    renderLists();
-
-    toast(
-      "Open positions cleared from view."
-    );
-
-  };
+  const clearPositionsButton = $("#clearPositions");
+  if (clearPositionsButton) {
+    clearPositionsButton.onclick = () => {
+      positions = [];
+      saveTradeState();
+      renderLists();
+      toast("Open positions cleared from view.");
+    };
+  }
 
 
   /* =========================
@@ -1341,3 +1338,260 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       .tz-s-head { display:flex; align-items:center; gap:11px; padding:17px 18px 14px; border-bottom:1px solid #222c40; }
       .tz-s-icon { width:52px; height:52px; flex:0 0 52px; display:grid; place-items:center; border-radius:15px; background:linear-gradient(135deg,#7b35ff,#3f72ff); box-shadow:0 8px 22px rgba(96,58,255,.25); font-size:27px; font-weight:800; }
+      .tz-s-title { min-width:0; flex:1; }
+      .tz-s-title h2 { margin:0; font-size:22px; line-height:1.05; }
+      .tz-s-title p { margin:5px 0 0; color:#7e879b; font-size:12px; }
+      #tzScannerClose { width:36px; height:36px; flex:0 0 36px; border:0; background:transparent; color:#7d879d; font-size:29px; cursor:pointer; line-height:1; }
+      .tz-s-body { padding:17px 18px 18px; }
+      .tz-s-info { background:#182133; border-radius:16px; padding:15px 16px; color:#9da7bc; font-size:13px; line-height:1.55; margin-bottom:18px; }
+      .tz-s-info strong { color:#f2f5ff; }
+      .tz-s-label { display:block; margin:0 0 8px; font-size:14px; font-weight:800; }
+      #tzScannerMarket { width:100%; box-sizing:border-box; background:#0b101b; color:#eef2fb; border:1px solid #273248; border-radius:13px; padding:12px 13px; font-size:14px; outline:none; }
+      .tz-s-ready { display:flex; justify-content:space-between; align-items:center; margin:22px 0 9px; font-size:14px; font-weight:800; }
+      #tzScanCount { color:#8b96ad; }
+      .tz-progress { height:8px; background:#1b2638; border-radius:99px; overflow:hidden; }
+      #tzProgressBar { width:0%; height:100%; border-radius:99px; background:linear-gradient(90deg,#6451ff,#278fff); transition:width .08s linear; }
+      #tzScanStatus { margin-top:8px; min-height:18px; color:#8290a9; font-size:11px; text-align:center; }
+      #tzScanButton, #tzLoadButton { width:100%; border-radius:14px; padding:14px 13px; font-size:15px; font-weight:900; cursor:pointer; margin-top:17px; }
+      #tzScanButton { border:0; color:#fff; background:linear-gradient(100deg,#5e4cff,#278fff); box-shadow:0 9px 22px rgba(54,91,255,.20); }
+      #tzScanButton:disabled { opacity:.62; cursor:wait; }
+      #tzLoadButton { border:1px solid #41516d; color:#f4f7ff; background:#172236; }
+      #tzLoadButton:disabled { opacity:.42; cursor:not-allowed; }
+      .tz-result { display:none; margin-top:14px; padding:13px; border:1px solid #293651; border-radius:14px; background:#111a2a; }
+      .tz-result.tz-show { display:block; }
+      .tz-result-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+      .tz-result-item { padding:9px; border-radius:10px; background:#0a101b; }
+      .tz-result-item small { display:block; color:#778197; margin-bottom:4px; font-size:10px; }
+      .tz-result-item strong { font-size:13px; }
+      .tz-s-note { margin-top:12px; color:#68748a; font-size:10px; line-height:1.45; }
+      @media (max-width:650px) {
+        #tzScannerModal { padding:10px; }
+        #tzScannerCard { width:min(100%, 430px); max-height:82vh; border-radius:18px; }
+        .tz-s-head { padding:14px 15px 12px; }
+        .tz-s-icon { width:46px; height:46px; flex-basis:46px; border-radius:13px; font-size:24px; }
+        .tz-s-title h2 { font-size:20px; }
+        .tz-s-title p { font-size:11px; }
+        .tz-s-body { padding:14px 15px 16px; }
+        .tz-s-info { padding:13px 14px; font-size:12px; margin-bottom:15px; }
+        .tz-s-ready { margin-top:18px; }
+        #tzScanButton, #tzLoadButton { margin-top:14px; padding:13px 12px; font-size:14px; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const modal = document.createElement('div');
+    modal.id = 'tzScannerModal';
+    modal.innerHTML = `
+      <div id="tzScannerCard" role="dialog" aria-modal="true" aria-labelledby="tzScannerTitle">
+        <div class="tz-s-head">
+          <div class="tz-s-icon">✧</div>
+          <div class="tz-s-title">
+            <h2 id="tzScannerTitle">Entry Scanner</h2>
+            <p>TradeZora Demo Scanner</p>
+          </div>
+          <button id="tzScannerClose" aria-label="Close scanner">×</button>
+        </div>
+        <div class="tz-s-body">
+          <div class="tz-s-info">
+            Choose a market category. The demo scanner will <strong>search several simulated volatility markets</strong> and select a simulated setup. It does not connect to Deriv.
+          </div>
+
+          <label class="tz-s-label" for="tzScannerMarket">Market category</label>
+          <select id="tzScannerMarket">
+            <option value="AUTO">Search all volatility markets</option>
+            <option value="Volatility 10 (1s)">Volatility 10 (1s)</option>
+            <option value="Volatility 25 (1s)">Volatility 25 (1s)</option>
+            <option value="Volatility 50 (1s)">Volatility 50 (1s)</option>
+            <option value="Volatility 75 (1s)">Volatility 75 (1s)</option>
+            <option value="Volatility 100 (1s)">Volatility 100 (1s)</option>
+          </select>
+
+          <div class="tz-s-ready">
+            <span id="tzReadyText">Ready to scan</span>
+            <span id="tzScanCount">0%</span>
+          </div>
+          <div class="tz-progress"><div id="tzProgressBar"></div></div>
+          <div id="tzScanStatus">Press Deep Scan to search for a simulated setup.</div>
+
+          <button id="tzScanButton">⌕ &nbsp; Deep Scan for Best Market</button>
+
+          <div id="tzResult" class="tz-result">
+            <div class="tz-result-grid">
+              <div class="tz-result-item"><small>Market</small><strong id="tzResultMarket">—</strong></div>
+              <div class="tz-result-item"><small>Contract</small><strong id="tzResultSignal">—</strong></div>
+              <div class="tz-result-item"><small>Digit</small><strong id="tzResultDigit">—</strong></div>
+              <div class="tz-result-item"><small>Demo confidence</small><strong id="tzResultConfidence">—</strong></div>
+            </div>
+          </div>
+
+          <button id="tzLoadButton" disabled>Load Deep Scanner Bot</button>
+          <div class="tz-s-note">Demo only. Loading applies the simulated market, contract and digit to the terminal. It does not place a trade.</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const $s = (id) => document.querySelector(id);
+    let scanResult = null;
+    let scanRunning = false;
+
+    const close = () => modal.classList.remove('tz-open');
+    const resetScanUI = () => {
+      scanResult = null;
+      scanRunning = false;
+      $s('#tzReadyText').textContent = 'Ready to scan';
+      $s('#tzScanCount').textContent = '0%';
+      $s('#tzProgressBar').style.width = '0%';
+      $s('#tzScanStatus').textContent = 'Press Deep Scan to search for a simulated setup.';
+      $s('#tzResult').classList.remove('tz-show');
+      $s('#tzLoadButton').disabled = true;
+      $s('#tzScanButton').disabled = false;
+    };
+    const open = () => { modal.classList.add('tz-open'); resetScanUI(); };
+
+    trigger.onclick = (event) => { event.preventDefault(); event.stopPropagation(); open(); };
+    $s('#tzScannerClose').onclick = close;
+    modal.addEventListener('click', (event) => { if (event.target === modal) close(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
+
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const marketOptions = [
+      'Volatility 10 (1s)', 'Volatility 25 (1s)', 'Volatility 50 (1s)',
+      'Volatility 75 (1s)', 'Volatility 100 (1s)'
+    ];
+    const signals = ['MATCH', 'DIFFER', 'EVEN', 'ODD', 'OVER', 'UNDER'];
+
+    $s('#tzScanButton').onclick = async () => {
+      if (scanRunning) return;
+      scanRunning = true;
+
+      const scanButton = $s('#tzScanButton');
+      const loadButton = $s('#tzLoadButton');
+      const count = $s('#tzScanCount');
+      const bar = $s('#tzProgressBar');
+      const readyText = $s('#tzReadyText');
+      const status = $s('#tzScanStatus');
+      const resultBox = $s('#tzResult');
+      const selectedCategory = $s('#tzScannerMarket').value;
+
+      scanButton.disabled = true;
+      loadButton.disabled = true;
+      resultBox.classList.remove('tz-show');
+      readyText.textContent = 'Searching markets';
+
+      const marketsToCheck = selectedCategory === 'AUTO' ? marketOptions : [selectedCategory];
+      const marketScores = [];
+      const totalSteps = 100;
+
+      for (let percent = 1; percent <= totalSteps; percent++) {
+        // Deliberately paced demo scan so the search feels visible rather than instant.
+        await wait(85);
+
+        const marketIndex = Math.min(
+          marketsToCheck.length - 1,
+          Math.floor(((percent - 1) / totalSteps) * marketsToCheck.length)
+        );
+        const market = marketsToCheck[marketIndex];
+        const marketProgress = Math.round(((percent - marketIndex * (100 / marketsToCheck.length)) / (100 / marketsToCheck.length)) * 100);
+        const safeProgress = Math.max(1, Math.min(100, marketProgress));
+
+        count.textContent = `${percent}%`;
+        bar.style.width = `${percent}%`;
+        status.textContent = `Searching ${market} · ${safeProgress}%`;
+
+        // Simulated score only — not real market analysis.
+        if (percent % 20 === 0 || percent === 1) {
+          marketScores.push({ market, score: 50 + Math.floor(Math.random() * 50) });
+        }
+      }
+
+      readyText.textContent = 'Best simulated market found';
+      status.textContent = 'Comparing simulated tick patterns…';
+      await wait(700);
+
+      let market;
+      if (selectedCategory !== 'AUTO') {
+        market = selectedCategory;
+      } else {
+        market = (marketScores.sort((a, b) => b.score - a.score)[0] || { market: marketOptions[0] }).market;
+      }
+
+      const signal = signals[Math.floor(Math.random() * signals.length)];
+      const digit = Math.floor(Math.random() * 10);
+      const confidence = 80 + Math.floor(Math.random() * 16);
+      scanResult = { market, signal, digit, confidence };
+
+      $s('#tzResultMarket').textContent = market;
+      $s('#tzResultSignal').textContent = signal;
+      $s('#tzResultDigit').textContent = digit;
+      $s('#tzResultConfidence').textContent = `${confidence}%`;
+      resultBox.classList.add('tz-show');
+      status.textContent = 'Simulated contract ready to load.';
+      readyText.textContent = 'Scan complete';
+      loadButton.disabled = false;
+      scanRunning = false;
+    };
+
+    $s('#tzLoadButton').onclick = async () => {
+      if (!scanResult || scanRunning) return;
+      scanRunning = true;
+      $s('#tzLoadButton').disabled = true;
+      $s('#tzScanStatus').textContent = 'Loading contract into terminal…';
+      await wait(450);
+
+      const marketSelect = document.querySelector('#marketSelect');
+      if (marketSelect) {
+        const match = [...marketSelect.options].find(option =>
+          option.value === scanResult.market || option.textContent.trim() === scanResult.market
+        );
+        if (match) {
+          marketSelect.value = match.value;
+          marketSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+
+      const contractMap = {
+        MATCH: 'match', DIFFER: 'match',
+        EVEN: 'even', ODD: 'even',
+        OVER: 'over', UNDER: 'over'
+      };
+      const wantedContract = contractMap[scanResult.signal];
+      const contractTab = [...document.querySelectorAll('.market-tabs button')]
+        .find(button => (button.dataset.contract || '').toLowerCase() === wantedContract);
+      if (contractTab) contractTab.click();
+
+      const digitButton = document.querySelector(`#contractDigits button[data-digit="${scanResult.digit}"]`) ||
+        [...document.querySelectorAll('#contractDigits button')].find(button => button.textContent.trim() === String(scanResult.digit));
+      if (digitButton) digitButton.click();
+
+      // Put the simulated contract details on the dashboard without placing a trade.
+      const contractLabel = document.querySelector('#selectedContract, #contractType, [data-selected-contract]');
+      if (contractLabel) contractLabel.textContent = scanResult.signal;
+
+      close();
+      showScannerToast(`Loaded ${scanResult.market} · ${scanResult.signal} · Digit ${scanResult.digit}`);
+      scanRunning = false;
+    };
+
+    function showScannerToast(message) {
+      const existing = document.querySelector('#toast');
+      if (existing) {
+        existing.textContent = message;
+        existing.classList.add('show');
+        setTimeout(() => existing.classList.remove('show'), 2600);
+        return;
+      }
+      const t = document.createElement('div');
+      t.textContent = message;
+      t.style.cssText = 'position:fixed;left:50%;bottom:78px;transform:translateX(-50%);z-index:10001;background:#102019;color:#e8fff3;border:1px solid #20543b;padding:11px 14px;border-radius:10px;font:700 12px system-ui;white-space:nowrap;max-width:90vw;text-align:center;';
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2600);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTradeZoraScanner, { once: true });
+  } else {
+    initTradeZoraScanner();
+  }
+})();
