@@ -1,1079 +1,208 @@
-:root {
-  --bg: #050807;
-  --panel: #0b120f;
-  --panel2: #101815;
-  --panel3: #07100c;
-  --text: #eef5f1;
-  --muted: #85918b;
-  --green: #16e58a;
-  --green-dark: #0d6d45;
-  --red: #ff5d6c;
-  --yellow: #f2c94c;
-  --purple: #9b7cff;
-  --border: #1b2922;
-}
+/* =========================================
+   TRADEZORA AI BOT RESULT
+========================================= */
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Inter, Arial, sans-serif;
-  min-height: 100vh;
-}
-
-/* =========================
-   TOP BAR
-========================= */
-
-.topbar {
-  height: 62px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 18px;
-  border-bottom: 1px solid var(--border);
-  background: #070b09;
-  position: sticky;
-  top: 0;
-  z-index: 30;
-}
-
-.icon-btn {
-  background: transparent;
-  border: 0;
-  color: #dce5e0;
-  font-size: 21px;
-  cursor: pointer;
-}
-
-.mobile-logo {
-  display: none;
-  color: #fff;
-  text-decoration: none;
-  font-weight: 800;
-  font-size: 19px;
-}
-
-.mobile-logo span,
-.logo span {
-  color: var(--green);
-}
-
-.top-actions {
-  display: flex;
-  gap: 13px;
-  align-items: center;
-}
-
-.demo-badge {
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--green);
-  border: 1px solid #176442;
-  padding: 4px 7px;
-  border-radius: 5px;
-}
-
-#balance {
-  font-weight: 800;
-  font-size: 14px;
-}
-
-.deposit-btn {
-  background: var(--green);
-  border: 0;
-  padding: 9px 14px;
-  border-radius: 8px;
-  font-weight: 800;
-  color: #031009;
-  cursor: pointer;
-}
-
-.notification-btn {
-  font-size: 13px;
-}
-
-
-/* =========================
-   SIDE MENU
-========================= */
-
-.side-menu {
-  position: fixed;
-  z-index: 50;
-  left: -330px;
-  top: 0;
-  bottom: 0;
-  width: 310px;
-  background: #08100c;
-  border-right: 1px solid var(--border);
-  transition: left 0.25s ease;
-  padding: 20px;
-  overflow: auto;
-}
-
-.side-menu.open {
-  left: 0;
-}
-
-.overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: #0009;
-  z-index: 40;
-}
-
-.overlay.show {
-  display: block;
-}
-
-.menu-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  font-size: 21px;
-  font-weight: 800;
-  color: #fff;
-  text-decoration: none;
-}
-
-.profile {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  padding: 13px;
-  border-radius: 12px;
-  margin: 24px 0;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #163e2b;
-  color: var(--green);
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-}
-
-.profile strong,
-.profile small {
-  display: block;
-}
-
-.profile small {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 3px;
-}
-
-.menu-nav {
-  display: grid;
-  gap: 5px;
-}
-
-.menu-nav a,
-.menu-nav button {
-  color: #bfc9c4;
-  text-decoration: none;
-  background: transparent;
-  border: 0;
-  text-align: left;
+.bot-result {
+  margin-top: 12px;
   padding: 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.menu-nav a:hover,
-.menu-nav button:hover {
-  background: #102019;
-  color: #fff;
-}
-
-
-/* =========================
-   MAIN TERMINAL
-========================= */
-
-.terminal {
-  max-width: 1280px;
-  margin: auto;
-  padding: 20px;
-}
-
-.market-tabs {
-  display: flex;
-  gap: 5px;
-  background: var(--panel);
-  padding: 5px;
-  border: 1px solid var(--border);
+  border: 1px solid #263d31;
   border-radius: 10px;
-  width: max-content;
+  background: #08120e;
+  color: #eef5f1;
+  animation: botResultIn 0.25s ease;
 }
 
-.market-tabs button,
-.mode button {
-  background: transparent;
-  color: var(--muted);
-  border: 0;
-  padding: 9px 13px;
-  border-radius: 7px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.market-tabs button.active,
-.mode button.active {
-  background: #17382a;
-  color: #fff;
-}
-
-
-/* =========================
-   TRADE LAYOUT
-========================= */
-
-.trade-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 350px;
-  gap: 14px;
-  margin-top: 14px;
-}
-
-.chart-panel,
-.trade-card,
-.data-section {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
-
-/* =========================
-   CHART
-========================= */
-
-.chart-panel {
-  padding: 15px;
-}
-
-.market-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.market-head small {
-  display: block;
-  color: var(--muted);
-  font-size: 10px;
-}
-
-.market-head select {
-  margin-top: 5px;
-  background: transparent;
-  border: 0;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 800;
-  outline: none;
-}
-
-.market-head option {
-  background: #0b120f;
-  color: #fff;
-}
-
-.historical {
-  font-size: 10px;
-  color: var(--purple);
-  background: #171328;
-  padding: 6px 9px;
-  border-radius: 20px;
-}
-
-.chart-wrap {
-  height: 410px;
-  margin-top: 12px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  position: relative;
-  overflow: hidden;
-
-  background:
-    repeating-linear-gradient(
-      0deg,
-      transparent 0 49px,
-      #142019 50px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 79px,
-      #142019 80px
-    );
-}
-
-#priceChart {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.pct {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 11px;
-  color: var(--green);
-  background: #0c2117;
-  padding: 5px 7px;
-  border-radius: 5px;
-}
-
-.chart-label {
-  position: absolute;
-  left: 12px;
-  bottom: 10px;
-  color: #50625a;
-  font-size: 9px;
-  letter-spacing: 0.8px;
-}
-
-.zoom-tools {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  display: flex;
-  gap: 4px;
-}
-
-.zoom-tools button {
-  background: #0a100d;
-  border: 1px solid var(--border);
-  color: #fff;
-  border-radius: 5px;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-}
-
-
-/* =========================
-   DIGIT PROBABILITIES
-========================= */
-
-.probability-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 13px;
-  color: #d9e3de;
-  font-size: 11px;
-}
-
-.probability-title small {
-  color: var(--muted);
-  font-size: 9px;
-}
-
-.probabilities {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 5px;
-  margin-top: 7px;
-}
-
-.probability {
-  min-width: 0;
-  padding: 7px 3px;
-  border: 1px solid var(--border);
-  background: #09100d;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.probability .digit-number {
-  display: block;
-  color: #dce5e0;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.probability .percent {
-  display: block;
-  margin-top: 3px;
-  color: var(--green);
-  font-size: 8px;
-}
-
-
-/* =========================
-   TRADE CARD
-========================= */
-
-.trade-card {
-  padding: 15px;
-}
-
-.mode {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  background: #07100c;
-  border-radius: 8px;
-  padding: 3px;
-}
-
-.mode button {
-  padding: 8px;
-}
-
-
-/* =========================
-   STAKE
-========================= */
-
-.control {
-  margin-top: 16px;
-}
-
-.control label,
-.controls-grid label {
-  display: block;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.stake {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px;
-}
-
-.stake strong {
-  font-size: 14px;
-}
-
-.stake button {
-  width: 36px;
-  height: 32px;
-  border: 0;
-  background: #142019;
-  color: #fff;
-  border-radius: 6px;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-
-/* =========================
-   AI BOT
-========================= */
-
-.scanner {
-  width: 100%;
-  margin: 12px 0;
-  padding: 10px;
-  border: 1px solid #392b67;
-  background: #17112b;
-  color: #c8baff;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-align: left;
-}
-
-.scanner:hover {
-  background: #1d1538;
-}
-
-.bot-icon {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: 7px;
-  background: #24194b;
-  color: #b9a5ff;
-  font-size: 14px;
-}
-
-.bot-content {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.bot-content strong {
-  font-size: 12px;
-}
-
-.bot-content small {
-  margin-top: 2px;
-  font-size: 9px;
-  color: #9585c9;
-}
-
-.bot-badge {
-  font-size: 8px;
-  opacity: 0.65;
-}
-
-
-/* =========================
-   RISK CONTROLS
-========================= */
-
-.controls-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.controls-grid label:last-child {
-  grid-column: 1 / -1;
-}
-
-.input-wrap {
-  display: flex;
-  align-items: center;
-  margin-top: 5px;
-  background: #07100c;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  overflow: hidden;
-}
-
-.input-wrap span {
-  padding-left: 9px;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.controls-grid input,
-.controls-grid select {
-  width: 100%;
-  background: transparent;
-  color: #fff;
-  border: 0;
-  outline: none;
-  padding: 9px;
-}
-
-.controls-grid select {
-  margin-top: 5px;
-  background: #07100c;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-}
-
-.controls-grid option {
-  background: #0b120f;
-  color: #fff;
-}
-
-
-/* =========================
-   SESSION
-========================= */
-
-.session {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-
-  margin: 14px 0;
-  padding: 12px 0;
-
-  font-size: 12px;
-}
-
-.session > div {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.session span {
-  color: var(--muted);
-}
-
-.session small {
-  color: #a8b4ae;
-  font-size: 9px;
-}
-
-.session strong {
-  color: var(--green);
-  font-size: 14px;
-}
-
-
-/* =========================
-   CONTRACT DIGITS
-========================= */
-
-.contract-title {
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.contract-digits {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 5px;
-  margin-top: 8px;
-}
-
-.contract-digits button {
-  border: 1px solid var(--border);
-  background: #09100d;
-  color: #cdd6d1;
-  border-radius: 6px;
-  padding: 8px 0;
-  cursor: pointer;
-  font-size: 11px;
-}
-
-.contract-digits button:hover {
-  border-color: #2b5945;
-}
-
-.contract-digits button.active {
-  border-color: var(--green);
-  color: var(--green);
-  background: #0c2117;
-}
-
-
-/* =========================
-   TRADE BUTTONS
-========================= */
-
-.trade-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.trade-buttons button {
-  border: 0;
-  border-radius: 9px;
-  padding: 15px 5px;
-  cursor: pointer;
-  transition: transform 0.12s ease, filter 0.12s ease;
-}
-
-.trade-buttons button:hover {
-  filter: brightness(1.08);
-}
-
-.trade-buttons button:active {
-  transform: scale(0.97);
-}
-
-.trade-buttons strong {
-  display: block;
-  font-size: 15px;
-  font-weight: 900;
-}
-
-.trade-buttons span {
-  display: block;
-  font-size: 9px;
-  opacity: 0.65;
-  margin-top: 3px;
-}
-
-.trade-buttons #match {
-  background: var(--green);
-  color: #031009;
-}
-
-.trade-buttons #differ {
-  background: var(--red);
-  color: #21060a;
-}
-
-
-/* =========================
-   DATA SECTIONS
-========================= */
-
-.data-section {
-  margin-top: 14px;
-  padding: 15px;
-}
-
-.section-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.section-title h2 {
-  font-size: 15px;
-  margin: 0;
-}
-
-.section-title button {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  padding: 6px 9px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.empty {
-  color: var(--muted);
-  font-size: 12px;
-  padding: 25px 5px;
-  text-align: center;
-}
-
-.position,
-.history-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-}
-
-.position:last-child,
-.history-item:last-child {
-  border: 0;
-}
-
-.win {
-  color: var(--green);
-}
-
-.loss {
-  color: var(--red);
-}
-
-
-/* =========================
-   TOAST
-========================= */
-
-.toast {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-
-  background: #102019;
-  border: 1px solid #20543b;
-  color: #e8fff3;
-
-  padding: 11px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-
-  opacity: 0;
-  transform: translateY(10px);
-  transition: 0.2s;
-
-  z-index: 100;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: none;
-}
-
-
-/* =========================
-   MOBILE NAV
-========================= */
-
-.bottom-nav {
+.bot-result[hidden] {
   display: none;
 }
 
-
-/* =========================
-   TABLET
-========================= */
-
-@media (max-width: 950px) {
-
-  .trade-layout {
-    grid-template-columns: 1fr;
+@keyframes botResultIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
   }
 
-  .trade-card {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bot-result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.bot-result-head strong {
+  color: #16e58a;
+  font-size: 13px;
+}
+
+.bot-result-head button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid #263d31;
+  border-radius: 6px;
+  background: #0d1712;
+  color: #85918b;
+  cursor: pointer;
+  font-size: 17px;
+}
+
+.bot-result-head button:hover {
+  color: #fff;
+  border-color: #16e58a;
+}
+
+.bot-status {
+  margin-bottom: 10px;
+  color: #16e58a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.bot-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+}
+
+.bot-info > div {
+  padding: 8px;
+  border: 1px solid #1b2922;
+  border-radius: 7px;
+  background: #0b1510;
+}
+
+.bot-info small {
+  display: block;
+  margin-bottom: 3px;
+  color: #85918b;
+  font-size: 9px;
+}
+
+.bot-info strong {
+  display: block;
+  color: #eef5f1;
+  font-size: 11px;
+  word-break: break-word;
+}
+
+.bot-info > div:last-child strong {
+  color: #16e58a;
+}
+
+.bot-result p {
+  margin: 10px 0 0;
+  color: #9aa8a1;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+
+/* =========================================
+   RESET DEMO
+========================================= */
+
+.reset-demo {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 4px;
+  border: 1px solid #5a3b20;
+  border-radius: 8px;
+  background: #17110b;
+  color: #f2c94c;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.reset-demo:hover {
+  background: #21170d;
+  border-color: #f2c94c;
+}
+
+.reset-demo:active {
+  transform: scale(0.98);
+}
+
+
+/* =========================================
+   AI BOT SCANNING STATE
+========================================= */
+
+.scanner:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.scanner:disabled .bot-icon {
+  animation: botPulse 0.8s infinite alternate;
+}
+
+@keyframes botPulse {
+  from {
+    transform: scale(1);
+    opacity: 0.55;
   }
 
-  .trade-card > .mode {
-    grid-column: 1 / -1;
-  }
-
-  .trade-card > .scanner {
-    margin: 0;
-  }
-
-  .trade-card > .controls-grid {
-    align-self: start;
-  }
-
-  .trade-card > .session,
-  .trade-card > .contract-title,
-  .trade-card > .contract-digits,
-  .trade-card > .trade-buttons {
-    grid-column: 1 / -1;
-  }
-
-  .chart-wrap {
-    height: 360px;
+  to {
+    transform: scale(1.25);
+    opacity: 1;
   }
 }
 
 
-/* =========================
-   MOBILE
-========================= */
+/* =========================================
+   MOBILE AI BOT RESULT
+========================================= */
 
-@media (max-width: 650px) {
+@media (max-width: 700px) {
 
-  .topbar {
-    height: 58px;
-    padding: 0 11px;
+  .bot-result {
+    margin-top: 10px;
+    padding: 10px;
   }
 
-  .mobile-logo {
-    display: block;
+  .bot-info {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .deposit-btn {
-    display: none;
-  }
-
-  .top-actions {
-    gap: 8px;
-  }
-
-  .demo-badge {
-    font-size: 8px;
-    padding: 3px 5px;
-  }
-
-  #balance {
-    font-size: 12px;
-  }
-
-  .notification-btn {
-    font-size: 11px;
-  }
-
-  .terminal {
-    padding: 9px;
-  }
-
-  .market-tabs {
-    width: 100%;
-    overflow-x: auto;
-  }
-
-  .market-tabs button {
-    white-space: nowrap;
-    font-size: 10px;
-  }
-
-  .chart-panel,
-  .trade-card,
-  .data-section {
-    border-radius: 9px;
-  }
-
-  .chart-panel {
-    padding: 11px;
-  }
-
-  .chart-wrap {
-    height: 300px;
-  }
-
-  .probabilities {
-    gap: 3px;
-  }
-
-  .probability {
-    padding: 6px 2px;
-  }
-
-  .probability .digit-number {
-    font-size: 10px;
-  }
-
-  .probability .percent {
-    font-size: 7px;
-  }
-
-  .trade-card {
-    display: block;
-  }
-
-  .trade-card > * {
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  .scanner {
-    margin: 12px 0;
-  }
-
-  .trade-buttons {
-    position: sticky;
-    bottom: 61px;
-    background: #050807;
-    padding-top: 7px;
-    z-index: 20;
-  }
-
-  .bottom-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-
-    background: #07100c;
-    border-top: 1px solid var(--border);
-
-    z-index: 35;
-  }
-
-  .bottom-nav a {
-    flex: 1;
-    color: var(--muted);
-    text-decoration: none;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 15px;
-  }
-
-  .bottom-nav a span {
-    font-size: 10px;
-    margin-top: 2px;
-  }
-
-  .bottom-nav a.active {
-    color: var(--green);
-  }
-
-  .data-section {
-    margin-bottom: 10px;
-  }
-
-}
-
-
-/* =========================
-   SMALL PHONES
-========================= */
-
-@media (max-width: 430px) {
-
-  .topbar {
-    padding: 0 8px;
-  }
-
-  .mobile-logo {
-    font-size: 17px;
-  }
-
-  #balance {
-    font-size: 11px;
-  }
-
-  .terminal {
+  .bot-info > div {
     padding: 7px;
   }
 
-  .chart-wrap {
-    height: 260px;
-  }
-
-  .market-head select {
-    font-size: 13px;
-  }
-
-  .historical {
-    font-size: 8px;
-    padding: 5px 7px;
-  }
-
-  .probability-title {
+  .bot-info strong {
     font-size: 10px;
   }
 
-  .probabilities {
-    gap: 2px;
-  }
-
-  .probability {
-    padding: 5px 1px;
-    border-radius: 5px;
-  }
-
-  .probability .digit-number {
+  .bot-result p {
     font-size: 9px;
   }
 
-  .probability .percent {
-    font-size: 6px;
+}
+
+
+@media (max-width: 420px) {
+
+  .bot-info {
+    grid-template-columns: 1fr 1fr;
   }
 
-  .contract-digits {
-    gap: 3px;
+  .bot-result-head strong {
+    font-size: 11px;
   }
 
-  .contract-digits button {
-    padding: 7px 0;
-    font-size: 10px;
-  }
-
-  .trade-buttons strong {
-    font-size: 13px;
+  .reset-demo {
+    padding: 9px 10px;
+    font-size: 12px;
   }
 
 }
