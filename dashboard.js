@@ -15,6 +15,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  /*
+    Keep the existing user's balance if they already have one.
+    New demo accounts receive $10,000.
+  */
   let storedBalance = localStorage.getItem("tradezoraDemoBalance");
 
   if (storedBalance === null) {
@@ -28,22 +32,21 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.getItem("tradezoraDemoStake") || 10
   );
 
-  let pnl = 0;
-  let wins = 0;
-  let losses = 0;
+  let price = 1000;
 
   let history = [];
   let positions = [];
 
   let selectedDigit = 0;
+
+  let pnl = 0;
+  let wins = 0;
+  let losses = 0;
+
   let contractType = "match";
+
   let mode = "AUTO";
 
-  let currentMarket = "Volatility 10 (1s)";
-  let price = 1000;
-
-  let chartTimer = null;
-  let tradeTimers = [];
 
   /* =========================
      PROFILE
@@ -71,13 +74,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  function signedMoney(value) {
-    return value >= 0
-      ? "+" + money(value)
-      : "-" + money(Math.abs(value));
-  }
-
-
   function toast(message) {
 
     const element = $("#toast");
@@ -85,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!element) return;
 
     element.textContent = message;
+
     element.classList.add("show");
 
     setTimeout(() => {
@@ -96,23 +93,23 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderBalance() {
 
     $("#balance").textContent = money(balance);
+
     $("#stake").textContent = money(stake);
 
     const pnlElement = $("#sessionPnl");
 
-    if (pnlElement) {
-      pnlElement.textContent = signedMoney(pnl);
-      pnlElement.style.color =
-        pnl >= 0 ? "#16e58a" : "#ff5d6c";
-    }
+    pnlElement.textContent =
+      (pnl >= 0 ? "+" : "") + money(pnl);
 
-    const record = $("#sessionRecord");
+    pnlElement.style.color =
+      pnl >= 0 ? "#16e58a" : "#ff5d6c";
 
-    if (record) {
-      record.textContent =
-        `${wins}W · ${losses}L`;
-    }
+    $("#sessionRecord").textContent =
+      `${wins}W · ${losses}L`;
   }
+
+
+  renderBalance();
 
 
   /* =========================
@@ -123,14 +120,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const overlay = $("#overlay");
 
   $("#menuBtn").onclick = () => {
+
     menu.classList.add("open");
     overlay.classList.add("show");
+
   };
 
 
   $("#closeMenu").onclick = () => {
+
     menu.classList.remove("open");
     overlay.classList.remove("show");
+
   };
 
 
@@ -143,11 +144,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("#logout").onclick = () => {
 
-    cancelAllTradeTimers();
-
     localStorage.removeItem("tradezoraDemoUser");
 
     location.href = "auth.html";
+
   };
 
 
@@ -156,7 +156,9 @@ document.addEventListener("DOMContentLoaded", () => {
   ========================= */
 
   $("#depositBtn").onclick = () => {
+
     toast("Demo account only — real deposits are disabled.");
+
   };
 
 
@@ -165,133 +167,10 @@ document.addEventListener("DOMContentLoaded", () => {
   ========================= */
 
   $("#themeSwitch").onclick = () => {
+
     toast("Dark theme is active.");
+
   };
-
-
-  /* =========================
-     RESET DEMO BUTTON
-  ========================= */
-
-  function createResetButton() {
-
-    let resetButton = $("#resetDemo");
-
-    if (resetButton) return resetButton;
-
-    resetButton = document.createElement("button");
-
-    resetButton.id = "resetDemo";
-    resetButton.className = "reset-demo";
-    resetButton.textContent = "↻ Reset Demo";
-
-    const logout = $("#logout");
-
-    if (logout && logout.parentNode) {
-      logout.parentNode.insertBefore(resetButton, logout);
-    }
-
-    return resetButton;
-  }
-
-
-  const resetDemoButton = createResetButton();
-
-
-  function cancelAllTradeTimers() {
-
-    tradeTimers.forEach(timer => {
-      clearTimeout(timer);
-    });
-
-    tradeTimers = [];
-  }
-
-
-  function resetDemo() {
-
-    const confirmed = confirm(
-      "Reset the entire TradeZora demo?\n\n" +
-      "This will restore the $10,000 demo balance " +
-      "and clear positions, history and session results."
-    );
-
-    if (!confirmed) return;
-
-    cancelAllTradeTimers();
-
-    balance = 10000;
-    stake = 10;
-
-    pnl = 0;
-    wins = 0;
-    losses = 0;
-
-    history = [];
-    positions = [];
-
-    selectedDigit = 0;
-    contractType = "match";
-    mode = "AUTO";
-
-    currentMarket = "Volatility 10 (1s)";
-    price = 1000;
-
-    localStorage.setItem(
-      "tradezoraDemoBalance",
-      "10000"
-    );
-
-    localStorage.setItem(
-      "tradezoraDemoStake",
-      "10"
-    );
-
-    const marketSelect = $("#marketSelect");
-
-    if (marketSelect) {
-      marketSelect.value = "Volatility 10 (1s)";
-    }
-
-    contractTabs.forEach(tab => {
-      tab.classList.remove("active");
-
-      if (tab.dataset.contract === "match") {
-        tab.classList.add("active");
-      }
-    });
-
-    $("#match").innerHTML =
-      "<strong>MATCH</strong><span>Demo</span>";
-
-    $("#differ").innerHTML =
-      "<strong>DIFFER</strong><span>Demo</span>";
-
-    $("#auto").classList.add("active");
-    $("#manual").classList.remove("active");
-
-    if (contractDigits.children.length) {
-
-      [...contractDigits.children].forEach(
-        button => button.classList.remove("active")
-      );
-
-      contractDigits.children[0].classList.add("active");
-    }
-
-    clearBotResult();
-
-    resetChart();
-
-    renderBalance();
-    renderLists();
-    generateProbabilities();
-
-    toast("Demo account reset to $10,000.");
-  }
-
-
-  resetDemoButton.onclick = resetDemo;
 
 
   /* =========================
@@ -306,33 +185,38 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!probabilityContainer) return;
 
     const values = [];
+
     let remaining = 100;
 
     for (let i = 0; i < 10; i++) {
 
       if (i === 9) {
 
-        values.push(
-          Number(remaining.toFixed(1))
-        );
+        values.push(Number(remaining.toFixed(1)));
 
       } else {
 
-        const value = Math.max(
-          4,
-          Math.min(
-            17,
-            7 + (Math.random() - 0.5) * 6
-          )
-        );
+        const value =
+          Math.max(
+            4,
+            Math.min(
+              17,
+              7 + (Math.random() - 0.5) * 6
+            )
+          );
 
-        values.push(
-          Number(value.toFixed(1))
-        );
+        values.push(Number(value.toFixed(1)));
 
         remaining -= value;
+
       }
+
     }
+
+
+    /*
+      Normalize probabilities so total = 100.
+    */
 
     const total =
       values.reduce((a, b) => a + b, 0);
@@ -340,7 +224,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const normalized =
       values.map(v => (v / total) * 100);
 
+
     probabilityContainer.innerHTML = "";
+
 
     normalized.forEach((probability, digit) => {
 
@@ -360,8 +246,13 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       probabilityContainer.appendChild(element);
+
     });
+
   }
+
+
+  generateProbabilities();
 
 
   /* =========================
@@ -378,6 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.createElement("button");
 
     button.textContent = i;
+
     button.dataset.digit = i;
 
     button.onclick = () => {
@@ -394,9 +286,11 @@ document.addEventListener("DOMContentLoaded", () => {
       generateProbabilities();
 
       toast(`Digit ${i} selected.`);
+
     };
 
     contractDigits.appendChild(button);
+
   }
 
 
@@ -426,45 +320,40 @@ document.addEventListener("DOMContentLoaded", () => {
       contractType =
         button.dataset.contract || "match";
 
-      updateContractButtons();
 
-      generateProbabilities();
+      if (contractType === "even") {
+
+        $("#match").innerHTML =
+          "<strong>EVEN</strong><span>Demo</span>";
+
+        $("#differ").innerHTML =
+          "<strong>ODD</strong><span>Demo</span>";
+
+      }
+
+      else if (contractType === "over") {
+
+        $("#match").innerHTML =
+          "<strong>OVER</strong><span>Demo</span>";
+
+        $("#differ").innerHTML =
+          "<strong>UNDER</strong><span>Demo</span>";
+
+      }
+
+      else {
+
+        $("#match").innerHTML =
+          "<strong>MATCH</strong><span>Demo</span>";
+
+        $("#differ").innerHTML =
+          "<strong>DIFFER</strong><span>Demo</span>";
+
+      }
+
     });
 
   });
-
-
-  function updateContractButtons() {
-
-    if (contractType === "even") {
-
-      $("#match").innerHTML =
-        "<strong>EVEN</strong><span>Demo</span>";
-
-      $("#differ").innerHTML =
-        "<strong>ODD</strong><span>Demo</span>";
-
-    }
-
-    else if (contractType === "over") {
-
-      $("#match").innerHTML =
-        "<strong>OVER</strong><span>Demo</span>";
-
-      $("#differ").innerHTML =
-        "<strong>UNDER</strong><span>Demo</span>";
-
-    }
-
-    else {
-
-      $("#match").innerHTML =
-        "<strong>MATCH</strong><span>Demo</span>";
-
-      $("#differ").innerHTML =
-        "<strong>DIFFER</strong><span>Demo</span>";
-    }
-  }
 
 
   /* =========================
@@ -479,6 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#manual").classList.remove("active");
 
     toast("AUTO mode selected.");
+
   };
 
 
@@ -490,6 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#auto").classList.remove("active");
 
     toast("MANUAL mode selected.");
+
   };
 
 
@@ -510,6 +401,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     renderBalance();
+
   };
 
 
@@ -527,6 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     renderBalance();
+
   };
 
 
@@ -534,337 +427,65 @@ document.addEventListener("DOMContentLoaded", () => {
      AI BOT
   ========================= */
 
-  const demoMarkets = [
-    "Volatility 10 (1s)",
-    "Volatility 25 (1s)",
-    "Volatility 50 (1s)",
-    "Volatility 75 (1s)",
-    "Volatility 100 (1s)"
-  ];
-
-
-  let botRunning = false;
-
-
-  function createBotResultPanel() {
-
-    let panel = $("#botResult");
-
-    if (panel) return panel;
-
-    panel = document.createElement("div");
-
-    panel.id = "botResult";
-    panel.className = "bot-result";
-
-    panel.hidden = true;
-
-    panel.innerHTML = `
-      <div class="bot-result-head">
-        <strong>🤖 AI BOT RESULT</strong>
-        <button id="closeBotResult">×</button>
-      </div>
-
-      <div class="bot-status" id="botStatus">
-        Analysis complete
-      </div>
-
-      <div class="bot-info">
-
-        <div>
-          <small>Market</small>
-          <strong id="botMarket">—</strong>
-        </div>
-
-        <div>
-          <small>Trade Type</small>
-          <strong id="botTradeType">—</strong>
-        </div>
-
-        <div>
-          <small>Signal</small>
-          <strong id="botSignal">—</strong>
-        </div>
-
-        <div>
-          <small>Digit</small>
-          <strong id="botDigit">—</strong>
-        </div>
-
-        <div>
-          <small>Confidence</small>
-          <strong id="botConfidence">—</strong>
-        </div>
-
-      </div>
-
-      <p id="botExplanation">
-        The AI BOT provides simulated demo analysis only.
-        You decide whether to trade.
-      </p>
-    `;
-
-    const scanner = $("#scanner");
-
-    scanner.parentNode.insertBefore(
-      panel,
-      scanner.nextSibling
-    );
-
-    $("#closeBotResult").onclick = () => {
-      clearBotResult();
-    };
-
-    return panel;
-  }
-
-
-  function clearBotResult() {
-
-    const panel = $("#botResult");
-
-    if (!panel) return;
-
-    panel.hidden = true;
-  }
-
-
-  function marketBasePrice(market) {
-
-    const prices = {
-      "Volatility 10 (1s)": 1000,
-      "Volatility 25 (1s)": 2500,
-      "Volatility 50 (1s)": 5000,
-      "Volatility 75 (1s)": 7500,
-      "Volatility 100 (1s)": 10000
-    };
-
-    return prices[market] || 1000;
-  }
-
-
-  function loadMarket(market) {
-
-    currentMarket = market;
-
-    const selector = $("#marketSelect");
-
-    if (selector) {
-      selector.value = market;
-    }
-
-    price = marketBasePrice(market);
-
-    resetChart();
-
-    toast(`${market} loaded into terminal.`);
-  }
-
-
-  function randomContract() {
-
-    const contracts = [
-      "MATCH",
-      "DIFFER",
-      "EVEN",
-      "ODD",
-      "OVER",
-      "UNDER"
-    ];
-
-    return contracts[
-      Math.floor(Math.random() * contracts.length)
-    ];
-  }
-
-
-  function applyBotContract(type) {
-
-    if (
-      type === "MATCH" ||
-      type === "DIFFER"
-    ) {
-
-      contractType = "match";
-
-    } else if (
-      type === "EVEN" ||
-      type === "ODD"
-    ) {
-
-      contractType = "even";
-
-    } else {
-
-      contractType = "over";
-    }
-
-    contractTabs.forEach(tab => {
-
-      tab.classList.remove("active");
-
-      if (
-        tab.dataset.contract === contractType
-      ) {
-        tab.classList.add("active");
-      }
-    });
-
-    updateContractButtons();
-  }
-
-
-  async function runAIBot() {
-
-    if (botRunning) return;
-
-    botRunning = true;
+  $("#scanner").onclick = () => {
 
     const button = $("#scanner");
 
     button.disabled = true;
 
-    clearBotResult();
+    toast("AI BOT analyzing demo market...");
 
-    toast("AI BOT scanning demo markets...");
 
-    const panel = createBotResultPanel();
+    setTimeout(() => {
 
-    panel.hidden = false;
+      const suggestedDigit =
+        Math.floor(Math.random() * 10);
 
-    $("#botStatus").textContent =
-      "Scanning available demo markets...";
+      selectedDigit = suggestedDigit;
 
-    $("#botMarket").textContent = "Scanning...";
-    $("#botTradeType").textContent = "—";
-    $("#botSignal").textContent = "—";
-    $("#botDigit").textContent = "—";
-    $("#botConfidence").textContent = "—";
 
-    await wait(700);
+      [...contractDigits.children]
+        .forEach(element =>
+          element.classList.remove("active")
+        );
 
-    for (const market of demoMarkets) {
+      contractDigits
+        .children[suggestedDigit]
+        .classList.add("active");
 
-      $("#botStatus").textContent =
-        `Scanning ${market}...`;
 
-      $("#botMarket").textContent = market;
+      generateProbabilities();
 
-      await wait(350);
-    }
-
-    /* Select market */
-
-    const selectedMarket =
-      demoMarkets[
-        Math.floor(
-          Math.random() * demoMarkets.length
-        )
-      ];
-
-    loadMarket(selectedMarket);
-
-    $("#botMarket").textContent =
-      selectedMarket;
-
-    $("#botStatus").textContent =
-      "Market selected. Loading data...";
-
-    await wait(700);
-
-    /* Select contract */
-
-    const selectedContract =
-      randomContract();
-
-    applyBotContract(selectedContract);
-
-    $("#botTradeType").textContent =
-      selectedContract;
-
-    await wait(500);
-
-    /* Select digit */
-
-    const suggestedDigit =
-      Math.floor(Math.random() * 10);
-
-    selectedDigit = suggestedDigit;
-
-    [...contractDigits.children]
-      .forEach(element =>
-        element.classList.remove("active")
+      toast(
+        `AI BOT demo signal: digit ${suggestedDigit}`
       );
 
-    contractDigits
-      .children[suggestedDigit]
-      .classList.add("active");
+      button.disabled = false;
 
-    generateProbabilities();
+    }, 1200);
 
-    $("#botDigit").textContent =
-      suggestedDigit;
-
-    $("#botSignal").textContent =
-      selectedContract === "MATCH"
-        ? `Match ${suggestedDigit}`
-        : selectedContract;
-
-    await wait(600);
-
-    /* Simulated confidence */
-
-    const confidence =
-      Math.floor(
-        Math.random() * 16
-      ) + 80;
-
-    $("#botConfidence").textContent =
-      `${confidence}%`;
-
-    $("#botStatus").textContent =
-      "Analysis complete";
-
-    $("#botExplanation").textContent =
-      `The demo AI BOT selected ${selectedMarket}, ` +
-      `identified ${selectedContract} as the simulated signal ` +
-      `and selected digit ${suggestedDigit}. ` +
-      `Confidence shown is simulated demo confidence, ` +
-      `not a real probability of winning. ` +
-      `No trade was placed automatically.`;
-
-    toast("AI BOT analysis complete.");
-
-    button.disabled = false;
-
-    botRunning = false;
-  }
-
-
-  function wait(milliseconds) {
-
-    return new Promise(resolve =>
-      setTimeout(resolve, milliseconds)
-    );
-  }
-
-
-  $("#scanner").onclick = runAIBot;
+  };
 
 
   /* =========================
      CHART
   ========================= */
 
-  const chart = $("#priceChart");
-  const ctx = chart.getContext("2d");
+  const chart =
+    $("#priceChart");
 
-  let series = Array.from(
-    { length: 100 },
-    () =>
-      price +
-      (Math.random() - 0.5) * 120
-  );
+  const ctx =
+    chart.getContext("2d");
+
+
+  let series =
+    Array.from(
+      { length: 100 },
+      () =>
+        price +
+        (Math.random() - 0.5) * 120
+    );
+
 
   let chartZoom = 1;
 
@@ -893,6 +514,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     drawChart();
+
   }
 
 
@@ -906,12 +528,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!width || !height) return;
 
+
     ctx.clearRect(
       0,
       0,
       width,
       height
     );
+
 
     const visibleCount =
       Math.max(
@@ -921,8 +545,10 @@ document.addEventListener("DOMContentLoaded", () => {
         )
       );
 
+
     const visible =
       series.slice(-visibleCount);
+
 
     const min =
       Math.min(...visible) - 20;
@@ -930,7 +556,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const max =
       Math.max(...visible) + 20;
 
+
+    /*
+      Main line
+    */
+
     ctx.beginPath();
+
 
     visible.forEach((value, index) => {
 
@@ -938,20 +570,28 @@ document.addEventListener("DOMContentLoaded", () => {
         index *
         (width / (visible.length - 1));
 
+
       const y =
         height -
         ((value - min) /
           (max - min)) *
-        height *
-        0.82 -
+          height *
+          0.82 -
         height * 0.05;
 
+
       if (index === 0) {
+
         ctx.moveTo(x, y);
+
       } else {
+
         ctx.lineTo(x, y);
+
       }
+
     });
+
 
     ctx.strokeStyle =
       "#16e58a";
@@ -960,9 +600,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ctx.stroke();
 
-    /* Glow */
+
+    /*
+      Glow line
+    */
 
     ctx.beginPath();
+
 
     visible.forEach((value, index) => {
 
@@ -974,16 +618,23 @@ document.addEventListener("DOMContentLoaded", () => {
         height -
         ((value - min) /
           (max - min)) *
-        height *
-        0.82 -
+          height *
+          0.82 -
         height * 0.05;
 
+
       if (index === 0) {
+
         ctx.moveTo(x, y);
+
       } else {
+
         ctx.lineTo(x, y);
+
       }
+
     });
+
 
     ctx.strokeStyle =
       "rgba(22,229,138,0.18)";
@@ -991,21 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.lineWidth = 7;
 
     ctx.stroke();
-  }
 
-
-  function resetChart() {
-
-    series = Array.from(
-      { length: 100 },
-      () =>
-        price +
-        (Math.random() - 0.5) * 120
-    );
-
-    chartZoom = 1;
-
-    drawChart();
   }
 
 
@@ -1021,30 +658,36 @@ document.addEventListener("DOMContentLoaded", () => {
      SIMULATED MARKET
   ========================= */
 
-  chartTimer = setInterval(() => {
+  setInterval(() => {
 
     const oldPrice = price;
 
     price +=
       (Math.random() - 0.48) * 18;
 
+
     series.push(price);
+
     series.shift();
+
 
     const change =
       ((price - oldPrice) /
         oldPrice) *
       100;
 
+
     $("#pct").textContent =
       (change >= 0 ? "+" : "") +
       change.toFixed(3) +
       "%";
 
+
     $("#pct").style.color =
       change >= 0
         ? "#16e58a"
         : "#ff5d6c";
+
 
     generateProbabilities();
 
@@ -1066,6 +709,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
     drawChart();
+
   };
 
 
@@ -1078,6 +722,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
     drawChart();
+
   };
 
 
@@ -1088,6 +733,7 @@ document.addEventListener("DOMContentLoaded", () => {
     drawChart();
 
     toast("Chart reset.");
+
   };
 
 
@@ -1100,7 +746,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const market =
       $("#marketSelect").value;
 
-    loadMarket(market);
+    toast(
+      `${market} selected.`
+    );
+
   };
 
 
@@ -1128,7 +777,6 @@ document.addEventListener("DOMContentLoaded", () => {
               ${position.type}
               • ${money(position.stake)}
               • digit ${position.digit}
-              • ${position.market}
             </span>
 
             <strong>
@@ -1145,6 +793,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `<div class="empty">
           No open positions.
         </div>`;
+
     }
 
 
@@ -1161,8 +810,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <span>
                 ${trade.type}
                 • ${money(trade.stake)}
-                • digit ${trade.digit}
-                • ${trade.market}
+                • ${trade.digit}
               </span>
 
               <strong
@@ -1186,7 +834,9 @@ document.addEventListener("DOMContentLoaded", () => {
         `<div class="empty">
           No trades yet.
         </div>`;
+
     }
+
   }
 
 
@@ -1199,41 +849,27 @@ document.addEventListener("DOMContentLoaded", () => {
     if (stake <= 0) {
 
       toast("Enter a valid stake.");
+
       return;
+
     }
 
 
     if (stake > balance) {
 
       toast("Not enough demo balance.");
+
       return;
+
     }
 
 
     /*
-      IMPORTANT:
-      Save the contract information NOW.
-      Changing the terminal later will not
-      change an already-open position.
+      Deduct stake immediately.
     */
 
-    const tradeContract =
-      contractType;
+    balance -= stake;
 
-    const tradeDigit =
-      selectedDigit;
-
-    const tradeMarket =
-      currentMarket;
-
-    const tradeStake =
-      stake;
-
-    const tradeMode =
-      mode;
-
-
-    balance -= tradeStake;
 
     localStorage.setItem(
       "tradezoraDemoBalance",
@@ -1247,34 +883,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
       type,
 
-      stake: tradeStake,
+      stake,
 
-      digit: tradeDigit,
+      digit: selectedDigit,
 
-      contract: tradeContract,
+      contract: contractType,
 
-      market: tradeMarket,
+      mode
 
-      mode: tradeMode
     };
 
 
     positions.push(position);
 
+
     renderBalance();
+
     renderLists();
+
 
     toast(
       `${type} demo position opened.`
     );
 
 
-    const timer = setTimeout(() => {
+    /*
+      Simulate contract result after 5 seconds.
+    */
 
-      tradeTimers =
-        tradeTimers.filter(
-          item => item !== timer
-        );
+    setTimeout(() => {
 
       const index =
         positions.findIndex(
@@ -1282,8 +919,13 @@ document.addEventListener("DOMContentLoaded", () => {
             item.id === position.id
         );
 
+
       if (index < 0) return;
 
+
+      /*
+        Generate a final simulated digit.
+      */
 
       const finalDigit =
         Math.floor(
@@ -1294,64 +936,54 @@ document.addEventListener("DOMContentLoaded", () => {
       let win = false;
 
 
-      if (tradeContract === "match") {
+      if (contractType === "match") {
 
         win =
-          (
-            finalDigit === tradeDigit &&
-            type === "MATCH"
-          ) ||
-          (
-            finalDigit !== tradeDigit &&
-            type === "DIFFER"
-          );
+          finalDigit === selectedDigit &&
+          type === "MATCH"
+          ||
+          finalDigit !== selectedDigit &&
+          type === "DIFFER";
+
       }
 
-
-      else if (tradeContract === "even") {
+      else if (contractType === "even") {
 
         const even =
           finalDigit % 2 === 0;
 
         win =
-          (
-            even &&
-            type === "EVEN"
-          ) ||
-          (
-            !even &&
-            type === "ODD"
-          );
+          (even && type === "EVEN") ||
+          (!even && type === "ODD");
+
       }
 
-
-      else if (tradeContract === "over") {
+      else if (contractType === "over") {
 
         const over =
           finalDigit > 5;
 
         win =
-          (
-            over &&
-            type === "OVER"
-          ) ||
-          (
-            !over &&
-            type === "UNDER"
-          );
+          (over && type === "OVER") ||
+          (!over && type === "UNDER");
+
       }
 
 
+      /*
+        Demo payout.
+      */
+
       const profit =
         win
-          ? tradeStake * 0.85
+          ? stake * 0.85
           : 0;
 
 
       if (win) {
 
         balance +=
-          tradeStake + profit;
+          stake + profit;
 
         pnl += profit;
 
@@ -1359,9 +991,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       } else {
 
-        pnl -= tradeStake;
+        pnl -= stake;
 
         losses++;
+
       }
 
 
@@ -1380,11 +1013,18 @@ document.addEventListener("DOMContentLoaded", () => {
         win,
 
         profit
+
       });
 
 
+      /*
+        Keep history manageable.
+      */
+
       if (history.length > 50) {
+
         history.shift();
+
       }
 
 
@@ -1395,6 +1035,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       renderBalance();
+
       renderLists();
 
 
@@ -1404,10 +1045,9 @@ document.addEventListener("DOMContentLoaded", () => {
           : `Demo trade lost — digit ${finalDigit}`
       );
 
+
     }, 5000);
 
-
-    tradeTimers.push(timer);
   }
 
 
@@ -1428,6 +1068,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     trade(type);
+
   };
 
 
@@ -1444,6 +1085,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     trade(type);
+
   };
 
 
@@ -1453,16 +1095,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("#clearPositions").onclick = () => {
 
-    if (!positions.length) {
-      toast("No open positions.");
-      return;
-    }
-
     positions = [];
 
     renderLists();
 
-    toast("Open positions cleared from view.");
+    toast(
+      "Open positions cleared from view."
+    );
+
   };
 
 
@@ -1470,13 +1110,11 @@ document.addEventListener("DOMContentLoaded", () => {
      INITIAL RENDER
   ========================= */
 
-  renderBalance();
-
   renderLists();
 
-  generateProbabilities();
+  renderBalance();
 
-  updateContractButtons();
+  generateProbabilities();
 
 
   console.log(
@@ -1484,3 +1122,316 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
 });
+/* =========================================================
+   TRADEZORA ENTRY SCANNER — DEMO MODULE
+   This module adds the working scanner flow without any
+   Deriv/API connection and without automatic trading.
+========================================================= */
+(function () {
+  function initTradeZoraScanner() {
+    const trigger = document.querySelector('#scanner');
+    if (!trigger) return;
+
+    /* Remove a previously injected version if the script is reloaded. */
+    const old = document.querySelector('#tzScannerModal');
+    if (old) old.remove();
+
+    const style = document.createElement('style');
+    style.id = 'tzScannerStyles';
+    style.textContent = `
+      #tzScannerModal {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(2, 5, 10, .78);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      #tzScannerModal.tz-open { display: flex; }
+      #tzScannerCard {
+        width: min(100%, 640px);
+        max-height: min(92vh, 760px);
+        overflow-y: auto;
+        background: #0b1120;
+        border: 1px solid #26334e;
+        border-radius: 24px;
+        box-shadow: 0 24px 80px rgba(0,0,0,.55);
+        color: #f4f7ff;
+      }
+      .tz-s-head {
+        display:flex; align-items:center; gap:16px;
+        padding:28px 28px 24px;
+        border-bottom:1px solid #222c40;
+      }
+      .tz-s-icon {
+        width:78px; height:78px; flex:0 0 78px;
+        display:grid; place-items:center;
+        border-radius:20px;
+        background:linear-gradient(135deg,#7b35ff,#3f72ff);
+        box-shadow:0 12px 30px rgba(96,58,255,.28);
+        font-size:40px; font-weight:800;
+      }
+      .tz-s-title { min-width:0; flex:1; }
+      .tz-s-title h2 { margin:0; font-size:30px; line-height:1.05; }
+      .tz-s-title p { margin:8px 0 0; color:#7e879b; font-size:16px; }
+      #tzScannerClose {
+        width:42px; height:42px; flex:0 0 42px;
+        border:0; background:transparent; color:#7d879d;
+        font-size:34px; cursor:pointer; line-height:1;
+      }
+      .tz-s-body { padding:28px; }
+      .tz-s-info {
+        background:#182133; border-radius:22px; padding:25px 26px;
+        color:#9da7bc; font-size:18px; line-height:1.65;
+        margin-bottom:28px;
+      }
+      .tz-s-info strong { color:#f2f5ff; }
+      .tz-s-label { display:block; margin:0 0 12px; font-size:18px; font-weight:800; }
+      #tzScannerMarket {
+        width:100%; box-sizing:border-box;
+        background:#0b101b; color:#eef2fb;
+        border:1px solid #273248; border-radius:18px;
+        padding:17px 18px; font-size:18px; outline:none;
+      }
+      .tz-s-ready {
+        display:flex; justify-content:space-between; align-items:center;
+        margin:36px 0 12px; font-size:18px; font-weight:800;
+      }
+      #tzScanCount { color:#707b91; }
+      .tz-progress {
+        height:12px; background:#1b2638; border-radius:99px; overflow:hidden;
+      }
+      #tzProgressBar {
+        width:0%; height:100%; border-radius:99px;
+        background:linear-gradient(90deg,#6451ff,#278fff);
+        transition:width .12s linear;
+      }
+      #tzScanButton, #tzLoadButton {
+        width:100%; border-radius:18px; padding:20px 16px;
+        font-size:20px; font-weight:900; cursor:pointer;
+        margin-top:28px;
+      }
+      #tzScanButton {
+        border:0; color:#fff;
+        background:linear-gradient(100deg,#5e4cff,#278fff);
+        box-shadow:0 12px 28px rgba(54,91,255,.22);
+      }
+      #tzScanButton:disabled { opacity:.65; cursor:wait; }
+      #tzLoadButton {
+        border:1px solid #41516d; color:#f4f7ff; background:#172236;
+      }
+      #tzLoadButton:disabled { opacity:.45; cursor:not-allowed; }
+      .tz-result {
+        display:none; margin-top:22px; padding:18px;
+        border:1px solid #293651; border-radius:18px; background:#111a2a;
+      }
+      .tz-result.tz-show { display:block; }
+      .tz-result-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+      .tz-result-item { padding:12px; border-radius:12px; background:#0a101b; }
+      .tz-result-item small { display:block; color:#778197; margin-bottom:5px; }
+      .tz-result-item strong { font-size:16px; }
+      .tz-s-note { margin-top:16px; color:#68748a; font-size:12px; line-height:1.5; }
+      @media (max-width:650px) {
+        #tzScannerModal { padding:12px; align-items:center; }
+        #tzScannerCard { border-radius:22px; max-height:90vh; }
+        .tz-s-head { padding:22px 18px 20px; gap:13px; }
+        .tz-s-icon { width:64px; height:64px; flex-basis:64px; border-radius:17px; font-size:31px; }
+        .tz-s-title h2 { font-size:27px; }
+        .tz-s-title p { font-size:14px; }
+        .tz-s-body { padding:18px; }
+        .tz-s-info { padding:21px; font-size:17px; }
+        .tz-s-ready { margin-top:28px; }
+        #tzScanButton, #tzLoadButton { font-size:18px; padding:18px 14px; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const modal = document.createElement('div');
+    modal.id = 'tzScannerModal';
+    modal.innerHTML = `
+      <div id="tzScannerCard" role="dialog" aria-modal="true" aria-labelledby="tzScannerTitle">
+        <div class="tz-s-head">
+          <div class="tz-s-icon">✧</div>
+          <div class="tz-s-title">
+            <h2 id="tzScannerTitle">Entry Scanner</h2>
+            <p>TradeZora Demo Scanner</p>
+          </div>
+          <button id="tzScannerClose" aria-label="Close scanner">×</button>
+        </div>
+        <div class="tz-s-body">
+          <div class="tz-s-info">
+            Pick the market category you want to scan. The demo scanner checks simulated
+            <strong>volatility / synthetic-style</strong> markets and surfaces a demo entry
+            signal based on simulated tick patterns.
+          </div>
+
+          <label class="tz-s-label" for="tzScannerMarket">Market</label>
+          <select id="tzScannerMarket">
+            <option value="Volatility 10 (1s)">Volatility 10 (1s)</option>
+            <option value="Volatility 25 (1s)">Volatility 25 (1s)</option>
+            <option value="Volatility 50 (1s)">Volatility 50 (1s)</option>
+            <option value="Volatility 75 (1s)">Volatility 75 (1s)</option>
+            <option value="Volatility 100 (1s)">Volatility 100 (1s)</option>
+            <option value="Even / Odd">Even / Odd</option>
+            <option value="Over / Under">Over / Under</option>
+          </select>
+
+          <div class="tz-s-ready">
+            <span id="tzReadyText">Ready to scan</span>
+            <span id="tzScanCount">0%</span>
+          </div>
+          <div class="tz-progress"><div id="tzProgressBar"></div></div>
+
+          <button id="tzScanButton">⌕ &nbsp; Deep Scan for Best Market</button>
+
+          <div id="tzResult" class="tz-result">
+            <div class="tz-result-grid">
+              <div class="tz-result-item"><small>Market</small><strong id="tzResultMarket">—</strong></div>
+              <div class="tz-result-item"><small>Signal</small><strong id="tzResultSignal">—</strong></div>
+              <div class="tz-result-item"><small>Digit</small><strong id="tzResultDigit">—</strong></div>
+              <div class="tz-result-item"><small>Demo confidence</small><strong id="tzResultConfidence">—</strong></div>
+            </div>
+          </div>
+
+          <button id="tzLoadButton" disabled>Load Deep Scanner Bot</button>
+          <div class="tz-s-note">Demo only. The scanner does not connect to Deriv, place trades automatically, or guarantee an outcome.</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const close = () => modal.classList.remove('tz-open');
+    const open = () => {
+      modal.classList.add('tz-open');
+      resetScanUI();
+    };
+
+    function resetScanUI() {
+      document.querySelector('#tzReadyText').textContent = 'Ready to scan';
+      document.querySelector('#tzScanCount').textContent = '0%';
+      document.querySelector('#tzProgressBar').style.width = '0%';
+      document.querySelector('#tzResult').classList.remove('tz-show');
+      document.querySelector('#tzLoadButton').disabled = true;
+      document.querySelector('#tzScanButton').disabled = false;
+    }
+
+    trigger.onclick = function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      open();
+    };
+
+    document.querySelector('#tzScannerClose').onclick = close;
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) close();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') close();
+    });
+
+    let scanResult = null;
+
+    document.querySelector('#tzScanButton').onclick = async () => {
+      const scanButton = document.querySelector('#tzScanButton');
+      const loadButton = document.querySelector('#tzLoadButton');
+      const count = document.querySelector('#tzScanCount');
+      const bar = document.querySelector('#tzProgressBar');
+      const readyText = document.querySelector('#tzReadyText');
+      const resultBox = document.querySelector('#tzResult');
+
+      scanButton.disabled = true;
+      loadButton.disabled = true;
+      resultBox.classList.remove('tz-show');
+      readyText.textContent = 'Deep scanning';
+
+      for (let i = 1; i <= 13; i++) {
+        await new Promise(resolve => setTimeout(resolve, 130));
+        count.textContent = `${i}/13`;
+        bar.style.width = `${(i / 13) * 100}%`;
+      }
+
+      const marketOptions = [
+        'Volatility 10 (1s)',
+        'Volatility 25 (1s)',
+        'Volatility 50 (1s)',
+        'Volatility 75 (1s)',
+        'Volatility 100 (1s)'
+      ];
+      const selectedCategory = document.querySelector('#tzScannerMarket').value;
+      const market = marketOptions.includes(selectedCategory)
+        ? selectedCategory
+        : marketOptions[Math.floor(Math.random() * marketOptions.length)];
+      const signals = ['MATCH', 'DIFFER', 'EVEN', 'ODD', 'OVER', 'UNDER'];
+      const signal = signals[Math.floor(Math.random() * signals.length)];
+      const digit = Math.floor(Math.random() * 10);
+      const confidence = 80 + Math.floor(Math.random() * 16);
+
+      scanResult = { market, signal, digit, confidence };
+      readyText.textContent = 'Scan complete';
+      document.querySelector('#tzResultMarket').textContent = market;
+      document.querySelector('#tzResultSignal').textContent = signal;
+      document.querySelector('#tzResultDigit').textContent = digit;
+      document.querySelector('#tzResultConfidence').textContent = `${confidence}%`;
+      resultBox.classList.add('tz-show');
+      loadButton.disabled = false;
+    };
+
+    document.querySelector('#tzLoadButton').onclick = () => {
+      if (!scanResult) return;
+
+      const marketSelect = document.querySelector('#marketSelect');
+      if (marketSelect) {
+        const match = [...marketSelect.options].find(option =>
+          option.value === scanResult.market || option.textContent.trim() === scanResult.market
+        );
+        if (match) {
+          marketSelect.value = match.value;
+          marketSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+
+      const digitButton = document.querySelector(`#contractDigits button[data-digit="${scanResult.digit}"]`) ||
+        [...document.querySelectorAll('#contractDigits button')].find(button => button.textContent.trim() === String(scanResult.digit));
+      if (digitButton) digitButton.click();
+
+      const contractMap = {
+        MATCH: 'match', DIFFER: 'match',
+        EVEN: 'even', ODD: 'even',
+        OVER: 'over', UNDER: 'over'
+      };
+      const wantedContract = contractMap[scanResult.signal];
+      const contractTab = [...document.querySelectorAll('.market-tabs button')]
+        .find(button => (button.dataset.contract || '').toLowerCase() === wantedContract);
+      if (contractTab) contractTab.click();
+
+      close();
+      showScannerToast(`Deep Scanner loaded: ${scanResult.signal}, digit ${scanResult.digit}`);
+    };
+
+    function showScannerToast(message) {
+      const existing = document.querySelector('#toast');
+      if (existing) {
+        existing.textContent = message;
+        existing.classList.add('show');
+        setTimeout(() => existing.classList.remove('show'), 2200);
+        return;
+      }
+      const t = document.createElement('div');
+      t.textContent = message;
+      t.style.cssText = 'position:fixed;left:50%;bottom:78px;transform:translateX(-50%);z-index:10001;background:#102019;color:#e8fff3;border:1px solid #20543b;padding:11px 14px;border-radius:10px;font:700 12px system-ui;white-space:nowrap;';
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2200);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTradeZoraScanner, { once: true });
+  } else {
+    initTradeZoraScanner();
+  }
+})();
