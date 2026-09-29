@@ -714,51 +714,15 @@ document.addEventListener("DOMContentLoaded", () => {
     The 0–9 statistics row above is now the digit selector.
   */
 
-  /* =========================
-     CONTRACT TABS
-  ========================= */
-
-  const contractDigits =
-    $("#contractDigits");
-
-
-  for (let i = 0; i < 10; i++) {
-
-    const button =
-      document.createElement("button");
-
-    button.textContent = i;
-
-    button.dataset.digit = i;
-
-    button.onclick = () => {
-
-      selectedDigit = i;
-
-      [...contractDigits.children]
-        .forEach(element =>
-          element.classList.remove("active")
-        );
-
-      button.classList.add("active");
-
-      generateProbabilities();
-
-      toast(`Digit ${i} selected.`);
-
-    };
-
-    contractDigits.appendChild(button);
-
-  }
-
-
-  contractDigits.children[0].classList.add("active");
-
+  const legacyContractTitle = document.querySelector(".contract-title");
+  const legacyContractDigits = document.querySelector("#contractDigits");
+  if (legacyContractTitle) legacyContractTitle.remove();
+  if (legacyContractDigits) legacyContractDigits.remove();
 
   /* =========================
      CONTRACT TABS
   ========================= */
+
 
   const contractTabs =
     document.querySelectorAll(
@@ -907,17 +871,7 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedDigit = suggestedDigit;
 
 
-      [...contractDigits.children]
-        .forEach(element =>
-          element.classList.remove("active")
-        );
-
-      contractDigits
-        .children[suggestedDigit]
-        .classList.add("active");
-
-
-      generateProbabilities();
+      renderDigitStatistics();
 
       toast(
         `AI BOT demo signal: digit ${suggestedDigit}`
