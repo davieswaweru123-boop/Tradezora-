@@ -652,7 +652,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const digitStats = Array(10).fill(10);
 
   function getLastDigit(value) {
-    return Math.abs(Math.floor(Number(value))) % 10;
+    // The contract digit follows the last visible decimal digit of the quote.
+    // Example: 1043.64 -> 4, 14166.41 -> 1.
+    const scaled = Math.round(Math.abs(Number(value)) * 100);
+    return scaled % 10;
   }
 
   function renderDigitStatistics() {
@@ -897,16 +900,43 @@ document.addEventListener("DOMContentLoaded", () => {
   let simulatedVelocity = 0;
   let simulatedCenter = price;
 
-  // Build a tighter, ranging demo history instead of large independent jumps.
-  for (let i = 0; i < 100; i++) {
-    const pull = (simulatedCenter - price) * 0.025;
-    const noise = (Math.random() - 0.5) * 2.8;
-    simulatedVelocity = simulatedVelocity * 0.55 + noise + pull;
-    simulatedCenter += simulatedVelocity;
-    series.push(simulatedCenter);
-  }
-  price = series[series.length - 1];
+  // Each demo market has its own simulated personality so the markets do not
+  // all produce the same-looking chart. This is demo data only.
+  const marketProfiles = {
+    "Volatility 10 (1s)": { trend: 0.00, noise: 1.35, momentum: 0.62, meanReversion: 0.055, range: 22 },
+    "Volatility 25 (1s)": { trend: 0.38, noise: 1.55, momentum: 0.64, meanReversion: 0.035, range: 34 },
+    "Volatility 50 (1s)": { trend: -0.34, noise: 1.75, momentum: 0.66, meanReversion: 0.035, range: 38 },
+    "Volatility 75 (1s)": { trend: 0.08, noise: 2.45, momentum: 0.72, meanReversion: 0.025, range: 52 },
+    "Volatility 100 (1s)": { trend: -0.06, noise: 3.10, momentum: 0.76, meanReversion: 0.018, range: 68 }
+  };
 
+  let activeMarket = $("#marketSelect")?.value || "Volatility 10 (1s)";
+  let marketProfile = marketProfiles[activeMarket] || marketProfiles["Volatility 10 (1s)"];
+
+  function buildMarketHistory() {
+    series = [];
+    simulatedVelocity = 0;
+    simulatedCenter = price;
+
+    // Give each market a different initial shape while keeping the visible
+    // range compact and readable on mobile.
+    for (let i = 0; i < 100; i++) {
+      const wave = Math.sin(i / 7) * marketProfile.noise * 0.55;
+      const noise = (Math.random() - 0.5) * marketProfile.noise;
+      const pull = (simulatedCenter - price) * marketProfile.meanReversion;
+      simulatedVelocity =
+        simulatedVelocity * marketProfile.momentum +
+        marketProfile.trend +
+        wave * 0.18 +
+        noise +
+        pull;
+      price += simulatedVelocity;
+      simulatedCenter = price;
+      series.push(price);
+    }
+  }
+
+  buildMarketHistory();
 
   let chartZoom = 1;
 
@@ -1153,21 +1183,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const oldPrice = price;
 
-    // Controlled ranging movement: small ticks with mild momentum and mean reversion.
-    const pullToCenter = (simulatedCenter - price) * 0.06;
-    const noise = (Math.random() - 0.5) * 3.2;
-    simulatedVelocity = simulatedVelocity * 0.58 + noise + pullToCenter;
+    // Market-specific simulated movement. Some markets trend upward, some
+    // downward, while others range or move more aggressively.
+    const wave = Math.sin(Date.now() / 7000) * marketProfile.noise * 0.28;
+    const noise = (Math.random() - 0.5) * marketProfile.noise;
+    const pullToCenter = (simulatedCenter - price) * marketProfile.meanReversion;
+
+    simulatedVelocity =
+      simulatedVelocity * marketProfile.momentum +
+      marketProfile.trend +
+      wave +
+      noise +
+      pullToCenter;
+
     price += simulatedVelocity;
 
-    // Keep the demo market inside a compact visible range.
-    const maxDistance = 42;
+    // Keep each demo market readable rather than allowing an unlimited drift.
+    const maxDistance = marketProfile.range;
     if (price > simulatedCenter + maxDistance) {
       price = simulatedCenter + maxDistance;
-      simulatedVelocity *= -0.35;
+      simulatedVelocity *= -0.22;
     } else if (price < simulatedCenter - maxDistance) {
       price = simulatedCenter - maxDistance;
-      simulatedVelocity *= -0.35;
+      simulatedVelocity *= -0.22;
     }
+
+    // Slowly move the local reference point so trending markets can actually
+    // trend instead of behaving like a flat random walk.
+    simulatedCenter += marketProfile.trend * 0.35;
 
     series.push(price);
 
@@ -1250,8 +1293,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const market =
       $("#marketSelect").value;
 
+    activeMarket = market;
+    marketProfile =
+      marketProfiles[market] ||
+      marketProfiles["Volatility 10 (1s)"];
+
+    // Keep the current quote as the starting point, but give the newly
+    // selected market its own history and movement character.
+    buildMarketHistory();
+    recordCurrentDigit();
+    generateProbabilities();
+    drawChart();
+
     toast(
-      `${market} selected.`
+      `${market} selected — demo market profile loaded.`
     );
 
   };
