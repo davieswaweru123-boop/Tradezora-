@@ -779,14 +779,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderLists() {
 
-    const positionsList = $("#positionsList");
-    const historyList = $("#historyList");
+    const positionsList =
+      $("#positionsList");
 
-    // Positions and History now have their own pages.
-    // Keep this function safe when those containers are not on Trade page.
-    if (!positionsList && !historyList) return;
+    const historyList =
+      $("#historyList");
 
-    if (positionsList && positions.length) {
+
+    if (positions.length) {
 
       positionsList.innerHTML =
         positions.map(position => `
@@ -807,7 +807,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         `).join("");
 
-    } else if (positionsList) {
+    } else {
 
       positionsList.innerHTML =
         `<div class="empty">
@@ -817,7 +817,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    if (historyList && history.length) {
+    if (history.length) {
 
       historyList.innerHTML =
         history
@@ -848,7 +848,7 @@ document.addEventListener("DOMContentLoaded", () => {
           `)
           .join("");
 
-    } else if (historyList) {
+    } else {
 
       historyList.innerHTML =
         `<div class="empty">
@@ -1071,217 +1071,102 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   /* =========================
-     CONTINUOUS DEMO TRADING
+     PERSISTENT CONTINUOUS DEMO TRADING
   ========================= */
 
   function buttonContractLabel(type) {
-
     if (type === "EVEN") return "EVEN";
     if (type === "ODD") return "ODD";
     if (type === "OVER") return "OVER";
     if (type === "UNDER") return "UNDER";
     if (type === "DIFFER") return "DIFFER";
-
     return "MATCH";
-
   }
 
-
   function setTradeButtonState(button, type, running) {
-
     if (!button) return;
-
     const label = buttonContractLabel(type);
-
     button.innerHTML = running
       ? `<strong>STOP ${label}</strong><span>Running</span>`
       : `<strong>${label}</strong><span>Demo</span>`;
-
     button.classList.toggle("continuous-active", running);
-    button.setAttribute(
-      "aria-label",
-      running ? `Stop continuous ${label} trading` : `Start ${label} trade`
-    );
-
+    button.setAttribute("aria-label", running
+      ? `Stop continuous ${label} trading`
+      : `Start ${label} trade`);
   }
 
-
-  function stopContinuousTrading(showToast = true) {
-
-    if (!continuousTrading.running) return;
-
-    if (continuousTrading.timer) {
-      clearTimeout(continuousTrading.timer);
-    }
-
-    const button = continuousTrading.button;
-    const type = continuousTrading.type;
-
-    continuousTrading = {
-      running: false,
-      type: null,
-      contract: null,
-      digit: null,
-      stake: null,
-      button: null,
-      timer: null
-    };
-
-    setTradeButtonState(button, type || "MATCH", false);
-
-    if (showToast) {
-      toast("Continuous trading stopped.");
-    }
-
+  function currentContinuousState() {
+    return window.TradeZoraContinuousEngine
+      ? window.TradeZoraContinuousEngine.getState()
+      : { running:false };
   }
 
-
-  function startContinuousTrading(type, button) {
-
-    // Pressing the active button again stops the stream.
-    if (
-      continuousTrading.running &&
-      continuousTrading.button === button
-    ) {
-      stopContinuousTrading(true);
+  function syncContinuousButtons() {
+    const state = currentContinuousState();
+    const matchButton = $("#match");
+    const differButton = $("#differ");
+    if (!state.running) {
+      if (matchButton) setTradeButtonState(matchButton, contractType === "even" ? "EVEN" : contractType === "over" ? "OVER" : "MATCH", false);
+      if (differButton) setTradeButtonState(differButton, contractType === "even" ? "ODD" : contractType === "over" ? "UNDER" : "DIFFER", false);
       return;
     }
+    setTradeButtonState(matchButton, state.type, state.type === "MATCH" || state.type === "EVEN" || state.type === "OVER");
+    setTradeButtonState(differButton, state.type, state.type === "DIFFER" || state.type === "ODD" || state.type === "UNDER");
+  }
 
-    // Only one continuous stream runs at once.
-    if (continuousTrading.running) {
-      stopContinuousTrading(false);
+  function startOrStopContinuous(type, button) {
+    const state = currentContinuousState();
+    if (state.running && state.type === type) {
+      window.TradeZoraContinuousEngine.stop();
+      toast("Continuous trading stopped.");
+      return;
     }
+    if (state.running) window.TradeZoraContinuousEngine.stop();
 
-    const streamContract = contractType;
-    const streamDigit = selectedDigit;
     const streamStake = Number(stake);
-
-    if (streamStake <= 0 || streamStake > balance) {
+    if (streamStake <= 0 || streamStake > Number(localStorage.getItem("tradezoraDemoBalance") || balance)) {
       toast("Not enough demo balance for continuous trading.");
       return;
     }
 
-    continuousTrading = {
-      running: true,
+    window.TradeZoraContinuousEngine.start({
       type,
-      contract: streamContract,
-      digit: streamDigit,
-      stake: streamStake,
-      button,
-      timer: null
-    };
-
-    setTradeButtonState(button, type, true);
-
-    toast(`Continuous ${buttonContractLabel(type)} trading started.`);
-
-    // Open the first demo trade immediately.
-    const opened = trade(type, {
-      contract: streamContract,
-      digit: streamDigit,
+      contract: contractType,
+      digit: selectedDigit,
       stake: streamStake,
       mode
     });
-
-    if (!opened) {
-      stopContinuousTrading(false);
-      return;
-    }
-
-    scheduleNextContinuousTrade();
-
+    toast(`Continuous ${buttonContractLabel(type)} trading started.`);
+    syncContinuousButtons();
   }
-
-
-  function scheduleNextContinuousTrade() {
-
-    if (!continuousTrading.running) return;
-
-    // Wait slightly longer than the 5-second demo result so trades don't overlap.
-    continuousTrading.timer = setTimeout(() => {
-
-      if (!continuousTrading.running) return;
-
-      const opened = trade(
-        continuousTrading.type,
-        {
-          contract: continuousTrading.contract,
-          digit: continuousTrading.digit,
-          stake: continuousTrading.stake,
-          mode
-        }
-      );
-
-      if (!opened) {
-        stopContinuousTrading(true);
-        return;
-      }
-
-      scheduleNextContinuousTrade();
-
-    }, 6500);
-
-  }
-
-
-  /* =========================
-     TRADE BUTTONS
-  ========================= */
 
   $("#match").onclick = () => {
-
     let type = "MATCH";
-
-    if (contractType === "even") {
-      type = "EVEN";
-    }
-
-    if (contractType === "over") {
-      type = "OVER";
-    }
-
-    startContinuousTrading(type, $("#match"));
-
+    if (contractType === "even") type = "EVEN";
+    if (contractType === "over") type = "OVER";
+    startOrStopContinuous(type, $("#match"));
   };
-
 
   $("#differ").onclick = () => {
-
     let type = "DIFFER";
-
-    if (contractType === "even") {
-      type = "ODD";
-    }
-
-    if (contractType === "over") {
-      type = "UNDER";
-    }
-
-    startContinuousTrading(type, $("#differ"));
-
+    if (contractType === "even") type = "ODD";
+    if (contractType === "over") type = "UNDER";
+    startOrStopContinuous(type, $("#differ"));
   };
 
+  window.addEventListener("tradezora-state-changed", () => {
+    balance = Number(localStorage.getItem("tradezoraDemoBalance") || balance);
+    history = JSON.parse(localStorage.getItem("tradezoraDemoHistory") || "[]");
+    positions = JSON.parse(localStorage.getItem("tradezoraDemoPositions") || "[]");
+    wins = history.filter(t => t.win).length;
+    losses = history.filter(t => !t.win).length;
+    pnl = history.reduce((sum, t) => sum + (t.win ? Number(t.profit || 0) : -Number(t.stake || 0)), 0);
+    renderBalance();
+    renderLists();
+    syncContinuousButtons();
+  });
 
-  /* =========================
-     CLEAR POSITIONS
-  ========================= */
-
-  const clearPositionsButton = $("#clearPositions");
-  if (clearPositionsButton) {
-    clearPositionsButton.onclick = () => {
-      positions = [];
-      saveTradeState();
-      renderLists();
-      toast("Open positions cleared from view.");
-    };
-  }
-
-
-  /* =========================
-     INITIAL RENDER
-  ========================= */
-
-  // Small visual cue for a running continuous button.
+  /* Small visual cue for a running continuous button. */
   const continuousStyle = document.createElement("style");
   continuousStyle.textContent = `
     .market-actions button.continuous-active,
@@ -1292,6 +1177,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   `;
   document.head.appendChild(continuousStyle);
+
+  /* =========================
+     CLEAR POSITIONS
+  ========================= */
+
+  $("#clearPositions").onclick = () => {
+
+    positions = [];
+    saveTradeState();
+
+    renderLists();
+
+    toast(
+      "Open positions cleared from view."
+    );
+
+  };
+
+
+  /* =========================
+     INITIAL RENDER
+  ========================= */
 
   renderLists();
 
