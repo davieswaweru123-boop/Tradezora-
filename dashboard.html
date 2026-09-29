@@ -16,7 +16,7 @@
 .side-menu{position:fixed;top:0;left:0;width:min(330px,88vw);height:100vh;padding:18px;background:#060b08;border-right:1px solid var(--border);box-shadow:18px 0 50px rgba(0,0,0,.4);transform:translateX(-105%);transition:transform .24s ease;z-index:90;overflow-y:auto}.side-menu.open{transform:translateX(0)}.side-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.side-brand{display:flex;align-items:center;gap:9px;color:var(--green);font-size:20px;font-weight:900}.brand-mark{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--green);border-radius:9px;font-size:12px}.icon-btn{border:1px solid var(--border);background:#0b1510;color:#fff;border-radius:9px}.close-btn{width:38px;height:38px;font-size:24px}.profile{display:flex;gap:11px;align-items:center;padding:13px;border:1px solid var(--border);border-radius:12px;background:#09140f;margin-bottom:12px}.avatar{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:50%;background:#103622;border:1px solid #246c47;color:var(--green);font-weight:900}.profile-info{min-width:0}.profile-info strong,.profile-info span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.profile-info span{margin-top:3px;color:var(--muted);font-size:11px}.side-nav{display:grid;gap:4px}.side-link{width:100%;min-height:44px;display:flex;align-items:center;gap:11px;padding:10px 12px;border:0;border-radius:9px;background:transparent;color:#d7e0dc;text-decoration:none;text-align:left;font-size:13px}.side-link span{width:19px;text-align:center;color:#9aa9a2}.side-link:hover,.side-link.active{background:#0b2117;color:var(--green)}.logout-btn{width:100%;margin-top:16px;padding:12px;border:1px solid #4b2028;border-radius:9px;background:#1a0b0e;color:#ff7c88}
 .page{width:100%}.terminal{width:min(1100px,100%);margin:0 auto;padding:16px}.market-tabs{display:flex;gap:5px;padding:4px;margin-bottom:10px;border:1px solid var(--border);border-radius:10px;background:#07100c;overflow-x:auto}.market-tabs button{flex:1 0 auto;min-height:38px;padding:8px 14px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-weight:700;font-size:12px;white-space:nowrap}.market-tabs button.active{background:#10301f;color:var(--green)}.market-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:10px}.eyebrow{display:block;margin-bottom:4px;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1px}.market-head select{min-width:190px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:#09130f;color:#fff;outline:none}.price-change{text-align:right}.price-change span{display:block;color:var(--muted);font-size:8px}.price-change strong{display:block;color:var(--green);font-size:13px}
 .panel{border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,#09110d,#07100c);box-shadow:var(--shadow)}.chart-panel{padding:13px}.chart-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px}.historical{padding:5px 8px;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:9px}.chart-tools{display:flex;gap:4px}.chart-tools button{min-width:31px;height:29px;padding:0 7px;border:1px solid var(--border);border-radius:6px;background:#0b1711;color:#dbe4df}.chart-wrap{position:relative;height:310px;margin-top:7px;overflow:hidden;border-radius:9px;background:linear-gradient(rgba(31,73,54,.15) 1px,transparent 1px),linear-gradient(90deg,rgba(31,73,54,.15) 1px,transparent 1px),#050a08;background-size:45px 45px}#priceChart{display:block;width:100%;height:100%}.chart-label{position:absolute;left:10px;bottom:8px;color:#4c6258;font-size:8px;pointer-events:none}.probability-title{display:flex;justify-content:space-between;gap:10px;margin-top:12px;color:#d9e3de;font-size:10px;font-weight:800}.probability-title small{color:var(--muted);font-size:8px;font-weight:500}.probabilities{display:grid;grid-template-columns:repeat(10,minmax(31px,1fr));gap:4px;margin-top:9px;align-items:start;overflow:visible}
-.probability{--probability:10%;position:relative;min-width:0;width:100%;aspect-ratio:1/1;border:0;border-radius:50%;background:#07101a;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:visible;isolation:isolate;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.02)}
+.probability{--probability:10%;position:relative;min-width:0;width:100%;aspect-ratio:1/1;border:0;border-radius:50%;background:#07101a;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:visible;isolation:isolate;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.02);transition:transform .18s ease,box-shadow .18s ease,filter .18s ease}
 .probability::before{content:"";position:absolute;inset:1px;border-radius:50%;background:conic-gradient(#26364b 0 var(--probability),#142033 var(--probability) 100%);z-index:-2}
 .probability::after{content:"";position:absolute;inset:5px;border-radius:50%;background:#07101a;z-index:-1}
 .probability .digit-number{position:relative;z-index:2;display:block;color:#edf3f7;font-size:13px;font-weight:800;line-height:1}
@@ -27,12 +27,13 @@
 .probability.lowest-digit .percent{color:#ff7084}
 .probability.current-digit{transform:translateY(-1px)}
 .probability.current-digit .digit-number{color:#fff}
-.probability.current-digit{box-shadow:0 0 0 2px rgba(244,197,66,.12)}
-.probability.current-digit::after{box-shadow:0 0 0 1px rgba(244,197,66,.14)}
 .probability.current-digit .digit-number::after{content:"";position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #f4c542}
-.probability.selected-digit{outline:1px solid rgba(94,160,255,.28);outline-offset:1px}
-.probability.highest-digit.current-digit{box-shadow:0 0 0 2px rgba(22,229,138,.2),0 0 12px rgba(22,229,138,.16)}
-.probability.lowest-digit.current-digit{box-shadow:0 0 0 2px rgba(255,77,103,.18),0 0 12px rgba(255,77,103,.12)}
+.probability.selected-digit{box-shadow:0 0 0 2px rgba(55,231,255,.22),0 0 12px rgba(55,231,255,.28),0 0 22px rgba(55,231,255,.12);filter:brightness(1.16)}
+.probability.selected-digit::after{box-shadow:inset 0 0 0 1px rgba(55,231,255,.28),0 0 10px rgba(55,231,255,.18)}
+.probability.selected-digit .digit-number{color:#fff}
+.probability.highest-digit.selected-digit{box-shadow:0 0 0 2px rgba(22,229,138,.55),0 0 14px rgba(22,229,138,.35),0 0 24px rgba(22,229,138,.15)}
+.probability.lowest-digit.selected-digit{box-shadow:0 0 0 2px rgba(255,77,103,.55),0 0 14px rgba(255,77,103,.3),0 0 24px rgba(255,77,103,.14)}
+
 .trade-card{margin-top:12px;padding:14px}.mode{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border-radius:8px;background:#06100b}.mode button{padding:8px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-weight:800;font-size:11px}.mode button.active{background:#10301f;color:var(--green)}.scanner{width:100%;margin:12px 0;padding:10px;display:flex;align-items:center;gap:9px;border:1px solid #392b67;border-radius:9px;background:#17112b;color:#c8baff;text-align:left}.scanner:disabled{opacity:.55;cursor:wait}.bot-icon{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:7px;background:#24194b;color:#b9a5ff}.bot-content{min-width:0;flex:1}.bot-content strong,.bot-content small{display:block}.bot-content strong{font-size:12px}.bot-content small{margin-top:2px;color:#9585c9;font-size:8px}.bot-badge{font-size:8px;opacity:.65}.control{margin-top:12px}.control label,.controls-grid label{display:block;color:var(--muted);font-size:9px;font-weight:700}.stake{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;padding:4px;border:1px solid var(--border);border-radius:8px}.stake strong{font-size:14px}.stake button{width:36px;height:31px;border:0;border-radius:6px;background:#142019;color:#fff;font-size:18px}.controls-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px}.input-wrap,.controls-grid select{display:flex;align-items:center;width:100%;min-height:38px;margin-top:5px;border:1px solid var(--border);border-radius:7px;background:#07100c;overflow:hidden}.input-wrap span{padding-left:8px;color:var(--muted);font-size:10px}.controls-grid input,.controls-grid select{width:100%;padding:8px;border:0;outline:0;background:transparent;color:#fff;font-size:11px}.controls-grid select{padding:0 8px}.controls-grid option{background:#0b120f;color:#fff}
 .session{margin-top:13px;padding:13px;border:1px solid var(--border);border-radius:11px;background:#07100c}.session h3{margin:0 0 9px;color:var(--muted);font-size:10px}.session-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.session-grid>div{min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;border-radius:8px;background:#050b08;text-align:center}.session-grid span{color:var(--muted);font-size:9px}.session-grid strong{margin-top:4px;font-size:14px}.contract-title{margin-top:12px;color:var(--muted);font-size:10px;font-weight:800}.contract-digits{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:7px;padding:8px;border:1px solid var(--border);border-radius:9px;background:#07100c}.contract-digits button{min-width:0;padding:8px 0;border:0;border-radius:6px;background:#4d4f50;color:#fff;font-size:12px;font-weight:800}.contract-digits button.active{background:var(--green);color:#041008}
 .trade-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.trade-buttons button{min-height:62px;border:0;border-radius:12px;color:#fff;font-size:16px;font-weight:900}.trade-buttons strong{display:block}.trade-buttons span{display:none}.match-btn{background:linear-gradient(135deg,#11df86,#16c978)}.differ-btn{background:linear-gradient(135deg,#ff5265,#f33f56)}
@@ -318,7 +319,25 @@
   </nav>
 
   <div id="toast" class="toast" role="status"></div>
-  <script>
+  
+<script>
+(function () {
+  window.tradeZoraCloseScanner = function () {
+    try {
+      var modal = document.querySelector('#tzScannerModal, .tz-scanner-modal, .scanner-modal');
+      if (!modal) return;
+      modal.classList.remove('tz-open', 'open', 'active', 'show');
+      modal.style.setProperty('display', 'none', 'important');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('scanner-open', 'modal-open');
+      document.body.style.overflow = '';
+    } catch (e) {
+      console.error('Scanner close fallback:', e);
+    }
+  };
+})();
+</script>
+<script>
 /* TradeZora shared demo trading engine.
    Keeps continuous demo trading alive while navigating between Trade,
    Positions and History pages. Demo only; no broker/API connection. */
@@ -687,8 +706,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const total = digitStats.reduce((sum, value) => sum + value, 0);
     const currentDigit = getLastDigit(price);
     const probabilities = digitStats.map(count => (count / total) * 100);
-    const highest = Math.max(...probabilities);
-    const lowest = Math.min(...probabilities);
+
+    // Pick exactly ONE highest and ONE lowest digit, even when percentages tie.
+    const highestDigit = probabilities.indexOf(Math.max(...probabilities));
+    let lowestDigit = -1;
+    let lowestValue = Infinity;
+
+    probabilities.forEach((value, digit) => {
+      if (digit === highestDigit) return;
+      if (value < lowestValue) {
+        lowestValue = value;
+        lowestDigit = digit;
+      }
+    });
+
+    // If every digit is tied, still show one high and one low so the UI
+    // communicates a clear visual state.
+    if (lowestDigit < 0) lowestDigit = highestDigit === 0 ? 1 : 0;
 
     probabilityContainer.innerHTML = "";
 
@@ -697,17 +731,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const element = document.createElement("div");
 
       element.className = "probability";
-      if (Math.abs(probability - highest) < 0.0001) element.classList.add("highest-digit");
-      if (Math.abs(probability - lowest) < 0.0001) element.classList.add("lowest-digit");
+      if (digit === highestDigit) element.classList.add("highest-digit");
+      if (digit === lowestDigit) element.classList.add("lowest-digit");
       if (digit === currentDigit) element.classList.add("current-digit");
       if (digit === selectedDigit) element.classList.add("selected-digit");
 
-      element.style.setProperty("--probability", `${Math.max(6, Math.min(100, probability))}%`);
+      element.style.setProperty(
+        "--probability",
+        `${Math.max(6, Math.min(100, probability))}%`
+      );
+
       element.setAttribute("role", "button");
       element.setAttribute("tabindex", "0");
       element.setAttribute(
         "aria-label",
-        `Digit ${digit}, ${probability.toFixed(1)} percent${digit === currentDigit ? ", current price last digit" : ""}`
+        `Digit ${digit}, ${probability.toFixed(1)} percent${digit === selectedDigit ? ", selected" : ""}${digit === currentDigit ? ", current price last digit" : ""}`
       );
 
       element.innerHTML = `
@@ -718,7 +756,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectDigit = () => {
         selectedDigit = digit;
         renderDigitStatistics();
-        toast(`Digit ${digit} selected.`);
+        if (typeof toast === "function") toast(`Digit ${digit} selected.`);
       };
 
       element.addEventListener("click", selectDigit);
@@ -2076,60 +2114,66 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!scanResult || scanRunning) return;
 
       scanRunning = true;
+      const loadedResult = { ...scanResult };
       const loadButton = $s('#tzLoadButton');
+
       loadButton.disabled = true;
       $s('#tzScanStatus').textContent = 'Loading contract into terminal…';
 
-      // Give the user a short visual confirmation, then apply the result.
-      await wait(250);
-
-      const marketSelect = document.querySelector('#marketSelect');
-      if (marketSelect) {
-        const match = [...marketSelect.options].find(option =>
-          option.value === scanResult.market ||
-          option.textContent.trim() === scanResult.market
-        );
-
-        if (match) {
-          marketSelect.value = match.value;
-          marketSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      }
-
-      const contractMap = {
-        MATCH: 'match', DIFFER: 'match',
-        EVEN: 'even', ODD: 'even',
-        OVER: 'over', UNDER: 'over'
-      };
-
-      const wantedContract = contractMap[scanResult.signal];
-      const contractTab = [...document.querySelectorAll('.market-tabs button')]
-        .find(button =>
-          (button.dataset.contract || '').toLowerCase() === wantedContract
-        );
-
-      if (contractTab) contractTab.click();
-
-      selectedDigit = Number(scanResult.digit);
-      renderDigitStatistics();
-
-      // The scanner only loads a demo setup. It never places a trade.
-      const contractLabel = document.querySelector(
-        '#selectedContract, #contractType, [data-selected-contract]'
-      );
-      if (contractLabel) contractLabel.textContent = scanResult.signal;
-
-      // IMPORTANT: close the modal explicitly in both CSS states.
+      // Close the scanner immediately. This guarantees the terminal becomes
+      // visible even if a later UI update encounters an error.
       modal.classList.remove('tz-open');
-      modal.style.display = 'none';
+      modal.style.setProperty('display', 'none', 'important');
       modal.setAttribute('aria-hidden', 'true');
-      modal.scrollTop = 0;
 
-      scanRunning = false;
+      await wait(120);
 
-      showScannerToast(
-        `Loaded ${scanResult.market} · ${scanResult.signal} · Digit ${scanResult.digit}`
-      );
+      try {
+        const marketSelect = document.querySelector('#marketSelect');
+
+        if (marketSelect) {
+          const match = [...marketSelect.options].find(option =>
+            option.value === loadedResult.market ||
+            option.textContent.trim() === loadedResult.market
+          );
+
+          if (match) {
+            marketSelect.value = match.value;
+            marketSelect.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+
+        const contractMap = {
+          MATCH: 'match', DIFFER: 'match',
+          EVEN: 'even', ODD: 'even',
+          OVER: 'over', UNDER: 'over'
+        };
+
+        const wantedContract = contractMap[loadedResult.signal];
+        const contractTab = [...document.querySelectorAll('.market-tabs button')]
+          .find(button =>
+            (button.dataset.contract || '').toLowerCase() === wantedContract
+          );
+
+        if (contractTab) contractTab.click();
+
+        selectedDigit = Number(loadedResult.digit);
+        renderDigitStatistics();
+
+        const contractLabel = document.querySelector(
+          '#selectedContract, #contractType, [data-selected-contract]'
+        );
+        if (contractLabel) contractLabel.textContent = loadedResult.signal;
+
+        showScannerToast(
+          `Loaded ${loadedResult.market} · ${loadedResult.signal} · Digit ${loadedResult.digit}`
+        );
+      } catch (error) {
+        console.error('TradeZora scanner load error:', error);
+        showScannerToast('Scanner result loaded. Check the terminal.');
+      } finally {
+        scanRunning = false;
+      }
     };
 
     function showScannerToast(message) {
