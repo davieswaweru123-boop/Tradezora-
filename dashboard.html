@@ -1935,13 +1935,13 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
     `;
-    document.body.appendChild(modal);
+    modal.setAttribute('aria-hidden', 'true'); document.body.appendChild(modal);
 
     const $s = (id) => document.querySelector(id);
     let scanResult = null;
     let scanRunning = false;
 
-    const close = () => modal.classList.remove('tz-open');
+    const close = () => { modal.classList.remove('tz-open'); modal.style.display = 'none'; modal.setAttribute('aria-hidden', 'true'); };
     const resetScanUI = () => {
       scanResult = null;
       scanRunning = false;
@@ -1953,7 +1953,7 @@ document.addEventListener("DOMContentLoaded", () => {
       $s('#tzLoadButton').disabled = true;
       $s('#tzScanButton').disabled = false;
     };
-    const open = () => { modal.classList.add('tz-open'); resetScanUI(); };
+    const open = () => { modal.style.display = 'flex'; modal.classList.add('tz-open'); modal.setAttribute('aria-hidden', 'false'); resetScanUI(); };
 
     trigger.onclick = (event) => { event.preventDefault(); event.stopPropagation(); open(); };
     $s('#tzScannerClose').onclick = close;
@@ -2074,8 +2074,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (contractLabel) contractLabel.textContent = scanResult.signal;
 
       close();
-      showScannerToast(`Loaded ${scanResult.market} · ${scanResult.signal} · Digit ${scanResult.digit}`);
       scanRunning = false;
+      showScannerToast(`Loaded ${scanResult.market} · ${scanResult.signal} · Digit ${scanResult.digit}`);
     };
 
     function showScannerToast(message) {
