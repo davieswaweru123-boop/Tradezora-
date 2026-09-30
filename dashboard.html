@@ -918,9 +918,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     $("#auto").classList.add("active");
     $("#manual").classList.remove("active");
-    syncContinuousButtons();
 
-    toast("AUTO mode selected — press a trade button to start continuous trading.");
+    // Entering AUTO mode automatically accepts continuous trading.
+    // The currently selected left-side contract is used as the stream.
+    // This is demo-only; MANUAL mode remains one trade at a time.
+    const pair = getContractPair();
+    const state = currentContinuousState();
+
+    if (!state.running) {
+      startOrStopContinuous(pair.left);
+    } else {
+      syncContinuousButtons();
+      toast(`AUTO continuous ${pair.left} trading is active.`);
+    }
 
   };
 
