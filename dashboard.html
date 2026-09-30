@@ -27,19 +27,26 @@
 .probability.lowest-digit .percent{color:#ff7084}
 .probability.current-digit{transform:translateY(-1px)}
 .probability.current-digit .digit-number{color:#fff}
-.probability.current-digit .digit-number::after{content:"";position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #f4c542}
+.probability.current-digit .digit-number::after{content:"";position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #f4c542;filter:drop-shadow(0 0 4px rgba(244,197,66,.65))}
 .probability.selected-digit{box-shadow:0 0 0 2px rgba(55,231,255,.22),0 0 12px rgba(55,231,255,.28),0 0 22px rgba(55,231,255,.12);filter:brightness(1.16)}
+.probability.trade-win{box-shadow:0 0 0 3px rgba(22,229,138,.82),0 0 16px rgba(22,229,138,.62),0 0 30px rgba(22,229,138,.24)!important;animation:tradeResultPulse 1.15s ease-in-out 2}
+.probability.trade-win::before{background:conic-gradient(#16e58a 0 var(--probability),#123c2a var(--probability) 100%)}
+.probability.trade-win .percent{color:#16e58a}
+.probability.trade-loss{box-shadow:0 0 0 3px rgba(255,77,103,.84),0 0 16px rgba(255,77,103,.62),0 0 30px rgba(255,77,103,.24)!important;animation:tradeResultPulse 1.15s ease-in-out 2}
+.probability.trade-loss::before{background:conic-gradient(#ff4d67 0 var(--probability),#4a1721 var(--probability) 100%)}
+.probability.trade-loss .percent{color:#ff7084}
+@keyframes tradeResultPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 .probability.selected-digit::after{box-shadow:inset 0 0 0 1px rgba(55,231,255,.28),0 0 10px rgba(55,231,255,.18)}
 .probability.selected-digit .digit-number{color:#fff}
 .probability.highest-digit.selected-digit{box-shadow:0 0 0 2px rgba(22,229,138,.55),0 0 14px rgba(22,229,138,.35),0 0 24px rgba(22,229,138,.15)}
 .probability.lowest-digit.selected-digit{box-shadow:0 0 0 2px rgba(255,77,103,.55),0 0 14px rgba(255,77,103,.3),0 0 24px rgba(255,77,103,.14)}
 
 .trade-card{margin-top:12px;padding:14px}.mode{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border-radius:8px;background:#06100b}.mode button{padding:8px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-weight:800;font-size:11px}.mode button.active{background:#10301f;color:var(--green)}.scanner{width:100%;margin:12px 0;padding:10px;display:flex;align-items:center;gap:9px;border:1px solid #392b67;border-radius:9px;background:#17112b;color:#c8baff;text-align:left}.scanner:disabled{opacity:.55;cursor:wait}.bot-icon{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:7px;background:#24194b;color:#b9a5ff}.bot-content{min-width:0;flex:1}.bot-content strong,.bot-content small{display:block}.bot-content strong{font-size:12px}.bot-content small{margin-top:2px;color:#9585c9;font-size:8px}.bot-badge{font-size:8px;opacity:.65}.control{margin-top:12px}.control label,.controls-grid label{display:block;color:var(--muted);font-size:9px;font-weight:700}.stake{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;padding:4px;border:1px solid var(--border);border-radius:8px}.stake strong{font-size:14px}.stake button{width:36px;height:31px;border:0;border-radius:6px;background:#142019;color:#fff;font-size:18px}.controls-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px}.input-wrap,.controls-grid select{display:flex;align-items:center;width:100%;min-height:38px;margin-top:5px;border:1px solid var(--border);border-radius:7px;background:#07100c;overflow:hidden}.input-wrap span{padding-left:8px;color:var(--muted);font-size:10px}.controls-grid input,.controls-grid select{width:100%;padding:8px;border:0;outline:0;background:transparent;color:#fff;font-size:11px}.controls-grid select{padding:0 8px}.controls-grid option{background:#0b120f;color:#fff}
-.session{margin-top:13px;padding:13px;border:1px solid var(--border);border-radius:11px;background:#07100c}.session h3{margin:0 0 9px;color:var(--muted);font-size:10px}.session-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.session-grid>div{min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;border-radius:8px;background:#050b08;text-align:center}.session-grid span{color:var(--muted);font-size:9px}.session-grid strong{margin-top:4px;font-size:14px}.contract-title{margin-top:12px;color:var(--muted);font-size:10px;font-weight:800}.contract-digits{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:7px;padding:8px;border:1px solid var(--border);border-radius:9px;background:#07100c}.contract-digits button{min-width:0;padding:8px 0;border:0;border-radius:6px;background:#4d4f50;color:#fff;font-size:12px;font-weight:800}.contract-digits button.active{background:var(--green);color:#041008}
+.session{margin-top:10px;min-height:46px;padding:0 12px;border:1px solid var(--border);border-radius:9px;background:#07100c;display:flex;align-items:center;gap:8px;overflow:hidden}.session-dot{width:8px;height:8px;border-radius:50%;background:#f4c542;box-shadow:0 0 8px rgba(244,197,66,.45);flex:0 0 auto}.session-label{color:#e9f0ed;font-size:12px;font-weight:800}.session-record{color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap}.session-pnl{margin-left:auto;color:var(--green);font-size:15px;font-weight:900;white-space:nowrap}.session-pnl.negative{color:#ff5d6c}.contract-title{margin-top:12px;color:var(--muted);font-size:10px;font-weight:800}.contract-digits{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:7px;padding:8px;border:1px solid var(--border);border-radius:9px;background:#07100c}.contract-digits button{min-width:0;padding:8px 0;border:0;border-radius:6px;background:#4d4f50;color:#fff;font-size:12px;font-weight:800}.contract-digits button.active{background:var(--green);color:#041008}
 .trade-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.trade-buttons button{min-height:62px;border:0;border-radius:12px;color:#fff;font-size:16px;font-weight:900}.trade-buttons strong{display:block}.trade-buttons span{display:none}.match-btn{background:linear-gradient(135deg,#11df86,#16c978)}.differ-btn{background:linear-gradient(135deg,#ff5265,#f33f56)}
 .data-section{margin-top:12px;padding:14px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.section-head h2{margin:0;font-size:21px}.section-head button{padding:7px 12px;border:0;border-radius:6px;background:#4d4f50;color:#fff}.position,.history-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:11px}.position:last-child,.history-item:last-child{border-bottom:0}.win{color:var(--green)}.loss{color:var(--red)}.empty{padding:25px 5px;color:var(--muted);text-align:center;font-size:12px}.demo-note{margin:14px 4px 0;color:#62736b;text-align:center;font-size:9px;line-height:1.5}.toast{position:fixed;left:50%;bottom:25px;z-index:120;max-width:min(90vw,360px);padding:10px 13px;border:1px solid #20543b;border-radius:8px;background:#102019;color:#e8fff3;font-size:11px;opacity:0;pointer-events:none;transform:translate(-50%,12px);transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}.bottom-nav{display:none}
-@media(max-width:650px){body{padding-bottom:68px}.topbar{height:58px;padding:0 9px;gap:7px}.menu-btn{width:40px;height:40px;flex-basis:40px;border-radius:8px}.mobile-logo{font-size:17px}.demo-badge{display:none}.balance-box{min-width:0;padding:5px 8px;border-radius:9px}.balance-box strong{font-size:13px}.balance-box small{font-size:7px}.notification-btn{width:40px;height:40px;flex-basis:40px}.terminal{padding:8px}.market-tabs{margin-bottom:8px;border-radius:8px}.market-tabs button{min-height:35px;padding:7px 10px;font-size:9px}.market-head{align-items:center}.market-head select{min-width:0;width:180px;max-width:65vw;padding:8px;font-size:11px}.price-change strong{font-size:10px}.chart-panel,.trade-card,.data-section{border-radius:10px}.chart-panel{padding:9px}.chart-wrap{height:245px}.probabilities{gap:3px}.probability{height:48px}.probability .digit-number{font-size:11px}.probability .percent{font-size:6px}.probability.current-digit::after{bottom:-8px;border-left-width:4px;border-right-width:4px;border-top-width:6px}.trade-card{padding:10px}.controls-grid{grid-template-columns:1fr 1fr}.controls-grid label:last-child{grid-column:1/-1}.session-grid>div{min-height:55px}.contract-digits{gap:3px;padding:6px}.contract-digits button{padding:7px 0;font-size:10px}.trade-buttons{gap:7px}.trade-buttons button{min-height:58px;border-radius:10px;font-size:14px}.section-head h2{font-size:19px}.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:75;height:60px;display:flex;background:rgba(6,12,9,.98);border-top:1px solid var(--border)}.bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);text-decoration:none;font-size:10px}.bottom-nav a.active{color:var(--green)}.nav-icon{font-size:14px}.side-menu{width:min(300px,82vw);padding:14px}.side-head{margin-bottom:14px}.side-brand{font-size:18px}.profile{padding:10px}.side-link{min-height:40px;font-size:12px;padding:8px 10px}.toast{bottom:72px}}
-@media(max-width:390px){.topbar{gap:5px}.mobile-logo{font-size:15px}.balance-box strong{font-size:12px}.balance-box{padding-left:6px;padding-right:6px}.notification-btn{width:36px;flex-basis:36px}.market-head select{width:155px}.chart-wrap{height:220px}.session-grid strong{font-size:12px}}
+@media(max-width:650px){body{padding-bottom:68px}.topbar{height:58px;padding:0 9px;gap:7px}.menu-btn{width:40px;height:40px;flex-basis:40px;border-radius:8px}.mobile-logo{font-size:17px}.demo-badge{display:none}.balance-box{min-width:0;padding:5px 8px;border-radius:9px}.balance-box strong{font-size:13px}.balance-box small{font-size:7px}.notification-btn{width:40px;height:40px;flex-basis:40px}.terminal{padding:8px}.market-tabs{margin-bottom:8px;border-radius:8px}.market-tabs button{min-height:35px;padding:7px 10px;font-size:9px}.market-head{align-items:center}.market-head select{min-width:0;width:180px;max-width:65vw;padding:8px;font-size:11px}.price-change strong{font-size:10px}.chart-panel,.trade-card,.data-section{border-radius:10px}.chart-panel{padding:9px}.chart-wrap{height:245px}.probabilities{gap:3px}.probability{height:48px}.probability .digit-number{font-size:11px}.probability .percent{font-size:6px}.probability.current-digit::after{bottom:-8px;border-left-width:4px;border-right-width:4px;border-top-width:6px}.trade-card{padding:10px}.controls-grid{grid-template-columns:1fr 1fr}.controls-grid label:last-child{grid-column:1/-1}.contract-digits{gap:3px;padding:6px}.contract-digits button{padding:7px 0;font-size:10px}.trade-buttons{gap:7px}.trade-buttons button{min-height:58px;border-radius:10px;font-size:14px}.section-head h2{font-size:19px}.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:75;height:60px;display:flex;background:rgba(6,12,9,.98);border-top:1px solid var(--border)}.bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);text-decoration:none;font-size:10px}.bottom-nav a.active{color:var(--green)}.nav-icon{font-size:14px}.side-menu{width:min(300px,82vw);padding:14px}.side-head{margin-bottom:14px}.side-brand{font-size:18px}.profile{padding:10px}.side-link{min-height:40px;font-size:12px;padding:8px 10px}.toast{bottom:72px}}
+@media(max-width:390px){.topbar{gap:5px}.mobile-logo{font-size:15px}.balance-box strong{font-size:12px}.balance-box{padding-left:6px;padding-right:6px}.notification-btn{width:36px;flex-basis:36px}.market-head select{width:155px}.chart-wrap{height:220px}.session-label{font-size:11px}.session-record{font-size:10px}.session-pnl{font-size:13px}}
 
 /* ===== TRADEZORA ENTRY SCANNER MODAL ===== */
 .scanner-modal{position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}
@@ -264,26 +271,11 @@
           </label>
         </div>
 
-        <div class="session">
-          <h3>SESSION</h3>
-          <div class="session-grid">
-            <div>
-              <span>Record</span>
-              <strong id="sessionRecord">0W · 0L</strong>
-            </div>
-            <div>
-              <span>P/L</span>
-              <strong id="sessionPnl">+$0.00</strong>
-            </div>
-            <div>
-              <span>Mode</span>
-              <strong id="sessionMode">AUTO</strong>
-            </div>
-            <div>
-              <span>Stake</span>
-              <strong id="sessionStake">$10.00</strong>
-            </div>
-          </div>
+        <div class="session session-compact">
+          <span class="session-dot"></span>
+          <strong class="session-label">Session</strong>
+          <span id="sessionRecord" class="session-record">0W · 0L</span>
+          <span id="sessionPnl" class="session-pnl">+$0.00</span>
         </div>
 <div class="trade-buttons">
           <button id="match" class="match-btn" type="button">
@@ -364,7 +356,10 @@
   }
 
   function settlePosition(position, now) {
-    const finalDigit = Math.floor(Math.random() * 10);
+    const closingPrice = Number(localStorage.getItem("tradezoraDemoLastPrice") || 0);
+    const finalDigit = Number.isFinite(closingPrice) && closingPrice !== 0
+      ? (Math.round(Math.abs(closingPrice) * 100) % 10)
+      : Math.floor(Math.random() * 10);
     const type = String(position.type || '').toUpperCase();
     const contract = position.contract;
     const digit = Number(position.digit);
@@ -391,6 +386,9 @@
     const history = read(HIST, []);
     history.push({ ...position, finalDigit, win, profit, settledAt: now });
     write(HIST, history.slice(-100));
+    localStorage.setItem("tradezoraLastDigitResult", JSON.stringify({
+      digit: finalDigit, win: Boolean(win), at: now
+    }));
   }
 
   function openContinuousTrade(state, now) {
@@ -691,7 +689,16 @@ document.addEventListener("DOMContentLoaded", () => {
     Digit statistics are derived from the simulated price stream.
     This is demo data only — not a prediction of a real market.
   */
-  const digitStats = Array(10).fill(10);
+  const digitProfiles = {
+    "Volatility 10 (1s)": [14, 7, 5, 9, 8, 11, 6, 18, 13, 4],
+    "Volatility 25 (1s)": [6, 16, 18, 8, 5, 11, 10, 7, 14, 4],
+    "Volatility 50 (1s)": [5, 8, 7, 11, 6, 9, 12, 4, 19, 10],
+    "Volatility 75 (1s)": [9, 6, 4, 12, 8, 20, 7, 11, 10, 5],
+    "Volatility 100 (1s)": [7, 21, 8, 5, 12, 9, 3, 10, 15, 6]
+  };
+
+  let digitStats = [...(digitProfiles[document.querySelector("#marketSelect")?.value] || digitProfiles["Volatility 10 (1s)"])];
+  let lastTradeResult = JSON.parse(localStorage.getItem("tradezoraLastDigitResult") || "null");
 
   function getLastDigit(value) {
     // The contract digit follows the last visible decimal digit of the quote.
@@ -735,6 +742,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (digit === lowestDigit) element.classList.add("lowest-digit");
       if (digit === currentDigit) element.classList.add("current-digit");
       if (digit === selectedDigit) element.classList.add("selected-digit");
+      if (lastTradeResult && digit === Number(lastTradeResult.digit)) {
+        element.classList.add(lastTradeResult.win ? "trade-win" : "trade-loss");
+      }
 
       element.style.setProperty(
         "--probability",
@@ -774,6 +784,18 @@ document.addEventListener("DOMContentLoaded", () => {
   function recordCurrentDigit() {
     const digit = getLastDigit(price);
     digitStats[digit] += 1;
+  }
+
+  function resetDigitProfile(market) {
+    const profile = digitProfiles[market] || digitProfiles["Volatility 10 (1s)"];
+    digitStats = [...profile];
+    renderDigitStatistics();
+  }
+
+  function showTradeDigitResult(digit, win) {
+    lastTradeResult = { digit: Number(digit), win: Boolean(win), at: Date.now() };
+    localStorage.setItem("tradezoraLastDigitResult", JSON.stringify(lastTradeResult));
+    renderDigitStatistics();
   }
 
   function generateProbabilities() {
@@ -866,6 +888,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     $("#auto").classList.add("active");
     $("#manual").classList.remove("active");
+    syncContinuousButtons();
 
     toast("AUTO mode selected.");
 
@@ -876,10 +899,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     mode = "MANUAL";
 
+    if (window.TradeZoraContinuousEngine?.getState().running) {
+      window.TradeZoraContinuousEngine.stop();
+    }
+
     $("#manual").classList.add("active");
     $("#auto").classList.remove("active");
+    syncContinuousButtons();
 
-    toast("MANUAL mode selected.");
+    toast("MANUAL mode selected — one trade at a time.");
 
   };
 
@@ -1269,6 +1297,7 @@ document.addEventListener("DOMContentLoaded", () => {
       pullToCenter;
 
     price += simulatedVelocity;
+    localStorage.setItem("tradezoraDemoLastPrice", String(price));
 
     // Keep each demo market readable rather than allowing an unlimited drift.
     const maxDistance = marketProfile.range;
@@ -1373,6 +1402,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Keep the current quote as the starting point, but give the newly
     // selected market its own history and movement character.
     buildMarketHistory();
+    resetDigitProfile(activeMarket);
     recordCurrentDigit();
     generateProbabilities();
     drawChart();
@@ -1508,6 +1538,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+    // Manual mode is deliberately one open trade at a time.
+    if (tradeMode === "MANUAL" && positions.some(item => String(item.mode).toUpperCase() === "MANUAL")) {
+      toast("Finish the current manual trade before placing another.");
+      return false;
+    }
+
 
     // Deduct the stake immediately.
     balance -= tradeStake;
@@ -1565,10 +1601,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (index < 0) return;
 
 
-      const finalDigit =
-        Math.floor(
-          Math.random() * 10
-        );
+      // Settlement digit comes from the simulated closing quote, not a
+      // separate random result. Example 9557.77 closes on digit 7.
+      const closingPrice = Number(localStorage.getItem("tradezoraDemoLastPrice") || price);
+      const finalDigit = getLastDigit(closingPrice);
 
 
       let win = false;
@@ -1647,6 +1683,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       });
 
+      showTradeDigitResult(finalDigit, win);
+
 
       if (history.length > 50) {
 
@@ -1694,35 +1732,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return "MATCH";
   }
 
-  function setTradeButtonState(button, type, running) {
-    if (!button) return;
-    const label = buttonContractLabel(type);
-    button.innerHTML = running
-      ? `<strong>STOP ${label}</strong><span>Running</span>`
-      : `<strong>${label}</strong><span>Demo</span>`;
-    button.classList.toggle("continuous-active", running);
-    button.setAttribute("aria-label", running
-      ? `Stop continuous ${label} trading`
-      : `Start ${label} trade`);
-  }
-
-  function currentContinuousState() {
-    return window.TradeZoraContinuousEngine
-      ? window.TradeZoraContinuousEngine.getState()
-      : { running:false };
-  }
-
   function getContractPair() {
     const current = String(contractType || "match").toLowerCase();
-
-    if (current === "even") {
-      return { left: "EVEN", right: "ODD" };
-    }
-
-    if (current === "over") {
-      return { left: "OVER", right: "UNDER" };
-    }
-
+    if (current === "even") return { left: "EVEN", right: "ODD" };
+    if (current === "over") return { left: "OVER", right: "UNDER" };
     return { left: "MATCH", right: "DIFFER" };
   }
 
@@ -1732,64 +1745,49 @@ document.addEventListener("DOMContentLoaded", () => {
     const rightButton = $("#differ");
     const pair = getContractPair();
 
-    // Always rebuild BOTH buttons from the current state.
-    // This prevents a previous STOP label from getting stuck.
+    // Manual mode always shows ordinary one-trade buttons.
+    if (mode === "MANUAL") {
+      leftButton.classList.remove("continuous-active");
+      rightButton.classList.remove("continuous-active");
+      leftButton.innerHTML = `<strong>${pair.left}</strong><span>Demo</span>`;
+      rightButton.innerHTML = `<strong>${pair.right}</strong><span>Demo</span>`;
+      return;
+    }
+
     if (!state.running) {
-      setTradeButtonState(leftButton, pair.left, false);
-      setTradeButtonState(rightButton, pair.right, false);
+      leftButton.innerHTML = `<strong>${pair.left}</strong><span>Demo</span>`;
+      rightButton.innerHTML = `<strong>${pair.right}</strong><span>Demo</span>`;
+      leftButton.classList.remove("continuous-active");
+      rightButton.classList.remove("continuous-active");
       return;
     }
 
     const activeType = String(state.type || "").toUpperCase();
-
-    if (activeType === pair.left) {
-      setTradeButtonState(leftButton, pair.left, true);
-      setTradeButtonState(rightButton, pair.right, false);
-      return;
-    }
-
-    if (activeType === pair.right) {
-      setTradeButtonState(leftButton, pair.left, false);
-      setTradeButtonState(rightButton, pair.right, true);
-      return;
-    }
-
-    // Safety fallback if an old/stale state contains another contract type.
-    setTradeButtonState(leftButton, pair.left, false);
-    setTradeButtonState(rightButton, pair.right, false);
+    leftButton.innerHTML = activeType === pair.left
+      ? `<strong>STOP ${pair.left}</strong><span>Running</span>`
+      : `<strong>${pair.left}</strong><span>Demo</span>`;
+    rightButton.innerHTML = activeType === pair.right
+      ? `<strong>STOP ${pair.right}</strong><span>Running</span>`
+      : `<strong>${pair.right}</strong><span>Demo</span>`;
+    leftButton.classList.toggle("continuous-active", activeType === pair.left);
+    rightButton.classList.toggle("continuous-active", activeType === pair.right);
   }
 
-  function startOrStopContinuous(type, button) {
+  function startOrStopContinuous(type) {
+    if (mode === "MANUAL") return;
     const state = currentContinuousState();
 
-    // Pressing the currently running contract stops it.
     if (state.running && String(state.type).toUpperCase() === type) {
       window.TradeZoraContinuousEngine.stop();
-
-      // Update the UI immediately instead of waiting for the engine event.
       syncContinuousButtons();
-
-      // Second sync catches any delayed localStorage/event update.
-      setTimeout(syncContinuousButtons, 0);
-      setTimeout(syncContinuousButtons, 100);
-
-      toast("Continuous trading stopped.");
+      toast(`Continuous ${buttonContractLabel(type)} trading stopped.`);
       return;
     }
 
-    // Stop another running stream before starting this one.
-    if (state.running) {
-      window.TradeZoraContinuousEngine.stop();
-      syncContinuousButtons();
-    }
+    if (state.running) window.TradeZoraContinuousEngine.stop();
 
     const streamStake = Number(stake);
-    if (
-      streamStake <= 0 ||
-      streamStake > Number(
-        localStorage.getItem("tradezoraDemoBalance") || balance
-      )
-    ) {
+    if (streamStake <= 0 || streamStake > Number(localStorage.getItem("tradezoraDemoBalance") || balance)) {
       toast("Not enough demo balance for continuous trading.");
       syncContinuousButtons();
       return;
@@ -1800,7 +1798,7 @@ document.addEventListener("DOMContentLoaded", () => {
       contract: contractType,
       digit: selectedDigit,
       stake: streamStake,
-      mode
+      mode: "AUTO"
     });
 
     toast(`Continuous ${buttonContractLabel(type)} trading started.`);
@@ -1809,12 +1807,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("#match").onclick = () => {
     const pair = getContractPair();
-    startOrStopContinuous(pair.left, $("#match"));
+    if (mode === "MANUAL") {
+      trade(pair.left, { mode: "MANUAL" });
+      return;
+    }
+    startOrStopContinuous(pair.left);
   };
 
   $("#differ").onclick = () => {
     const pair = getContractPair();
-    startOrStopContinuous(pair.right, $("#differ"));
+    if (mode === "MANUAL") {
+      trade(pair.right, { mode: "MANUAL" });
+      return;
+    }
+    startOrStopContinuous(pair.right);
   };
 
   window.addEventListener("tradezora-state-changed", () => {
@@ -1829,6 +1835,8 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     renderBalance();
     renderLists();
+    lastTradeResult = JSON.parse(localStorage.getItem("tradezoraLastDigitResult") || "null");
+    renderDigitStatistics();
     syncContinuousButtons();
   });
 
@@ -1873,6 +1881,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderLists();
 
   renderBalance();
+  localStorage.setItem("tradezoraDemoLastPrice", String(price));
 
   recordCurrentDigit();
   generateProbabilities();
