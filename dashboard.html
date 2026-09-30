@@ -199,16 +199,6 @@
             <span class="barrier-help">Over wins above the barrier. Under wins below it.</span>
           </div>
         </div>
-        <div class="payout-preview">
-          <div id="leftPayoutBox" class="payout-box">
-            <span id="leftPayoutLabel">MATCH</span>
-            <strong id="leftPayout">—</strong>
-          </div>
-          <div id="rightPayoutBox" class="payout-box loss">
-            <span id="rightPayoutLabel">DIFFER</span>
-            <strong id="rightPayout">—</strong>
-          </div>
-        </div>
       </section>
 
       <!-- MARKET HEADER -->
@@ -232,6 +222,7 @@
 
       <!-- CHART -->
       <section class="panel chart-panel">
+        <!-- Win-rate/probability information is intentionally not displayed. -->
         <div class="chart-toolbar">
           <span class="historical">Historical view</span>
           <div class="chart-tools">
@@ -246,11 +237,6 @@
           <div class="chart-label">SIMULATED DEMO MARKET</div>
         </div>
 
-        <div class="probability-title">
-          <span>DIGIT PROBABILITY</span>
-          <small>Demo estimate — not a prediction</small>
-        </div>
-        <div id="probabilities" class="probabilities"></div>
       </section>
 
       <!-- TRADE CARD -->
@@ -1719,7 +1705,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   /* =========================
-     DEMO PAYOUT QUOTES
+     INTERNAL DEMO PAYOUT RULES
+     Values are used by settlement only and are not displayed as win rates.
   ========================= */
 
   function getPayoutForTrade(contract, digit, type) {
