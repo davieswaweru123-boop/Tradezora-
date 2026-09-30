@@ -27,14 +27,14 @@
 .probability.lowest-digit .percent{color:#ff7084}
 .probability.current-digit{transform:translateY(-1px)}
 .probability.current-digit .digit-number{color:#fff}
-.probability.current-digit .digit-number::after{content:"";position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #f4c542;filter:drop-shadow(0 0 4px rgba(244,197,66,.65))}
+.current-digit-marker{position:absolute;left:50%;bottom:-12px;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #f4c542;filter:drop-shadow(0 0 5px rgba(244,197,66,.8));z-index:5;pointer-events:none}
 .probability.selected-digit{box-shadow:0 0 0 2px rgba(55,231,255,.22),0 0 12px rgba(55,231,255,.28),0 0 22px rgba(55,231,255,.12);filter:brightness(1.16)}
-.probability.trade-win{box-shadow:0 0 0 3px rgba(22,229,138,.82),0 0 16px rgba(22,229,138,.62),0 0 30px rgba(22,229,138,.24)!important;animation:tradeResultPulse 1.15s ease-in-out 2}
-.probability.trade-win::before{background:conic-gradient(#16e58a 0 var(--probability),#123c2a var(--probability) 100%)}
-.probability.trade-win .percent{color:#16e58a}
-.probability.trade-loss{box-shadow:0 0 0 3px rgba(255,77,103,.84),0 0 16px rgba(255,77,103,.62),0 0 30px rgba(255,77,103,.24)!important;animation:tradeResultPulse 1.15s ease-in-out 2}
-.probability.trade-loss::before{background:conic-gradient(#ff4d67 0 var(--probability),#4a1721 var(--probability) 100%)}
-.probability.trade-loss .percent{color:#ff7084}
+.probability.trade-win{box-shadow:0 0 0 3px rgba(22,229,138,.98),0 0 18px rgba(22,229,138,.85),0 0 34px rgba(22,229,138,.42)!important;animation:tradeResultPulse 1.15s ease-in-out 3}
+.probability.trade-win::before{background:conic-gradient(#16e58a 0 var(--probability),#123c2a var(--probability) 100%)!important}
+.probability.trade-win .percent{color:#16e58a!important}
+.probability.trade-loss{box-shadow:0 0 0 3px rgba(255,77,103,1),0 0 18px rgba(255,77,103,.88),0 0 34px rgba(255,77,103,.44)!important;animation:tradeResultPulse 1.15s ease-in-out 3}
+.probability.trade-loss::before{background:conic-gradient(#ff4d67 0 var(--probability),#4a1721 var(--probability) 100%)!important}
+.probability.trade-loss .percent{color:#ff7084!important}
 @keyframes tradeResultPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 .probability.selected-digit::after{box-shadow:inset 0 0 0 1px rgba(55,231,255,.28),0 0 10px rgba(55,231,255,.18)}
 .probability.selected-digit .digit-number{color:#fff}
@@ -76,6 +76,12 @@
   .probabilities{gap:3px}
   .probability .digit-number{font-size:12px}
   .probability .percent{font-size:7px}
+}
+
+.current-digit-marker + *{pointer-events:none}
+@media (max-width:650px){
+  .probabilities{gap:3px;padding-bottom:9px}
+  .current-digit-marker{bottom:-11px}
 }
 </style>
 </head>
@@ -441,6 +447,11 @@
       if (changed) write(POS, remaining);
 
       let state = getState();
+      if (state.running && String(state.mode || '').toUpperCase() === 'MANUAL') {
+        write(KEY, { ...state, running:false, nextTradeAt:null });
+        state = getState();
+        changed = true;
+      }
       if (state.running && Number(state.nextTradeAt || 0) <= now) {
         if (openContinuousTrade(state, now)) changed = true;
         state = getState();
@@ -455,6 +466,9 @@
   const api = {
     getState,
     start(config) {
+      if (String(config.mode || '').toUpperCase() === 'MANUAL') {
+        return getState();
+      }
       const state = {
         running:true,
         type:String(config.type || 'EVEN').toUpperCase(),
@@ -540,7 +554,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let contractType = "match";
 
-  let mode = "AUTO";
+  let mode = "MANUAL";
 
   // Continuous demo trading state. Only one contract stream can run at a time.
   let continuousTrading = {
@@ -761,6 +775,7 @@ document.addEventListener("DOMContentLoaded", () => {
       element.innerHTML = `
         <span class="digit-number">${digit}</span>
         <span class="percent">${probability.toFixed(1)}%</span>
+        ${digit === currentDigit ? '<span class="current-digit-marker" aria-hidden="true"></span>' : ''}
       `;
 
       const selectDigit = () => {
@@ -890,7 +905,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#manual").classList.remove("active");
     syncContinuousButtons();
 
-    toast("AUTO mode selected.");
+    toast("AUTO mode selected — press a trade button to start continuous trading.");
 
   };
 
@@ -1538,10 +1553,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-    // Manual mode is deliberately one open trade at a time.
-    if (tradeMode === "MANUAL" && positions.some(item => String(item.mode).toUpperCase() === "MANUAL")) {
-      toast("Finish the current manual trade before placing another.");
-      return false;
+    // Manual mode is strictly one trade at a time and can never use
+    // the continuous engine.
+    if (tradeMode === "MANUAL") {
+      if (window.TradeZoraContinuousEngine?.getState().running) {
+        window.TradeZoraContinuousEngine.stop();
+      }
+      if (positions.some(item => String(item.mode).toUpperCase() === "MANUAL")) {
+        toast("Finish the current manual trade before placing another.");
+        return false;
+      }
     }
 
 
@@ -1840,8 +1861,13 @@ document.addEventListener("DOMContentLoaded", () => {
     syncContinuousButtons();
   });
 
+  // Manual is the safe default. A previous AUTO stream must never resume merely
+  // because this page was reloaded or reopened.
+  if (mode === "MANUAL" && window.TradeZoraContinuousEngine?.getState().running) {
+    window.TradeZoraContinuousEngine.stop();
+  }
+
   // Sync once on page load. The shared engine emits an event whenever its state changes.
-  // Avoid a fast polling loop here because it causes unnecessary DOM redraws on mobile.
   syncContinuousButtons();
 
   /* Small visual cue for a running continuous button. */
