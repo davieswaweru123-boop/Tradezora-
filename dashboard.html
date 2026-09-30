@@ -569,7 +569,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let contractType = "match";
 
-  let mode = "MANUAL";
+  // The AUTO tab is the default view, so AUTO mode is accepted immediately
+  // when the Trade page opens. MANUAL remains opt-in and one-trade-at-a-time.
+  let mode = document.querySelector("#auto")?.classList.contains("active")
+    ? "AUTO"
+    : "MANUAL";
 
   // Continuous demo trading state. Only one contract stream can run at a time.
   let continuousTrading = {
@@ -1936,14 +1940,30 @@ document.addEventListener("DOMContentLoaded", () => {
     syncContinuousButtons();
   });
 
-  // Manual is the safe default. A previous AUTO stream must never resume merely
-  // because this page was reloaded or reopened.
-  if (mode === "MANUAL" && window.TradeZoraContinuousEngine?.getState().running) {
-    window.TradeZoraContinuousEngine.stop();
+  // Respect the mode visible on the page when it opens.
+  // AUTO means continuous demo trading is accepted immediately.
+  // MANUAL always stops any previous continuous stream.
+  if (mode === "MANUAL") {
+    if (window.TradeZoraContinuousEngine?.getState().running) {
+      window.TradeZoraContinuousEngine.stop();
+    }
   }
 
-  // Sync once on page load. The shared engine emits an event whenever its state changes.
+  // Sync once on page load.
   syncContinuousButtons();
+
+  // If AUTO is the active page, start the continuous stream immediately.
+  // Do this after all handlers/functions are defined so the first contract
+  // can be opened safely.
+  if (mode === "AUTO") {
+    const autoState = currentContinuousState();
+    if (!autoState.running) {
+      const autoPair = getContractPair();
+      startOrStopContinuous(autoPair.left);
+    } else {
+      syncContinuousButtons();
+    }
+  }
 
   /* Small visual cue for a running continuous button. */
   const continuousStyle = document.createElement("style");
