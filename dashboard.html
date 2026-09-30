@@ -920,23 +920,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("#auto").onclick = () => {
 
+    // AUTO is a mode selector only. Selecting AUTO must NEVER place
+    // a trade or start continuous trading by itself.
     mode = "AUTO";
 
     $("#auto").classList.add("active");
     $("#manual").classList.remove("active");
 
-    // AUTO starts continuous demo trading only because the user
-    // explicitly tapped the AUTO button. Opening/logging into the page
-    // never starts a trade. MANUAL remains one trade at a time.
-    const pair = getContractPair();
-    const state = currentContinuousState();
-
-    if (!state.running) {
-      startOrStopContinuous(pair.left);
-    } else {
-      syncContinuousButtons();
-      toast(`AUTO continuous ${pair.left} trading is active.`);
-    }
+    syncContinuousButtons();
+    toast("AUTO mode selected — tap MATCH or DIFFER to start continuous trading.");
 
   };
 
