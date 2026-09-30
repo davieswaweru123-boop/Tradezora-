@@ -186,7 +186,7 @@
       <section class="contract-config" aria-label="Contract settings">
         <div class="contract-config-head">
           <strong id="contractConfigTitle">Matches / Differs</strong>
-          <span>DEMO PAYOUT</span>
+          <span></span>
         </div>
         <div id="predictionArea">
           <span class="prediction-label">PREDICTION DIGIT</span>
@@ -413,7 +413,7 @@
     }
 
     const stake = Number(position.stake) || 0;
-    const payoutPct = Number(position.payoutPct ?? 85);
+    const payoutPct = Number(position.payoutPct ?? 56);
     const profit = win ? stake * (payoutPct / 100) : 0;
     let balance = Number(localStorage.getItem(BAL) || 10000);
     if (win) balance += stake + profit;
@@ -610,10 +610,41 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#auto")?.classList.remove("active");
   $("#manual")?.classList.add("active");
 
-  let barrierDigit = 5;
+  let barrierDigit = 1;
 
-  // Demo payout quotes are calculated from the simulated digit distribution.
-  // They are intentionally labelled DEMO and are not real broker quotes.
+  // Fixed demo payout rates supplied for TradeZora.
+  // Values are profit-per-1-staked-unit (e.g. 0.56 means $0.56 profit on $10).
+  const OVER_PAYOUT_RATES = {
+    1: 0.56,
+    2: 1.88,
+    3: 5.83,
+    4: 9.00,
+    5: 13.75,
+    6: 21.67,
+    7: 37.50,
+    8: 85.00
+  };
+
+  const UNDER_PAYOUT_RATES = {
+    1: 85.00,
+    2: 37.50,
+    3: 21.67,
+    4: 13.75,
+    5: 9.00,
+    6: 5.83,
+    7: 1.88,
+    8: 0.56
+  };
+
+  function fixedPayoutRate(contract, digit, type) {
+    const d = Number(digit);
+    if (contract === "over") {
+      if (type === "OVER") return OVER_PAYOUT_RATES[d] ?? null;
+      if (type === "UNDER") return UNDER_PAYOUT_RATES[d] ?? null;
+    }
+    return null;
+  }
+
   function currentProbabilities() {
     const total = digitStats.reduce((sum, value) => sum + value, 0) || 1;
     return digitStats.map(value => (value / total) * 100);
@@ -640,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const probs = currentProbabilities();
     const setBox = (box, valueEl, value) => {
       box.classList.toggle("disabled", value == null);
-      valueEl.textContent = value == null ? "—" : `${value}%`;
+      valueEl.textContent = value == null ? "—" : Number(value).toFixed(2);
     };
 
     if (contractType === "match") {
@@ -667,10 +698,8 @@ document.addEventListener("DOMContentLoaded", () => {
       barrierArea.style.display = "block";
       leftLabel.textContent = `OVER ${barrierDigit}`;
       rightLabel.textContent = `UNDER ${barrierDigit}`;
-      const overProb = probs.slice(barrierDigit + 1).reduce((a,b) => a+b, 0);
-      const underProb = probs.slice(0, barrierDigit).reduce((a,b) => a+b, 0);
-      setBox(leftBox, leftValue, payoutFromProbability(overProb));
-      setBox(rightBox, rightValue, payoutFromProbability(underProb));
+      setBox(leftBox, leftValue, fixedPayoutRate("over", barrierDigit, "OVER"));
+      setBox(rightBox, rightValue, fixedPayoutRate("over", barrierDigit, "UNDER"));
     }
   }
 
@@ -698,7 +727,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const select = $("#barrierSelect");
     if (!select) return;
     select.innerHTML = "";
-    for (let digit = 0; digit <= 9; digit++) {
+    for (let digit = 1; digit <= 8; digit++) {
       const option = document.createElement("option");
       option.value = digit;
       option.textContent = `Last digit ${digit}`;
@@ -1694,6 +1723,9 @@ document.addEventListener("DOMContentLoaded", () => {
   ========================= */
 
   function getPayoutForTrade(contract, digit, type) {
+    const fixedRate = fixedPayoutRate(contract, digit, type);
+    if (fixedRate != null) return fixedRate * 100;
+
     const probs = currentProbabilities();
     let probability = 0;
     if (contract === "match") {
@@ -1702,10 +1734,6 @@ document.addEventListener("DOMContentLoaded", () => {
       probability = type === "EVEN"
         ? probs[0] + probs[2] + probs[4] + probs[6] + probs[8]
         : probs[1] + probs[3] + probs[5] + probs[7] + probs[9];
-    } else if (contract === "over") {
-      probability = type === "OVER"
-        ? probs.slice(digit + 1).reduce((a,b) => a+b, 0)
-        : probs.slice(0, digit).reduce((a,b) => a+b, 0);
     }
     return payoutFromProbability(probability) ?? 85;
   }
