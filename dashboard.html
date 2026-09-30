@@ -395,6 +395,12 @@
     localStorage.setItem("tradezoraLastDigitResult", JSON.stringify({
       digit: finalDigit, win: Boolean(win), at: now
     }));
+
+    try {
+      window.dispatchEvent(new CustomEvent("tradezora-trade-settled", {
+        detail: { digit: finalDigit, win: Boolean(win), profit: profit }
+      }));
+    } catch (e) {}
   }
 
   function openContinuousTrade(state, now) {
@@ -405,6 +411,15 @@
       write(KEY, stopped);
       return false;
     }
+
+    // A newly opened AUTO trade must not inherit the previous trade's
+    // green/red result. The result light appears only after settlement.
+    localStorage.removeItem("tradezoraLastDigitResult");
+    try {
+      window.dispatchEvent(new CustomEvent("tradezora-trade-opened", {
+        detail: { mode: "AUTO", digit: Number(state.digit), type: state.type }
+      }));
+    } catch (e) {}
 
     balance -= stake;
     localStorage.setItem(BAL, String(balance));
@@ -1566,6 +1581,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+    // A new trade starts with no result light. The light is shown only
+    // after this trade settles and its actual closing digit is known.
+    lastTradeResult = null;
+    localStorage.removeItem("tradezoraLastDigitResult");
+    renderDigitStatistics();
+
     // Deduct the stake immediately.
     balance -= tradeStake;
 
@@ -1706,6 +1727,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       showTradeDigitResult(finalDigit, win);
 
+      try {
+        window.dispatchEvent(new CustomEvent("tradezora-trade-settled", {
+          detail: { digit: finalDigit, win: Boolean(win), profit: profit }
+        }));
+      } catch (e) {}
+
 
       if (history.length > 50) {
 
@@ -1758,6 +1785,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (current === "even") return { left: "EVEN", right: "ODD" };
     if (current === "over") return { left: "OVER", right: "UNDER" };
     return { left: "MATCH", right: "DIFFER" };
+  }
+
+  function currentContinuousState() {
+    try {
+      return window.TradeZoraContinuousEngine?.getState?.() || {
+        running: false,
+        type: null,
+        contract: null,
+        digit: null,
+        stake: null
+      };
+    } catch (error) {
+      console.error("TradeZora continuous state error:", error);
+      return { running: false };
+    }
   }
 
   function syncContinuousButtons() {
@@ -1822,8 +1864,11 @@ document.addEventListener("DOMContentLoaded", () => {
       mode: "AUTO"
     });
 
-    toast(`Continuous ${buttonContractLabel(type)} trading started.`);
+    // Force the first AUTO contract immediately rather than waiting for the
+    // background timer.
+    window.TradeZoraContinuousEngine.tick?.();
     syncContinuousButtons();
+    toast(`Continuous ${buttonContractLabel(type)} trading started.`);
   }
 
   $("#match").onclick = () => {
@@ -1843,6 +1888,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     startOrStopContinuous(pair.right);
   };
+
+  window.addEventListener("tradezora-trade-opened", () => {
+    // Hide any previous result. Do not light a digit merely because a trade
+    // was opened.
+    lastTradeResult = null;
+    renderDigitStatistics();
+  });
+
+  window.addEventListener("tradezora-trade-settled", (event) => {
+    const result = event.detail || {};
+    if (Number.isFinite(Number(result.digit))) {
+      lastTradeResult = {
+        digit: Number(result.digit),
+        win: Boolean(result.win),
+        at: Date.now()
+      };
+      localStorage.setItem("tradezoraLastDigitResult", JSON.stringify(lastTradeResult));
+      renderDigitStatistics();
+    }
+  });
 
   window.addEventListener("tradezora-state-changed", () => {
     balance = Number(localStorage.getItem("tradezoraDemoBalance") || balance);
