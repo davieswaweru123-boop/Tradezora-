@@ -577,10 +577,20 @@ document.addEventListener("DOMContentLoaded", () => {
   let balance = Number(storedBalance);
 
   let stake = Number(
-    localStorage.getItem("tradezoraDemoStake") || 10
+    savedTerminalView.stake || localStorage.getItem("tradezoraDemoStake") || 10
   );
+  if (!Number.isFinite(stake) || stake <= 0) stake = 10;
 
-  let price = 1000;
+  let price = Number(localStorage.getItem("tradezoraDemoLastPrice") || 1000);
+
+  // Remember the exact terminal view so returning from History/Positions
+  // restores the same market, contract, barrier, stake and mode.
+  let savedTerminalView = {};
+  try {
+    savedTerminalView = JSON.parse(localStorage.getItem("tradezoraTerminalView") || "{}");
+  } catch (e) {
+    savedTerminalView = {};
+  }
 
   let history = JSON.parse(localStorage.getItem("tradezoraDemoHistory") || "[]");
   let positions = JSON.parse(localStorage.getItem("tradezoraDemoPositions") || "[]");
@@ -590,21 +600,33 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("tradezoraDemoPositions", JSON.stringify(positions));
   }
 
-  let selectedDigit = 0;
+  let selectedDigit = Number.isFinite(Number(savedTerminalView.selectedDigit))
+    ? Number(savedTerminalView.selectedDigit)
+    : 0;
 
   let pnl = 0;
   let wins = 0;
   let losses = 0;
 
-  let contractType = "match";
+  let contractType = savedTerminalView.contractType || "match";
 
   // MANUAL is the safe default on page load. AUTO starts only after
   // the user explicitly taps the AUTO button.
-  let mode = "MANUAL";
+  const persistedEngineState = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("tradezoraContinuousState") || "null");
+    } catch (e) {
+      return null;
+    }
+  })();
 
-  // Keep the mode UI consistent with the safe default.
-  $("#auto")?.classList.remove("active");
-  $("#manual")?.classList.add("active");
+  let mode = persistedEngineState?.running
+    ? "AUTO"
+    : (savedTerminalView.mode === "AUTO" ? "AUTO" : "MANUAL");
+
+  // Keep the mode UI consistent with the restored state.
+  $("#auto")?.classList.toggle("active", mode === "AUTO");
+  $("#manual")?.classList.toggle("active", mode !== "AUTO");
 
   // Continuous demo trading state. Only one contract stream can run at a time.
   let continuousTrading = {
@@ -643,6 +665,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+
+  function saveTerminalView(extra = {}) {
+    const market = $("#marketSelect")?.value || savedTerminalView.market || "Volatility 10 (1s)";
+    const state = {
+      market,
+      contractType,
+      selectedDigit: Number(selectedDigit),
+      stake: Number(stake),
+      mode,
+      chartZoom: Number(chartZoom || 1),
+      ...extra
+    };
+    localStorage.setItem("tradezoraTerminalView", JSON.stringify(state));
+    savedTerminalView = state;
+  }
 
   function toast(message) {
 
@@ -830,6 +867,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const selectDigit = () => {
         selectedDigit = digit;
+        saveTerminalView();
         renderDigitStatistics();
         if (typeof toast === "function") toast(`Digit ${digit} selected.`);
       };
@@ -907,6 +945,7 @@ document.addEventListener("DOMContentLoaded", () => {
       contractType =
         button.dataset.contract || "match";
 
+      saveTerminalView();
 
       if (contractType === "even") {
 
@@ -943,6 +982,24 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 
+  // Restore the contract tab that was active before leaving the terminal.
+  contractTabs.forEach(tab => {
+    tab.classList.toggle("active", (tab.dataset.contract || "match") === contractType);
+  });
+  const restoredTab = [...contractTabs].find(tab => (tab.dataset.contract || "match") === contractType);
+  if (restoredTab) {
+    if (contractType === "even") {
+      $("#match").innerHTML = "<strong>EVEN</strong><span>Demo</span>";
+      $("#differ").innerHTML = "<strong>ODD</strong><span>Demo</span>";
+    } else if (contractType === "over") {
+      $("#match").innerHTML = "<strong>OVER</strong><span>Demo</span>";
+      $("#differ").innerHTML = "<strong>UNDER</strong><span>Demo</span>";
+    } else {
+      $("#match").innerHTML = "<strong>MATCH</strong><span>Demo</span>";
+      $("#differ").innerHTML = "<strong>DIFFER</strong><span>Demo</span>";
+    }
+  }
+
   /* =========================
      AUTO / MANUAL
   ========================= */
@@ -952,6 +1009,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // AUTO is a mode selector only. Selecting AUTO must NEVER place
     // a trade or start continuous trading by itself.
     mode = "AUTO";
+    saveTerminalView();
 
     $("#auto").classList.add("active");
     $("#manual").classList.remove("active");
@@ -965,6 +1023,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#manual").onclick = () => {
 
     mode = "MANUAL";
+    saveTerminalView();
 
     if (window.TradeZoraContinuousEngine?.getState().running) {
       window.TradeZoraContinuousEngine.stop();
@@ -994,6 +1053,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "tradezoraDemoStake",
       stake
     );
+    saveTerminalView();
 
     renderBalance();
 
@@ -1012,6 +1072,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "tradezoraDemoStake",
       stake
     );
+    saveTerminalView();
 
     renderBalance();
 
@@ -1077,7 +1138,10 @@ document.addEventListener("DOMContentLoaded", () => {
     "Volatility 100 (1s)": { trend: -0.06, noise: 3.10, momentum: 0.76, meanReversion: 0.018, range: 68 }
   };
 
-  let activeMarket = $("#marketSelect")?.value || "Volatility 10 (1s)";
+  let activeMarket = savedTerminalView.market || $("#marketSelect")?.value || "Volatility 10 (1s)";
+  if ($("#marketSelect") && [...$("#marketSelect").options].some(option => option.value === activeMarket)) {
+    $("#marketSelect").value = activeMarket;
+  }
   let marketProfile = marketProfiles[activeMarket] || marketProfiles["Volatility 10 (1s)"];
 
   function buildMarketHistory() {
@@ -1105,7 +1169,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   buildMarketHistory();
 
-  let chartZoom = 1;
+  let chartZoom = Number(savedTerminalView.chartZoom || 1);
+  if (!Number.isFinite(chartZoom) || chartZoom < 1 || chartZoom > 3) chartZoom = 1;
 
 
   function resizeChart() {
@@ -1422,6 +1487,7 @@ document.addEventListener("DOMContentLoaded", () => {
         3,
         chartZoom + 0.5
       );
+    saveTerminalView();
 
     drawChart();
 
@@ -1435,6 +1501,7 @@ document.addEventListener("DOMContentLoaded", () => {
         1,
         chartZoom - 0.5
       );
+    saveTerminalView();
 
     drawChart();
 
@@ -1444,6 +1511,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#resetZoom").onclick = () => {
 
     chartZoom = 1;
+    saveTerminalView();
 
     drawChart();
 
@@ -1462,6 +1530,7 @@ document.addEventListener("DOMContentLoaded", () => {
       $("#marketSelect").value;
 
     activeMarket = market;
+    saveTerminalView();
     marketProfile =
       marketProfiles[market] ||
       marketProfiles["Volatility 10 (1s)"];
@@ -1927,12 +1996,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    saveTerminalView({ mode: "AUTO", contractType, selectedDigit, stake: streamStake });
+
     window.TradeZoraContinuousEngine.start({
       type,
       contract: contractType,
       digit: selectedDigit,
       stake: streamStake,
-      mode: "AUTO"
+      mode: "AUTO",
+      market: $("#marketSelect")?.value || activeMarket
     });
 
     // Force the first AUTO contract immediately rather than waiting for the
@@ -1997,13 +2069,33 @@ document.addEventListener("DOMContentLoaded", () => {
     syncContinuousButtons();
   });
 
-  // Never start continuous trading on page load/login.
-  // Stop any stale continuous demo stream, then leave the terminal idle.
-  if (window.TradeZoraContinuousEngine?.getState().running) {
-    window.TradeZoraContinuousEngine.stop();
+  // A running AUTO stream is intentionally preserved while the user visits
+  // History or Positions. The shared engine on those pages keeps settling and
+  // opening trades. When the user returns here, restore the same terminal view.
+  const restoredRunningState = currentContinuousState();
+  if (restoredRunningState.running) {
+    mode = "AUTO";
+    contractType = restoredRunningState.contract || contractType;
+    selectedDigit = Number.isFinite(Number(restoredRunningState.digit))
+      ? Number(restoredRunningState.digit)
+      : selectedDigit;
+    stake = Number(restoredRunningState.stake) || stake;
+
+    if (restoredRunningState.market && $("#marketSelect")) {
+      const hasMarket = [...$("#marketSelect").options].some(option => option.value === restoredRunningState.market);
+      if (hasMarket) {
+        $("#marketSelect").value = restoredRunningState.market;
+        activeMarket = restoredRunningState.market;
+        marketProfile = marketProfiles[activeMarket] || marketProfiles["Volatility 10 (1s)"];
+        resetDigitProfile(activeMarket);
+      }
+    }
+
+    $("#auto")?.classList.add("active");
+    $("#manual")?.classList.remove("active");
+    saveTerminalView({ mode:"AUTO", contractType, selectedDigit, stake });
   }
 
-  // Sync once on page load. The user must explicitly tap AUTO to start.
   syncContinuousButtons();
 
   /* Small visual cue for a running continuous button. */
@@ -2043,6 +2135,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderLists();
 
   renderBalance();
+  saveTerminalView();
   localStorage.setItem("tradezoraDemoLastPrice", String(price));
 
   recordCurrentDigit();
