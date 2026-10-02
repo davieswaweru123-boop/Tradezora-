@@ -866,7 +866,12 @@ document.addEventListener("DOMContentLoaded", () => {
     "Volatility 100 (1s)": { trend: -0.06, noise: 3.10, momentum: 0.76, meanReversion: 0.018, range: 68 }
   };
 
-  let activeMarket = $("#marketSelect")?.value || "Volatility 10 (1s)";
+  const savedMarket = localStorage.getItem("tradezoraActiveMarket");
+  const marketSelectEl = $("#marketSelect");
+  if (marketSelectEl && savedMarket && [...marketSelectEl.options].some(option => option.value === savedMarket)) {
+    marketSelectEl.value = savedMarket;
+  }
+  let activeMarket = marketSelectEl?.value || "Volatility 10 (1s)";
   let marketProfile = marketProfiles[activeMarket] || marketProfiles["Volatility 10 (1s)"];
 
   function buildMarketHistory() {
@@ -1251,6 +1256,7 @@ document.addEventListener("DOMContentLoaded", () => {
       $("#marketSelect").value;
 
     activeMarket = market;
+    localStorage.setItem("tradezoraActiveMarket", market);
     marketProfile =
       marketProfiles[market] ||
       marketProfiles["Volatility 10 (1s)"];
@@ -1786,13 +1792,30 @@ document.addEventListener("DOMContentLoaded", () => {
     syncContinuousButtons();
   });
 
-  // Never start continuous trading on page load/login.
-  // Stop any stale continuous demo stream, then leave the terminal idle.
-  if (window.TradeZoraContinuousEngine?.getState().running) {
-    window.TradeZoraContinuousEngine.stop();
+  // Restore an already-running AUTO stream when returning to the Trade page.
+  // The shared engine is persisted in localStorage, so navigating to History
+  // or Positions must NOT stop it. Returning here only restores the UI.
+  const restoredState = window.TradeZoraContinuousEngine?.getState?.() || { running: false };
+  if (restoredState.running) {
+    mode = "AUTO";
+    selectedDigit = Number.isFinite(Number(restoredState.digit)) ? Number(restoredState.digit) : selectedDigit;
+    stake = Number(restoredState.stake) > 0 ? Number(restoredState.stake) : stake;
+    contractType = restoredState.contract || contractType;
+
+    contractTabs.forEach(tab => {
+      tab.classList.toggle("active", (tab.dataset.contract || "match") === contractType);
+    });
+
+    const pair = getContractPair();
+    $("#auto")?.classList.add("active");
+    $("#manual")?.classList.remove("active");
+    $("#match").innerHTML = `<strong>${pair.left}</strong><span>Demo</span>`;
+    $("#differ").innerHTML = `<strong>${pair.right}</strong><span>Demo</span>`;
+    renderBalance();
+    renderDigitStatistics();
   }
 
-  // Sync once on page load. The user must explicitly tap AUTO to start.
+  // Sync once on page load without changing the persisted running state.
   syncContinuousButtons();
 
   /* Small visual cue for a running continuous button. */
