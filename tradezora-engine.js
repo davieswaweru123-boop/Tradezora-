@@ -158,7 +158,10 @@
     if (state.running) {
       const tradePnl = win ? profit : -stake;
       const sessionPnl = Number(state.sessionPnl || 0) + tradePnl;
-      const updated = { ...state, sessionPnl };
+      const sessionTrades = Number(state.sessionTrades || 0) + 1;
+      const sessionWins = Number(state.sessionWins || 0) + (win ? 1 : 0);
+      const sessionLosses = Number(state.sessionLosses || 0) + (win ? 0 : 1);
+      const updated = { ...state, sessionPnl, sessionTrades, sessionWins, sessionLosses };
       const reason = riskReached(updated);
       if (reason) {
         updated.running = false;
@@ -280,6 +283,9 @@
         takeProfit:normalizeRiskTarget(config.takeProfit),
         stopLoss:normalizeRiskTarget(config.stopLoss),
         sessionPnl:0,
+        sessionTrades:0,
+        sessionWins:0,
+        sessionLosses:0,
         startedAt:Date.now(),
         stoppedReason:null,
         nextTradeAt:Date.now()
@@ -293,6 +299,21 @@
       const state = getState();
       write(KEY, { ...state, running:false, nextTradeAt:null, stoppedReason:'manual-stop' });
       emit();
+    },
+    resetSession() {
+      const state = getState();
+      const reset = {
+        ...state,
+        sessionPnl: 0,
+        sessionTrades: 0,
+        sessionWins: 0,
+        sessionLosses: 0,
+        stoppedReason: null,
+        stoppedAt: null
+      };
+      write(KEY, reset);
+      emit();
+      return getState();
     },
     updateRisk(takeProfit, stopLoss) {
       const state = getState();
