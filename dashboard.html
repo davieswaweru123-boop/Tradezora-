@@ -1840,11 +1840,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!modal) return;
 
     const reason = state.stoppedReason === "stop-loss" ? "stop-loss" : "take-profit";
-    const pnlValue = Number(state.sessionPnl || 0);
-    const tradesValue = Number(state.sessionTrades || 0);
-    const winsValue = Number(state.sessionWins || 0);
-    const lossesValue = Number(state.sessionLosses || 0);
-    const winRate = tradesValue > 0 ? Math.round((winsValue / tradesValue) * 100) : 0;
+    // Prefer the frozen result captured when TP/SL ended the session.
+    // This prevents the result panel from showing 0 trades after the session
+    // has already been marked for reset.
+    const result = state.lastSessionResult || {};
+    const pnlValue = Number(result.sessionPnl ?? state.sessionPnl ?? 0);
+    const tradesValue = Number(result.sessionTrades ?? state.sessionTrades ?? 0);
+    const winsValue = Number(result.sessionWins ?? state.sessionWins ?? 0);
+    const lossesValue = Number(result.sessionLosses ?? state.sessionLosses ?? 0);
+    const winRate = Number.isFinite(Number(result.winRate))
+      ? Number(result.winRate)
+      : (tradesValue > 0 ? Math.round((winsValue / tradesValue) * 100) : 0);
 
     const icon = $("#riskResultIcon");
     const title = $("#riskResultTitle");

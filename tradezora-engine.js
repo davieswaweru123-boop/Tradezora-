@@ -168,6 +168,17 @@
         updated.nextTradeAt = null;
         updated.stoppedReason = reason;
         updated.stoppedAt = now;
+        // Freeze the completed session statistics so the result screen always
+        // shows the trades/W-L/win-rate from the session that just ended.
+        updated.lastSessionResult = {
+          sessionPnl,
+          sessionTrades,
+          sessionWins,
+          sessionLosses,
+          winRate: sessionTrades > 0 ? Math.round((sessionWins / sessionTrades) * 100) : 0,
+          reason,
+          completedAt: now
+        };
       }
       write(KEY, updated);
     }
@@ -309,7 +320,8 @@
         sessionWins: 0,
         sessionLosses: 0,
         stoppedReason: null,
-        stoppedAt: null
+        stoppedAt: null,
+        lastSessionResult: null
       };
       write(KEY, reset);
       emit();
