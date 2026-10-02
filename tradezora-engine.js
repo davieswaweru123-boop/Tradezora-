@@ -1,236 +1,693 @@
-/* TradeZora shared demo trading engine.
-   Keeps continuous demo trading alive while navigating between Trade,
-   Positions and History pages. Demo only; no broker/API connection. */
+/* =========================================================
+   TRADEZORA SHARED DEMO TRADING ENGINE
+   Continuous trading + x6 loss multiplier
+   Demo only — no broker/API connection
+========================================================= */
+
 (function () {
-  const KEY = 'tradezoraContinuousState';
-  const POS = 'tradezoraDemoPositions';
-  const HIST = 'tradezoraDemoHistory';
-  const BAL = 'tradezoraDemoBalance';
+
+  const KEY  = "tradezoraContinuousState";
+  const POS  = "tradezoraDemoPositions";
+  const HIST = "tradezoraDemoHistory";
+  const BAL  = "tradezoraDemoBalance";
+
   let busy = false;
 
   const read = (key, fallback) => {
-    try { return JSON.parse(localStorage.getItem(key) ?? JSON.stringify(fallback)); }
-    catch { return fallback; }
+    try {
+      return JSON.parse(
+        localStorage.getItem(key) ?? JSON.stringify(fallback)
+      );
+    } catch {
+      return fallback;
+    }
   };
-  const write = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+
+  const write = (key, value) => {
+    localStorage.setItem(key, JSON.stringify(value));
+  };
 
   function getState() {
-    const s = read(KEY, null);
-    return s && typeof s === 'object' ? s : { running:false };
+
+    const state = read(KEY, null);
+
+    if (state && typeof state === "object") {
+      return state;
+    }
+
+    return {
+      running: false
+    };
   }
 
   function emit() {
-    window.dispatchEvent(new CustomEvent('tradezora-state-changed'));
+    window.dispatchEvent(
+      new CustomEvent("tradezora-state-changed")
+    );
   }
+
+
+  /* =========================================================
+     SETTLE TRADE
+  ========================================================= */
 
   function settlePosition(position, now) {
-    const closingPrice = Number(localStorage.getItem("tradezoraDemoLastPrice") || 0);
-    const finalDigit = Number.isFinite(closingPrice) && closingPrice !== 0
-      ? (Math.round(Math.abs(closingPrice) * 100) % 10)
-      : Math.floor(Math.random() * 10);
-    const type = String(position.type || '').toUpperCase();
-    const contract = position.contract;
-    const digit = Number(position.digit);
+
+    const finalDigit =
+      Math.floor(Math.random() * 10);
+
+    const type =
+      String(position.type || "").toUpperCase();
+
+    const contract =
+      String(position.contract || "").toLowerCase();
+
+    const digit =
+      Number(position.digit);
+
     let win = false;
 
-    if (contract === 'match') {
-      win = (finalDigit === digit && type === 'MATCH') ||
-            (finalDigit !== digit && type === 'DIFFER');
-    } else if (contract === 'even') {
-      win = (finalDigit % 2 === 0 && type === 'EVEN') ||
-            (finalDigit % 2 !== 0 && type === 'ODD');
-    } else if (contract === 'over') {
-      // Over/Under use the selected digit as the barrier.
-      // OVER N wins when the closing digit is greater than N.
-      // UNDER N wins when the closing digit is less than N.
-      // Equality is always a loss.
-      if (type === 'OVER') {
-        win = finalDigit > digit;
-      } else if (type === 'UNDER') {
-        win = finalDigit < digit;
-      }
+
+    /* MATCH / DIFFER */
+
+    if (contract === "match") {
+
+      win =
+        (finalDigit === digit && type === "MATCH") ||
+        (finalDigit !== digit && type === "DIFFER");
+
     }
 
-    const stake = Number(position.stake) || 0;
-    const overProfitTable = {
-      0: 0.56,
-      1: 1.88,
-      2: 3.57,
-      3: 5.83,
-      4: 9.00,
-      5: 13.75,
-      6: 21.67,
-      7: 37.50,
-      8: 85.00
-    };
-    let profit = 0;
+
+    /* EVEN / ODD */
+
+    else if (contract === "even") {
+
+      win =
+        (finalDigit % 2 === 0 && type === "EVEN") ||
+        (finalDigit % 2 !== 0 && type === "ODD");
+
+    }
+
+
+    /* OVER / UNDER */
+
+    else if (contract === "over") {
+
+      win =
+        (finalDigit > 5 && type === "OVER") ||
+        (finalDigit <= 5 && type === "UNDER");
+
+    }
+
+
+    const stake =
+      Number(position.stake) || 0;
+
+    const profit =
+      win ? stake * 0.85 : 0;
+
+
+    let balance =
+      Number(
+        localStorage.getItem(BAL) || 10000
+      );
+
+
+    /*
+      The stake was already removed when
+      the position was opened.
+
+      On WIN, return the stake + profit.
+    */
+
     if (win) {
-      if (contract === 'over') {
-        const barrier = Number(digit);
-        const baseProfit = type === 'OVER'
-          ? overProfitTable[barrier]
-          : overProfitTable[9 - barrier];
-        profit = Number.isFinite(baseProfit) ? stake * (baseProfit / 10) : 0;
-      } else {
-        profit = stake * 0.85;
-      }
+      balance += stake + profit;
     }
-    let balance = Number(localStorage.getItem(BAL) || 10000);
-    if (win) balance += stake + profit;
 
-    localStorage.setItem(BAL, String(balance));
 
-    const history = read(HIST, []);
-    history.push({ ...position, finalDigit, win, profit, settledAt: now });
-    write(HIST, history.slice(-100));
+    localStorage.setItem(
+      BAL,
+      String(balance)
+    );
 
-    // Multiplier recovery: a normal trade that loses arms exactly ONE
-    // recovery trade. A recovery trade never chains into another multiplier step.
-    const currentState = getState();
-    const positionWasRecovery = Boolean(position.recoveryApplied);
-    const selectedMultiplier = Math.min(10, Math.max(1, Number(position.multiplier || currentState.multiplier || 1)));
-    const nextRecovery = !positionWasRecovery && !win && selectedMultiplier > 1;
-    write(KEY, { ...currentState, recoveryPending: nextRecovery });
 
-    localStorage.setItem("tradezoraLastDigitResult", JSON.stringify({
-      digit: finalDigit, win: Boolean(win), at: now
-    }));
+    /* Save history */
 
-    try {
-      window.dispatchEvent(new CustomEvent("tradezora-trade-settled", {
-        detail: { digit: finalDigit, win: Boolean(win), profit: profit }
-      }));
-    } catch (e) {}
+    const history =
+      read(HIST, []);
+
+    history.push({
+      ...position,
+      finalDigit,
+      win,
+      profit,
+      settledAt: now
+    });
+
+    write(
+      HIST,
+      history.slice(-100)
+    );
+
+
+    /* =======================================================
+       X6 MULTIPLIER SYSTEM
+
+       Base = $10
+       x6
+
+       LOSS 1 -> $60
+       LOSS 2 -> $360
+       LOSS 3 -> $2,160
+       LOSS 4 -> $12,960
+       LOSS 5 -> $77,760
+       LOSS 6 -> RESET TO $10
+
+       ANY WIN -> RESET TO $10
+    ======================================================= */
+
+    const state =
+      getState();
+
+
+    if (
+      position.continuous &&
+      state.running
+    ) {
+
+      const baseStake =
+        Number(
+          state.baseStake ||
+          state.stake ||
+          10
+        );
+
+
+      const multiplier =
+        Number(
+          state.multiplier || 6
+        );
+
+
+      const maxLosses =
+        Number(
+          state.maxConsecutiveLosses || 6
+        );
+
+
+      let consecutiveLosses =
+        Number(
+          state.consecutiveLosses || 0
+        );
+
+
+      let nextStake =
+        Number(
+          state.stake || baseStake
+        );
+
+
+      /* -------------------------
+         WIN
+      ------------------------- */
+
+      if (win) {
+
+        consecutiveLosses = 0;
+
+        nextStake =
+          baseStake;
+
+      }
+
+
+      /* -------------------------
+         LOSS
+      ------------------------- */
+
+      else {
+
+        consecutiveLosses += 1;
+
+
+        /*
+          Sixth consecutive loss:
+          reset to base stake.
+        */
+
+        if (
+          consecutiveLosses >= maxLosses
+        ) {
+
+          consecutiveLosses = 0;
+
+          nextStake =
+            baseStake;
+
+        }
+
+
+        /*
+          Otherwise multiply the
+          ACTUAL losing stake by x6.
+        */
+
+        else {
+
+          nextStake =
+            stake * multiplier;
+
+        }
+
+      }
+
+
+      write(
+        KEY,
+        {
+          ...state,
+
+          running: true,
+
+          baseStake,
+
+          multiplier,
+
+          maxConsecutiveLosses:
+            maxLosses,
+
+          consecutiveLosses,
+
+          stake:
+            nextStake,
+
+          nextStake,
+
+          currentStake:
+            nextStake
+        }
+      );
+
+    }
+
   }
 
+
+  /* =========================================================
+     OPEN CONTINUOUS TRADE
+  ========================================================= */
+
   function openContinuousTrade(state, now) {
-    const baseStake = Number(state.baseStake ?? state.stake);
-    const selectedMultiplier = Math.min(10, Math.max(1, Number(state.multiplier || 1)));
-    const recoveryApplied = Boolean(state.recoveryPending) && selectedMultiplier > 1;
-    const stake = recoveryApplied ? baseStake * selectedMultiplier : baseStake;
-    let balance = Number(localStorage.getItem(BAL) || 10000);
-    if (!Number.isFinite(stake) || stake <= 0 || stake > balance) {
-      const stopped = { ...state, running:false, nextTradeAt:null, stoppedReason:'balance' };
-      write(KEY, stopped);
+
+    const stake =
+      Number(state.stake);
+
+
+    let balance =
+      Number(
+        localStorage.getItem(BAL) || 10000
+      );
+
+
+    /*
+      Do not open a trade if the demo
+      balance cannot cover the stake.
+    */
+
+    if (
+      !Number.isFinite(stake) ||
+      stake <= 0 ||
+      stake > balance
+    ) {
+
+      write(
+        KEY,
+        {
+          ...state,
+
+          running: false,
+
+          nextTradeAt: null,
+
+          stoppedReason: "balance"
+        }
+      );
+
       return false;
     }
 
-    // Consume the one recovery step immediately. Settlement will arm a new
-    // recovery only when a NORMAL trade loses; a recovery trade can never chain.
-    const nextState = {
-      ...state,
-      baseStake,
-      stake: baseStake,
-      multiplier: selectedMultiplier,
-      recoveryPending: false
-    };
 
-    // A newly opened AUTO trade must not inherit the previous trade's
-    // green/red result. The result light appears only after settlement.
-    localStorage.removeItem("tradezoraLastDigitResult");
-    try {
-      window.dispatchEvent(new CustomEvent("tradezora-trade-opened", {
-        detail: { mode: "AUTO", digit: Number(state.digit), type: state.type }
-      }));
-    } catch (e) {}
+    /* Remove stake from balance */
 
     balance -= stake;
-    localStorage.setItem(BAL, String(balance));
 
-    const positions = read(POS, []);
+    localStorage.setItem(
+      BAL,
+      String(balance)
+    );
+
+
+    /* Create position */
+
+    const positions =
+      read(POS, []);
+
+
     positions.push({
-      id: `ct-${now}-${Math.random().toString(36).slice(2)}`,
-      type: state.type,
-      stake,
-      baseStake,
-      multiplier: selectedMultiplier,
-      recoveryApplied,
-      digit: Number(state.digit),
-      contract: state.contract,
-      mode: state.mode || 'AUTO',
-      openedAt: now,
-      settleAt: now + 5000,
-      continuous: true
-    });
-    write(POS, positions);
 
-    write(KEY, { ...nextState, running:true, nextTradeAt:now + 6500 });
+      id:
+        `ct-${now}-${Math.random()
+          .toString(36)
+          .slice(2)}`,
+
+      type:
+        state.type,
+
+      stake,
+
+      digit:
+        Number(state.digit),
+
+      contract:
+        state.contract,
+
+      mode:
+        state.mode || "AUTO",
+
+      market:
+        state.market || null,
+
+      openedAt:
+        now,
+
+      settleAt:
+        now + 5000,
+
+      continuous:
+        true
+
+    });
+
+
+    write(
+      POS,
+      positions
+    );
+
+
+    /*
+      Keep the same stake state.
+      It will be changed after the
+      trade settles.
+    */
+
+    write(
+      KEY,
+      {
+
+        ...state,
+
+        running: true,
+
+        nextTradeAt:
+          now + 6500
+
+      }
+    );
+
+
     return true;
   }
 
+
+  /* =========================================================
+     ENGINE TICK
+  ========================================================= */
+
   function tick() {
-    if (busy) return;
+
+    if (busy) {
+      return;
+    }
+
     busy = true;
+
+
     try {
-      const now = Date.now();
-      let positions = read(POS, []);
+
+      const now =
+        Date.now();
+
+
+      let positions =
+        read(POS, []);
+
+
       const remaining = [];
+
+
       let changed = false;
 
-      for (const position of positions) {
-        if (position.settleAt && Number(position.settleAt) <= now) {
-          settlePosition(position, now);
+
+      /* --------------------------------
+         Settle finished positions
+      -------------------------------- */
+
+      for (
+        const position of positions
+      ) {
+
+        if (
+          position.settleAt &&
+          Number(position.settleAt) <= now
+        ) {
+
+          settlePosition(
+            position,
+            now
+          );
+
           changed = true;
-        } else {
-          remaining.push(position);
+
         }
-      }
-      if (changed) write(POS, remaining);
 
-      let state = getState();
-      if (state.running && String(state.mode || '').toUpperCase() === 'MANUAL') {
-        write(KEY, { ...state, running:false, nextTradeAt:null });
-        state = getState();
-        changed = true;
-      }
-      if (state.running && Number(state.nextTradeAt || 0) <= now) {
-        if (openContinuousTrade(state, now)) changed = true;
-        state = getState();
+        else {
+
+          remaining.push(position);
+
+        }
+
       }
 
-      if (changed) emit();
-    } finally {
-      busy = false;
+
+      if (changed) {
+
+        write(
+          POS,
+          remaining
+        );
+
+      }
+
+
+      /* --------------------------------
+         Open next continuous trade
+      -------------------------------- */
+
+      let state =
+        getState();
+
+
+      if (
+        state.running &&
+        Number(
+          state.nextTradeAt || 0
+        ) <= now
+      ) {
+
+        if (
+          openContinuousTrade(
+            state,
+            now
+          )
+        ) {
+
+          changed = true;
+
+        }
+
+
+        state =
+          getState();
+
+      }
+
+
+      if (changed) {
+        emit();
+      }
+
     }
+
+    finally {
+
+      busy = false;
+
+    }
+
   }
 
+
+  /* =========================================================
+     PUBLIC API
+  ========================================================= */
+
   const api = {
+
     getState,
+
+
     start(config) {
-      if (String(config.mode || '').toUpperCase() === 'MANUAL') {
-        return getState();
-      }
+
+      const baseStake =
+        Number(
+          config.baseStake ||
+          config.stake ||
+          10
+        );
+
+
       const state = {
-        running:true,
-        type:String(config.type || 'EVEN').toUpperCase(),
-        contract:config.contract || 'even',
-        digit:Number(config.digit ?? 0),
-        stake:Number(config.stake || 1),
-        baseStake:Number(config.baseStake ?? config.stake ?? 1),
-        multiplier:Math.min(10, Math.max(1, Number(config.multiplier || 1))),
-        recoveryPending:false,
-        mode:config.mode || 'AUTO',
-        market:config.market || null,
-        nextTradeAt:Date.now()
+
+        running: true,
+
+        type:
+          String(
+            config.type ||
+            "EVEN"
+          ).toUpperCase(),
+
+        contract:
+          config.contract ||
+          "even",
+
+        digit:
+          Number(
+            config.digit ?? 0
+          ),
+
+        stake:
+          baseStake,
+
+        baseStake,
+
+        multiplier:
+          Number(
+            config.multiplier || 6
+          ),
+
+        maxConsecutiveLosses:
+          Number(
+            config.maxConsecutiveLosses || 6
+          ),
+
+        consecutiveLosses: 0,
+
+        nextStake:
+          baseStake,
+
+        currentStake:
+          baseStake,
+
+        mode:
+          config.mode ||
+          "AUTO",
+
+        market:
+          config.market ||
+          null,
+
+        nextTradeAt:
+          Date.now()
+
       };
-      write(KEY, state);
+
+
+      write(
+        KEY,
+        state
+      );
+
+
       tick();
+
       emit();
+
+
       return getState();
+
     },
+
+
     stop() {
-      const state = getState();
-      write(KEY, { ...state, running:false, nextTradeAt:null });
+
+      const state =
+        getState();
+
+
+      write(
+        KEY,
+        {
+
+          ...state,
+
+          running: false,
+
+          nextTradeAt: null
+
+        }
+      );
+
+
       emit();
+
     },
+
+
     reset() {
-      localStorage.removeItem(KEY);
+
+      localStorage.removeItem(
+        KEY
+      );
+
       emit();
+
     },
+
+
     tick
+
   };
 
-  window.TradeZoraContinuousEngine = api;
+
+  /* Make engine available */
+
+  window.TradeZoraContinuousEngine =
+    api;
+
+
+  /* Start engine */
+
   tick();
-  setInterval(tick, 500);
+
+
+  /* Keep engine alive across pages */
+
+  setInterval(
+    tick,
+    500
+  );
+
+
 })();
