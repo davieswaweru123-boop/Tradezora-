@@ -1562,12 +1562,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const historyList =
       $("#historyList");
 
-    // The Trade page keeps Positions and History on separate pages.
-    // Nothing should fail here when those list containers are not present.
-    if (!positionsList && !historyList) return;
+    // Trade, Positions and History are separate pages. The Trade page
+    // does not contain these list containers, so there is nothing to render here.
+    if (!positionsList || !historyList) return;
 
-
-    if (positionsList && positions.length) {
+    if (positions.length) {
 
       positionsList.innerHTML =
         positions.map(position => `
@@ -1588,7 +1587,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         `).join("");
 
-    } else if (positionsList) {
+    } else {
 
       positionsList.innerHTML =
         `<div class="empty">
@@ -1598,7 +1597,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    if (historyList && history.length) {
+    if (history.length) {
 
       historyList.innerHTML =
         history
@@ -1629,7 +1628,7 @@ document.addEventListener("DOMContentLoaded", () => {
           `)
           .join("");
 
-    } else if (historyList) {
+    } else {
 
       historyList.innerHTML =
         `<div class="empty">
