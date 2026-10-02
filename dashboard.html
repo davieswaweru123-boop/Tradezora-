@@ -335,216 +335,7 @@
   };
 })();
 </script>
-<script>
-/* TradeZora shared demo trading engine.
-   Keeps continuous demo trading alive while navigating between Trade,
-   Positions and History pages. Demo only; no broker/API connection. */
-(function () {
-  const KEY = 'tradezoraContinuousState';
-  const POS = 'tradezoraDemoPositions';
-  const HIST = 'tradezoraDemoHistory';
-  const BAL = 'tradezoraDemoBalance';
-  let busy = false;
-
-  const read = (key, fallback) => {
-    try { return JSON.parse(localStorage.getItem(key) ?? JSON.stringify(fallback)); }
-    catch { return fallback; }
-  };
-  const write = (key, value) => localStorage.setItem(key, JSON.stringify(value));
-
-  function getState() {
-    const s = read(KEY, null);
-    return s && typeof s === 'object' ? s : { running:false };
-  }
-
-  function emit() {
-    window.dispatchEvent(new CustomEvent('tradezora-state-changed'));
-  }
-
-  function settlePosition(position, now) {
-    const closingPrice = Number(localStorage.getItem("tradezoraDemoLastPrice") || 0);
-    const finalDigit = Number.isFinite(closingPrice) && closingPrice !== 0
-      ? (Math.round(Math.abs(closingPrice) * 100) % 10)
-      : Math.floor(Math.random() * 10);
-    const type = String(position.type || '').toUpperCase();
-    const contract = position.contract;
-    const digit = Number(position.digit);
-    let win = false;
-
-    if (contract === 'match') {
-      win = (finalDigit === digit && type === 'MATCH') ||
-            (finalDigit !== digit && type === 'DIFFER');
-    } else if (contract === 'even') {
-      win = (finalDigit % 2 === 0 && type === 'EVEN') ||
-            (finalDigit % 2 !== 0 && type === 'ODD');
-    } else if (contract === 'over') {
-      // Over/Under use the selected digit as the barrier.
-      // OVER N wins when the closing digit is greater than N.
-      // UNDER N wins when the closing digit is less than N.
-      // Equality is always a loss.
-      if (type === 'OVER') {
-        win = finalDigit > digit;
-      } else if (type === 'UNDER') {
-        win = finalDigit < digit;
-      }
-    }
-
-    const stake = Number(position.stake) || 0;
-    const overProfitTable = {
-      0: 0.56,
-      1: 1.88,
-      2: 3.57,
-      3: 5.83,
-      4: 9.00,
-      5: 13.75,
-      6: 21.67,
-      7: 37.50,
-      8: 85.00
-    };
-    let profit = 0;
-    if (win) {
-      if (contract === 'over') {
-        const barrier = Number(digit);
-        const baseProfit = type === 'OVER'
-          ? overProfitTable[barrier]
-          : overProfitTable[9 - barrier];
-        profit = Number.isFinite(baseProfit) ? stake * (baseProfit / 10) : 0;
-      } else {
-        profit = stake * 0.85;
-      }
-    }
-    let balance = Number(localStorage.getItem(BAL) || 10000);
-    if (win) balance += stake + profit;
-
-    localStorage.setItem(BAL, String(balance));
-
-    const history = read(HIST, []);
-    history.push({ ...position, finalDigit, win, profit, settledAt: now });
-    write(HIST, history.slice(-100));
-    localStorage.setItem("tradezoraLastDigitResult", JSON.stringify({
-      digit: finalDigit, win: Boolean(win), at: now
-    }));
-
-    try {
-      window.dispatchEvent(new CustomEvent("tradezora-trade-settled", {
-        detail: { digit: finalDigit, win: Boolean(win), profit: profit }
-      }));
-    } catch (e) {}
-  }
-
-  function openContinuousTrade(state, now) {
-    const stake = Number(state.stake);
-    let balance = Number(localStorage.getItem(BAL) || 10000);
-    if (!Number.isFinite(stake) || stake <= 0 || stake > balance) {
-      const stopped = { ...state, running:false, nextTradeAt:null, stoppedReason:'balance' };
-      write(KEY, stopped);
-      return false;
-    }
-
-    // A newly opened AUTO trade must not inherit the previous trade's
-    // green/red result. The result light appears only after settlement.
-    localStorage.removeItem("tradezoraLastDigitResult");
-    try {
-      window.dispatchEvent(new CustomEvent("tradezora-trade-opened", {
-        detail: { mode: "AUTO", digit: Number(state.digit), type: state.type }
-      }));
-    } catch (e) {}
-
-    balance -= stake;
-    localStorage.setItem(BAL, String(balance));
-
-    const positions = read(POS, []);
-    positions.push({
-      id: `ct-${now}-${Math.random().toString(36).slice(2)}`,
-      type: state.type,
-      stake,
-      digit: Number(state.digit),
-      contract: state.contract,
-      mode: state.mode || 'AUTO',
-      openedAt: now,
-      settleAt: now + 5000,
-      continuous: true
-    });
-    write(POS, positions);
-
-    write(KEY, { ...state, running:true, nextTradeAt:now + 6500 });
-    return true;
-  }
-
-  function tick() {
-    if (busy) return;
-    busy = true;
-    try {
-      const now = Date.now();
-      let positions = read(POS, []);
-      const remaining = [];
-      let changed = false;
-
-      for (const position of positions) {
-        if (position.settleAt && Number(position.settleAt) <= now) {
-          settlePosition(position, now);
-          changed = true;
-        } else {
-          remaining.push(position);
-        }
-      }
-      if (changed) write(POS, remaining);
-
-      let state = getState();
-      if (state.running && String(state.mode || '').toUpperCase() === 'MANUAL') {
-        write(KEY, { ...state, running:false, nextTradeAt:null });
-        state = getState();
-        changed = true;
-      }
-      if (state.running && Number(state.nextTradeAt || 0) <= now) {
-        if (openContinuousTrade(state, now)) changed = true;
-        state = getState();
-      }
-
-      if (changed) emit();
-    } finally {
-      busy = false;
-    }
-  }
-
-  const api = {
-    getState,
-    start(config) {
-      if (String(config.mode || '').toUpperCase() === 'MANUAL') {
-        return getState();
-      }
-      const state = {
-        running:true,
-        type:String(config.type || 'EVEN').toUpperCase(),
-        contract:config.contract || 'even',
-        digit:Number(config.digit ?? 0),
-        stake:Number(config.stake || 1),
-        mode:config.mode || 'AUTO',
-        nextTradeAt:Date.now()
-      };
-      write(KEY, state);
-      tick();
-      emit();
-      return getState();
-    },
-    stop() {
-      const state = getState();
-      write(KEY, { ...state, running:false, nextTradeAt:null });
-      emit();
-    },
-    reset() {
-      localStorage.removeItem(KEY);
-      emit();
-    },
-    tick
-  };
-
-  window.TradeZoraContinuousEngine = api;
-  tick();
-  setInterval(tick, 500);
-})();
-
-  </script>
+<script src="tradezora-engine.js?v=3"></script>
   <script>
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -577,20 +368,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let balance = Number(storedBalance);
 
   let stake = Number(
-    savedTerminalView.stake || localStorage.getItem("tradezoraDemoStake") || 10
+    localStorage.getItem("tradezoraDemoStake") || 10
   );
-  if (!Number.isFinite(stake) || stake <= 0) stake = 10;
 
-  let price = Number(localStorage.getItem("tradezoraDemoLastPrice") || 1000);
-
-  // Remember the exact terminal view so returning from History/Positions
-  // restores the same market, contract, barrier, stake and mode.
-  let savedTerminalView = {};
-  try {
-    savedTerminalView = JSON.parse(localStorage.getItem("tradezoraTerminalView") || "{}");
-  } catch (e) {
-    savedTerminalView = {};
-  }
+  let price = 1000;
 
   let history = JSON.parse(localStorage.getItem("tradezoraDemoHistory") || "[]");
   let positions = JSON.parse(localStorage.getItem("tradezoraDemoPositions") || "[]");
@@ -600,33 +381,21 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("tradezoraDemoPositions", JSON.stringify(positions));
   }
 
-  let selectedDigit = Number.isFinite(Number(savedTerminalView.selectedDigit))
-    ? Number(savedTerminalView.selectedDigit)
-    : 0;
+  let selectedDigit = 0;
 
   let pnl = 0;
   let wins = 0;
   let losses = 0;
 
-  let contractType = savedTerminalView.contractType || "match";
+  let contractType = "match";
 
   // MANUAL is the safe default on page load. AUTO starts only after
   // the user explicitly taps the AUTO button.
-  const persistedEngineState = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("tradezoraContinuousState") || "null");
-    } catch (e) {
-      return null;
-    }
-  })();
+  let mode = "MANUAL";
 
-  let mode = persistedEngineState?.running
-    ? "AUTO"
-    : (savedTerminalView.mode === "AUTO" ? "AUTO" : "MANUAL");
-
-  // Keep the mode UI consistent with the restored state.
-  $("#auto")?.classList.toggle("active", mode === "AUTO");
-  $("#manual")?.classList.toggle("active", mode !== "AUTO");
+  // Keep the mode UI consistent with the safe default.
+  $("#auto")?.classList.remove("active");
+  $("#manual")?.classList.add("active");
 
   // Continuous demo trading state. Only one contract stream can run at a time.
   let continuousTrading = {
@@ -666,21 +435,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  function saveTerminalView(extra = {}) {
-    const market = $("#marketSelect")?.value || savedTerminalView.market || "Volatility 10 (1s)";
-    const state = {
-      market,
-      contractType,
-      selectedDigit: Number(selectedDigit),
-      stake: Number(stake),
-      mode,
-      chartZoom: Number(chartZoom || 1),
-      ...extra
-    };
-    localStorage.setItem("tradezoraTerminalView", JSON.stringify(state));
-    savedTerminalView = state;
-  }
-
   function toast(message) {
 
     const element = $("#toast");
@@ -699,20 +453,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderBalance() {
 
-    $("#balance").textContent = money(balance);
-
-    $("#stake").textContent = money(stake);
-
+    const balanceEl = $("#balance");
+    const stakeEl = $("#stake");
     const pnlElement = $("#sessionPnl");
+    const recordEl = $("#sessionRecord");
 
-    pnlElement.textContent =
-      (pnl >= 0 ? "+" : "") + money(pnl);
-
-    pnlElement.style.color =
-      pnl >= 0 ? "#16e58a" : "#ff5d6c";
-
-    $("#sessionRecord").textContent =
-      `${wins}W · ${losses}L`;
+    if (balanceEl) balanceEl.textContent = money(balance);
+    if (stakeEl) stakeEl.textContent = money(stake);
+    if (pnlElement) {
+      pnlElement.textContent = (pnl >= 0 ? "+" : "") + money(pnl);
+      pnlElement.style.color = pnl >= 0 ? "#16e58a" : "#ff5d6c";
+    }
+    if (recordEl) recordEl.textContent = `${wins}W · ${losses}L`;
   }
 
 
@@ -867,7 +619,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const selectDigit = () => {
         selectedDigit = digit;
-        saveTerminalView();
         renderDigitStatistics();
         if (typeof toast === "function") toast(`Digit ${digit} selected.`);
       };
@@ -945,7 +696,6 @@ document.addEventListener("DOMContentLoaded", () => {
       contractType =
         button.dataset.contract || "match";
 
-      saveTerminalView();
 
       if (contractType === "even") {
 
@@ -982,24 +732,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 
-  // Restore the contract tab that was active before leaving the terminal.
-  contractTabs.forEach(tab => {
-    tab.classList.toggle("active", (tab.dataset.contract || "match") === contractType);
-  });
-  const restoredTab = [...contractTabs].find(tab => (tab.dataset.contract || "match") === contractType);
-  if (restoredTab) {
-    if (contractType === "even") {
-      $("#match").innerHTML = "<strong>EVEN</strong><span>Demo</span>";
-      $("#differ").innerHTML = "<strong>ODD</strong><span>Demo</span>";
-    } else if (contractType === "over") {
-      $("#match").innerHTML = "<strong>OVER</strong><span>Demo</span>";
-      $("#differ").innerHTML = "<strong>UNDER</strong><span>Demo</span>";
-    } else {
-      $("#match").innerHTML = "<strong>MATCH</strong><span>Demo</span>";
-      $("#differ").innerHTML = "<strong>DIFFER</strong><span>Demo</span>";
-    }
-  }
-
   /* =========================
      AUTO / MANUAL
   ========================= */
@@ -1009,7 +741,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // AUTO is a mode selector only. Selecting AUTO must NEVER place
     // a trade or start continuous trading by itself.
     mode = "AUTO";
-    saveTerminalView();
 
     $("#auto").classList.add("active");
     $("#manual").classList.remove("active");
@@ -1023,7 +754,6 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#manual").onclick = () => {
 
     mode = "MANUAL";
-    saveTerminalView();
 
     if (window.TradeZoraContinuousEngine?.getState().running) {
       window.TradeZoraContinuousEngine.stop();
@@ -1053,7 +783,6 @@ document.addEventListener("DOMContentLoaded", () => {
       "tradezoraDemoStake",
       stake
     );
-    saveTerminalView();
 
     renderBalance();
 
@@ -1072,7 +801,6 @@ document.addEventListener("DOMContentLoaded", () => {
       "tradezoraDemoStake",
       stake
     );
-    saveTerminalView();
 
     renderBalance();
 
@@ -1138,10 +866,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "Volatility 100 (1s)": { trend: -0.06, noise: 3.10, momentum: 0.76, meanReversion: 0.018, range: 68 }
   };
 
-  let activeMarket = savedTerminalView.market || $("#marketSelect")?.value || "Volatility 10 (1s)";
-  if ($("#marketSelect") && [...$("#marketSelect").options].some(option => option.value === activeMarket)) {
-    $("#marketSelect").value = activeMarket;
-  }
+  let activeMarket = $("#marketSelect")?.value || "Volatility 10 (1s)";
   let marketProfile = marketProfiles[activeMarket] || marketProfiles["Volatility 10 (1s)"];
 
   function buildMarketHistory() {
@@ -1169,8 +894,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   buildMarketHistory();
 
-  let chartZoom = Number(savedTerminalView.chartZoom || 1);
-  if (!Number.isFinite(chartZoom) || chartZoom < 1 || chartZoom > 3) chartZoom = 1;
+  let chartZoom = 1;
 
 
   function resizeChart() {
@@ -1487,7 +1211,6 @@ document.addEventListener("DOMContentLoaded", () => {
         3,
         chartZoom + 0.5
       );
-    saveTerminalView();
 
     drawChart();
 
@@ -1501,7 +1224,6 @@ document.addEventListener("DOMContentLoaded", () => {
         1,
         chartZoom - 0.5
       );
-    saveTerminalView();
 
     drawChart();
 
@@ -1511,7 +1233,6 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#resetZoom").onclick = () => {
 
     chartZoom = 1;
-    saveTerminalView();
 
     drawChart();
 
@@ -1530,7 +1251,6 @@ document.addEventListener("DOMContentLoaded", () => {
       $("#marketSelect").value;
 
     activeMarket = market;
-    saveTerminalView();
     marketProfile =
       marketProfiles[market] ||
       marketProfiles["Volatility 10 (1s)"];
@@ -1562,11 +1282,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const historyList =
       $("#historyList");
 
-    // Trade, Positions and History are separate pages. The Trade page
-    // does not contain these list containers, so there is nothing to render here.
-    if (!positionsList || !historyList) return;
 
-    if (positions.length) {
+    if (positionsList && positions.length) {
 
       positionsList.innerHTML =
         positions.map(position => `
@@ -1587,7 +1304,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         `).join("");
 
-    } else {
+    } else if (positionsList) {
 
       positionsList.innerHTML =
         `<div class="empty">
@@ -1597,7 +1314,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    if (history.length) {
+    if (historyList && history.length) {
 
       historyList.innerHTML =
         history
@@ -1628,7 +1345,7 @@ document.addEventListener("DOMContentLoaded", () => {
           `)
           .join("");
 
-    } else {
+    } else if (historyList) {
 
       historyList.innerHTML =
         `<div class="empty">
@@ -1999,15 +1716,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    saveTerminalView({ mode: "AUTO", contractType, selectedDigit, stake: streamStake });
-
     window.TradeZoraContinuousEngine.start({
       type,
       contract: contractType,
       digit: selectedDigit,
       stake: streamStake,
-      mode: "AUTO",
-      market: $("#marketSelect")?.value || activeMarket
+      mode: "AUTO"
     });
 
     // Force the first AUTO contract immediately rather than waiting for the
@@ -2072,33 +1786,13 @@ document.addEventListener("DOMContentLoaded", () => {
     syncContinuousButtons();
   });
 
-  // A running AUTO stream is intentionally preserved while the user visits
-  // History or Positions. The shared engine on those pages keeps settling and
-  // opening trades. When the user returns here, restore the same terminal view.
-  const restoredRunningState = currentContinuousState();
-  if (restoredRunningState.running) {
-    mode = "AUTO";
-    contractType = restoredRunningState.contract || contractType;
-    selectedDigit = Number.isFinite(Number(restoredRunningState.digit))
-      ? Number(restoredRunningState.digit)
-      : selectedDigit;
-    stake = Number(restoredRunningState.stake) || stake;
-
-    if (restoredRunningState.market && $("#marketSelect")) {
-      const hasMarket = [...$("#marketSelect").options].some(option => option.value === restoredRunningState.market);
-      if (hasMarket) {
-        $("#marketSelect").value = restoredRunningState.market;
-        activeMarket = restoredRunningState.market;
-        marketProfile = marketProfiles[activeMarket] || marketProfiles["Volatility 10 (1s)"];
-        resetDigitProfile(activeMarket);
-      }
-    }
-
-    $("#auto")?.classList.add("active");
-    $("#manual")?.classList.remove("active");
-    saveTerminalView({ mode:"AUTO", contractType, selectedDigit, stake });
+  // Never start continuous trading on page load/login.
+  // Stop any stale continuous demo stream, then leave the terminal idle.
+  if (window.TradeZoraContinuousEngine?.getState().running) {
+    window.TradeZoraContinuousEngine.stop();
   }
 
+  // Sync once on page load. The user must explicitly tap AUTO to start.
   syncContinuousButtons();
 
   /* Small visual cue for a running continuous button. */
@@ -2120,16 +1814,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const clearPositionsButton = $("#clearPositions");
   if (clearPositionsButton) {
     clearPositionsButton.onclick = () => {
-
       positions = [];
       saveTradeState();
-
       renderLists();
-
-      toast(
-        "Open positions cleared from view."
-      );
-
+      toast("Open positions cleared from view.");
     };
   }
 
@@ -2141,7 +1829,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderLists();
 
   renderBalance();
-  saveTerminalView();
   localStorage.setItem("tradezoraDemoLastPrice", String(price));
 
   recordCurrentDigit();
