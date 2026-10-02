@@ -71,12 +71,7 @@
           ? overProfitTable[barrier]
           : overProfitTable[9 - barrier];
         profit = Number.isFinite(baseProfit) ? stake * (baseProfit / 10) : 0;
-      } else if (contract === 'match') {
-        // MATCH pays $85 profit on a $10 stake; DIFFER pays $0.56.
-        const rate = type === 'MATCH' ? 8.5 : 0.056;
-        profit = stake * rate;
       } else {
-        // Keep the existing payout for other contract types unchanged.
         profit = stake * 0.85;
       }
     }
@@ -88,6 +83,15 @@
     const history = read(HIST, []);
     history.push({ ...position, finalDigit, win, profit, settledAt: now });
     write(HIST, history.slice(-100));
+
+    // Multiplier recovery: a normal trade that loses arms exactly ONE
+    // recovery trade. A recovery trade never chains into another multiplier step.
+    const currentState = getState();
+    const positionWasRecovery = Boolean(position.recoveryApplied);
+    const selectedMultiplier = Math.min(10, Math.max(1, Number(position.multiplier || currentState.multiplier || 1)));
+    const nextRecovery = !positionWasRecovery && !win && selectedMultiplier > 1;
+    write(KEY, { ...currentState, recoveryPending: nextRecovery });
+
     localStorage.setItem("tradezoraLastDigitResult", JSON.stringify({
       digit: finalDigit, win: Boolean(win), at: now
     }));
@@ -100,13 +104,26 @@
   }
 
   function openContinuousTrade(state, now) {
-    const stake = Number(state.stake);
+    const baseStake = Number(state.baseStake ?? state.stake);
+    const selectedMultiplier = Math.min(10, Math.max(1, Number(state.multiplier || 1)));
+    const recoveryApplied = Boolean(state.recoveryPending) && selectedMultiplier > 1;
+    const stake = recoveryApplied ? baseStake * selectedMultiplier : baseStake;
     let balance = Number(localStorage.getItem(BAL) || 10000);
     if (!Number.isFinite(stake) || stake <= 0 || stake > balance) {
       const stopped = { ...state, running:false, nextTradeAt:null, stoppedReason:'balance' };
       write(KEY, stopped);
       return false;
     }
+
+    // Consume the one recovery step immediately. Settlement will arm a new
+    // recovery only when a NORMAL trade loses; a recovery trade can never chain.
+    const nextState = {
+      ...state,
+      baseStake,
+      stake: baseStake,
+      multiplier: selectedMultiplier,
+      recoveryPending: false
+    };
 
     // A newly opened AUTO trade must not inherit the previous trade's
     // green/red result. The result light appears only after settlement.
@@ -125,6 +142,9 @@
       id: `ct-${now}-${Math.random().toString(36).slice(2)}`,
       type: state.type,
       stake,
+      baseStake,
+      multiplier: selectedMultiplier,
+      recoveryApplied,
       digit: Number(state.digit),
       contract: state.contract,
       mode: state.mode || 'AUTO',
@@ -134,7 +154,7 @@
     });
     write(POS, positions);
 
-    write(KEY, { ...state, running:true, nextTradeAt:now + 6500 });
+    write(KEY, { ...nextState, running:true, nextTradeAt:now + 6500 });
     return true;
   }
 
@@ -186,6 +206,9 @@
         contract:config.contract || 'even',
         digit:Number(config.digit ?? 0),
         stake:Number(config.stake || 1),
+        baseStake:Number(config.baseStake ?? config.stake ?? 1),
+        multiplier:Math.min(10, Math.max(1, Number(config.multiplier || 1))),
+        recoveryPending:false,
         mode:config.mode || 'AUTO',
         market:config.market || null,
         nextTradeAt:Date.now()
