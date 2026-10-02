@@ -1123,11 +1123,27 @@ document.addEventListener("DOMContentLoaded", () => {
      MULTIPLIER
   ========================= */
 
+  function readMultiplierValue(value) {
+    // Accept both numeric option values ("2") and labels such as "2x".
+    const parsed = Number(String(value ?? "").replace(/[^0-9.]/g, ""));
+    if (!Number.isFinite(parsed)) return 1;
+    return Math.min(10, Math.max(1, parsed));
+  }
+
+  function getSelectedMultiplier() {
+    const selectValue = $("#multiplier")?.value;
+    const parsed = readMultiplierValue(selectValue);
+    if (parsed >= 1) return parsed;
+    return readMultiplierValue(multiplier);
+  }
+
   const multiplierSelect = $("#multiplier");
   if (multiplierSelect) {
-    multiplierSelect.value = String(multiplier);
+    multiplierSelect.value = String(readMultiplierValue(multiplier));
+    multiplier = readMultiplierValue(multiplierSelect.value);
+    localStorage.setItem("tradezoraMultiplier", String(multiplier));
     multiplierSelect.addEventListener("change", () => {
-      multiplier = Math.min(10, Math.max(1, Number(multiplierSelect.value) || 1));
+      multiplier = getSelectedMultiplier();
       localStorage.setItem("tradezoraMultiplier", String(multiplier));
       saveTerminalView({ multiplier });
       toast(`Multiplier set to ×${multiplier}. One recovery trade only.`);
@@ -1703,7 +1719,7 @@ document.addEventListener("DOMContentLoaded", () => {
       options.stake ?? stake
     );
     const recoveryPending = localStorage.getItem("tradezoraMultiplierPending") === "true";
-    const selectedMultiplier = Math.min(10, Math.max(1, Number(multiplier || 1)));
+    const selectedMultiplier = getSelectedMultiplier();
     const recoveryApplied = !options.stake && recoveryPending && selectedMultiplier > 1;
     const tradeStake = recoveryApplied
       ? baseTradeStake * selectedMultiplier
@@ -2065,6 +2081,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    multiplier = getSelectedMultiplier();
     const streamStake = Number(stake);
     if (streamStake <= 0 || streamStake > Number(localStorage.getItem("tradezoraDemoBalance") || balance)) {
       toast("Not enough demo balance for continuous trading.");
@@ -2089,7 +2106,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // background timer.
     window.TradeZoraContinuousEngine.tick?.();
     syncContinuousButtons();
-    toast(`Continuous ${buttonContractLabel(type)} trading started.`);
+    toast(`Continuous ${buttonContractLabel(type)} trading started — ×${multiplier} recovery armed after a loss.`);
   }
 
   $("#match").onclick = () => {
