@@ -598,8 +598,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let barrierDigit = 1;
 
-  // Fixed demo payout rates supplied for TradeZora.
-  // Values are profit-per-1-staked-unit (e.g. 0.56 means $0.56 profit on $10).
+  // Fixed TradeZora risk/reward table.
+  // Values are the PROFIT amount on a $10 stake (e.g. 0.56 = $0.56 profit on $10).
+  // The same rate scales proportionally with any stake. They are not win-rate values.
   const OVER_PAYOUT_RATES = {
     1: 0.56,
     2: 1.88,
@@ -642,51 +643,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return Math.max(1, Math.min(900, Math.round(payout)));
   }
 
+  // Payout/risk values are internal to the demo trade engine.
+  // They are intentionally NOT displayed in the terminal.
   function updatePayoutPreview() {
-    const title = $("#contractConfigTitle");
-    const predictionArea = $("#predictionArea");
-    const barrierArea = $("#barrierArea");
-    const leftLabel = $("#leftPayoutLabel");
-    const rightLabel = $("#rightPayoutLabel");
-    const leftValue = $("#leftPayout");
-    const rightValue = $("#rightPayout");
-    const leftBox = $("#leftPayoutBox");
-    const rightBox = $("#rightPayoutBox");
-    if (!title || !leftValue || !rightValue) return;
-
-    const probs = currentProbabilities();
-    const setBox = (box, valueEl, value) => {
-      box.classList.toggle("disabled", value == null);
-      valueEl.textContent = value == null ? "—" : Number(value).toFixed(2);
-    };
-
-    if (contractType === "match") {
-      title.textContent = "Matches / Differs";
-      predictionArea.style.display = "block";
-      barrierArea.style.display = "none";
-      leftLabel.textContent = "MATCH";
-      rightLabel.textContent = "DIFFER";
-      setBox(leftBox, leftValue, payoutFromProbability(probs[selectedDigit]));
-      setBox(rightBox, rightValue, payoutFromProbability(100 - probs[selectedDigit]));
-    } else if (contractType === "even") {
-      title.textContent = "Even / Odd";
-      predictionArea.style.display = "none";
-      barrierArea.style.display = "none";
-      leftLabel.textContent = "EVEN";
-      rightLabel.textContent = "ODD";
-      const evenProb = probs[0] + probs[2] + probs[4] + probs[6] + probs[8];
-      const oddProb = 100 - evenProb;
-      setBox(leftBox, leftValue, payoutFromProbability(evenProb));
-      setBox(rightBox, rightValue, payoutFromProbability(oddProb));
-    } else {
-      title.textContent = "Over / Under";
-      predictionArea.style.display = "none";
-      barrierArea.style.display = "block";
-      leftLabel.textContent = `OVER ${barrierDigit}`;
-      rightLabel.textContent = `UNDER ${barrierDigit}`;
-      setBox(leftBox, leftValue, fixedPayoutRate("over", barrierDigit, "OVER"));
-      setBox(rightBox, rightValue, fixedPayoutRate("over", barrierDigit, "UNDER"));
-    }
+    return;
   }
 
   function renderDigitSelector() {
@@ -1709,10 +1669,17 @@ document.addEventListener("DOMContentLoaded", () => {
      Values are used by settlement only and are not displayed as win rates.
   ========================= */
 
+  // Fixed risk/reward table. Each value is the PROFIT on a $10 stake.
+  // For any stake: profit = stake * (tableValue / 10).
+  // These values are internal only and are never shown as win-rate/probability.
   function getPayoutForTrade(contract, digit, type) {
-    const fixedRate = fixedPayoutRate(contract, digit, type);
-    if (fixedRate != null) return fixedRate * 100;
+    const fixedRateOnTen = fixedPayoutRate(contract, digit, type);
+    if (fixedRateOnTen != null) {
+      return fixedRateOnTen / 10;
+    }
 
+    // Keep the existing simulated quote logic for Matches/Differs and Even/Odd
+    // until their dedicated risk/reward tables are defined.
     const probs = currentProbabilities();
     let probability = 0;
     if (contract === "match") {
@@ -1722,7 +1689,8 @@ document.addEventListener("DOMContentLoaded", () => {
         ? probs[0] + probs[2] + probs[4] + probs[6] + probs[8]
         : probs[1] + probs[3] + probs[5] + probs[7] + probs[9];
     }
-    return payoutFromProbability(probability) ?? 85;
+    const quote = payoutFromProbability(probability);
+    return quote != null ? quote / 100 : 0.85;
   }
 
   /* =========================
@@ -1874,10 +1842,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       }
 
-      const tradePayoutPct = getPayoutForTrade(tradeContract, tradeDigit, type);
+      const tradeProfitRate = getPayoutForTrade(tradeContract, tradeDigit, type);
       const profit =
         win
-          ? tradeStake * (tradePayoutPct / 100)
+          ? tradeStake * tradeProfitRate
           : 0;
 
 
