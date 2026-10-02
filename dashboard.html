@@ -269,10 +269,16 @@
           <label>
             Multiplier
             <select id="multiplier">
-              <option>1x</option>
-              <option selected>2x</option>
-              <option>5x</option>
-              <option>10x</option>
+              <option value="1">1x</option>
+              <option value="2" selected>2x</option>
+              <option value="3">3x</option>
+              <option value="4">4x</option>
+              <option value="5">5x</option>
+              <option value="6">6x</option>
+              <option value="7">7x</option>
+              <option value="8">8x</option>
+              <option value="9">9x</option>
+              <option value="10">10x</option>
             </select>
           </label>
         </div>
@@ -390,6 +396,8 @@
     }
 
     const stake = Number(position.stake) || 0;
+    const positionMultiplier = Math.min(10, Math.max(1, Number(position.multiplier || 1)));
+    const positionWasRecovery = Boolean(position.recoveryApplied);
     const overProfitTable = {
       0: 0.56,
       1: 1.88,
@@ -413,6 +421,22 @@
         profit = stake * 0.85;
       }
     }
+
+    // Exactly one recovery trade after a normal loss. Never chain recovery.
+    const nextRecovery = !positionWasRecovery && !win && positionMultiplier > 1;
+    const currentState = getState();
+    write(KEY, {
+      ...currentState,
+      baseStake: Number(position.baseStake || currentState.baseStake || stake),
+      multiplier: positionMultiplier,
+      recoveryPending: nextRecovery
+    });
+    if (nextRecovery) {
+      localStorage.setItem("tradezoraMultiplierPending", "true");
+    } else {
+      localStorage.removeItem("tradezoraMultiplierPending");
+    }
+
     let balance = Number(localStorage.getItem(BAL) || 10000);
     if (win) balance += stake + profit;
 
@@ -433,7 +457,10 @@
   }
 
   function openContinuousTrade(state, now) {
-    const stake = Number(state.stake);
+    const baseStake = Number(state.baseStake ?? state.stake);
+    const selectedMultiplier = Math.min(10, Math.max(1, Number(state.multiplier || 1)));
+    const recoveryApplied = Boolean(state.recoveryPending) && selectedMultiplier > 1;
+    const stake = recoveryApplied ? baseStake * selectedMultiplier : baseStake;
     let balance = Number(localStorage.getItem(BAL) || 10000);
     if (!Number.isFinite(stake) || stake <= 0 || stake > balance) {
       const stopped = { ...state, running:false, nextTradeAt:null, stoppedReason:'balance' };
@@ -458,6 +485,9 @@
       id: `ct-${now}-${Math.random().toString(36).slice(2)}`,
       type: state.type,
       stake,
+      baseStake,
+      multiplier: selectedMultiplier,
+      recoveryApplied,
       digit: Number(state.digit),
       contract: state.contract,
       mode: state.mode || 'AUTO',
@@ -467,7 +497,16 @@
     });
     write(POS, positions);
 
-    write(KEY, { ...state, running:true, nextTradeAt:now + 6500 });
+    write(KEY, {
+      ...state,
+      running:true,
+      baseStake,
+      stake: baseStake,
+      multiplier: selectedMultiplier,
+      recoveryPending: false,
+      nextTradeAt:now + 6500
+    });
+    localStorage.removeItem("tradezoraMultiplierPending");
     return true;
   }
 
@@ -519,6 +558,9 @@
         contract:config.contract || 'even',
         digit:Number(config.digit ?? 0),
         stake:Number(config.stake || 1),
+        baseStake:Number(config.baseStake ?? config.stake ?? 1),
+        multiplier:Math.min(10, Math.max(1, Number(config.multiplier || 1))),
+        recoveryPending:false,
         mode:config.mode || 'AUTO',
         nextTradeAt:Date.now()
       };
@@ -590,6 +632,21 @@ document.addEventListener("DOMContentLoaded", () => {
     savedTerminalView.stake || localStorage.getItem("tradezoraDemoStake") || 10
   );
   if (!Number.isFinite(stake) || stake <= 0) stake = 10;
+
+  let multiplier = Number(savedTerminalView.multiplier || localStorage.getItem("tradezoraMultiplier") || 2);
+  if (!Number.isFinite(multiplier) || multiplier < 1 || multiplier > 10) multiplier = 2;
+
+  function readMultiplierValue(value) {
+    const parsed = Number(String(value ?? "").replace(/[^0-9.]/g, ""));
+    if (!Number.isFinite(parsed)) return 1;
+    return Math.min(10, Math.max(1, parsed));
+  }
+
+  function getSelectedMultiplier() {
+    const select = $("#multiplier");
+    if (select) return readMultiplierValue(select.value);
+    return readMultiplierValue(multiplier);
+  }
 
   let price = Number(localStorage.getItem("tradezoraDemoLastPrice") || 1000);
 
@@ -674,6 +731,7 @@ document.addEventListener("DOMContentLoaded", () => {
       contractType,
       selectedDigit: Number(selectedDigit),
       stake: Number(stake),
+      multiplier: Number(multiplier),
       mode,
       chartZoom: Number(chartZoom || 1),
       ...extra
@@ -1639,14 +1697,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   /* =========================
+     MULTIPLIER
+  ========================= */
+
+  const multiplierSelect = $("#multiplier");
+  if (multiplierSelect) {
+    multiplierSelect.value = String(readMultiplierValue(multiplier));
+    multiplier = readMultiplierValue(multiplierSelect.value);
+    localStorage.setItem("tradezoraMultiplier", String(multiplier));
+
+    multiplierSelect.addEventListener("change", () => {
+      multiplier = getSelectedMultiplier();
+      localStorage.setItem("tradezoraMultiplier", String(multiplier));
+      saveTerminalView({ multiplier });
+      toast(`Multiplier set to ×${multiplier}. One recovery trade only.`);
+    });
+  }
+
+  /* =========================
      TRADE ENGINE
   ========================= */
 
   function trade(type, options = {}) {
 
-    const tradeStake = Number(
-      options.stake ?? stake
-    );
+    const baseTradeStake = Number(options.stake ?? stake);
+    const selectedMultiplier = getSelectedMultiplier();
+    const recoveryPending = localStorage.getItem("tradezoraMultiplierPending") === "true";
+    const recoveryApplied = !options.stake && recoveryPending && selectedMultiplier > 1;
+    const tradeStake = recoveryApplied
+      ? baseTradeStake * selectedMultiplier
+      : baseTradeStake;
 
     const tradeContract =
       options.contract || contractType;
@@ -1716,6 +1796,9 @@ document.addEventListener("DOMContentLoaded", () => {
       type,
 
       stake: tradeStake,
+      baseStake: baseTradeStake,
+      multiplier: selectedMultiplier,
+      recoveryApplied,
 
       digit: tradeDigit,
 
@@ -1823,6 +1906,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
+
+      // Arm exactly ONE recovery trade after a normal loss.
+      // A recovery trade never chains into another multiplier trade.
+      if (!recoveryApplied && !win && selectedMultiplier > 1) {
+        localStorage.setItem("tradezoraMultiplierPending", "true");
+      } else {
+        localStorage.removeItem("tradezoraMultiplierPending");
+      }
 
       if (win) {
 
@@ -1990,6 +2081,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    multiplier = getSelectedMultiplier();
     const streamStake = Number(stake);
     if (streamStake <= 0 || streamStake > Number(localStorage.getItem("tradezoraDemoBalance") || balance)) {
       toast("Not enough demo balance for continuous trading.");
@@ -1997,13 +2089,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    saveTerminalView({ mode: "AUTO", contractType, selectedDigit, stake: streamStake });
+    saveTerminalView({ mode: "AUTO", contractType, selectedDigit, stake: streamStake, multiplier });
 
     window.TradeZoraContinuousEngine.start({
       type,
       contract: contractType,
       digit: selectedDigit,
       stake: streamStake,
+      baseStake: streamStake,
+      multiplier,
       mode: "AUTO",
       market: $("#marketSelect")?.value || activeMarket
     });
@@ -2012,7 +2106,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // background timer.
     window.TradeZoraContinuousEngine.tick?.();
     syncContinuousButtons();
-    toast(`Continuous ${buttonContractLabel(type)} trading started.`);
+    toast(`Continuous ${buttonContractLabel(type)} trading started — ×${multiplier} recovery armed after a loss.`);
   }
 
   $("#match").onclick = () => {
@@ -2080,7 +2174,9 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedDigit = Number.isFinite(Number(restoredRunningState.digit))
       ? Number(restoredRunningState.digit)
       : selectedDigit;
-    stake = Number(restoredRunningState.stake) || stake;
+    stake = Number(restoredRunningState.baseStake || restoredRunningState.stake) || stake;
+    multiplier = Math.min(10, Math.max(1, Number(restoredRunningState.multiplier || multiplier)));
+    if (multiplierSelect) multiplierSelect.value = String(multiplier);
 
     if (restoredRunningState.market && $("#marketSelect")) {
       const hasMarket = [...$("#marketSelect").options].some(option => option.value === restoredRunningState.market);
@@ -2094,7 +2190,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     $("#auto")?.classList.add("active");
     $("#manual")?.classList.remove("active");
-    saveTerminalView({ mode:"AUTO", contractType, selectedDigit, stake });
+    saveTerminalView({ mode:"AUTO", contractType, selectedDigit, stake, multiplier });
   }
 
   syncContinuousButtons();
