@@ -1543,6 +1543,10 @@ document.addEventListener("DOMContentLoaded", () => {
           profit = Number.isFinite(baseProfit)
             ? tradeStake * (baseProfit / 10)
             : 0;
+        } else if (tradeContract === "match") {
+          // MATCH: $85 profit on a $10 stake. DIFFER: $0.56 profit on a $10 stake.
+          const rate = type === "MATCH" ? 8.5 : 0.056;
+          profit = tradeStake * rate;
         } else {
           profit = tradeStake * 0.85;
         }

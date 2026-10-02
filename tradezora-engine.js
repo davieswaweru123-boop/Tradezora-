@@ -71,7 +71,12 @@
           ? overProfitTable[barrier]
           : overProfitTable[9 - barrier];
         profit = Number.isFinite(baseProfit) ? stake * (baseProfit / 10) : 0;
+      } else if (contract === 'match') {
+        // MATCH pays $85 profit on a $10 stake; DIFFER pays $0.56.
+        const rate = type === 'MATCH' ? 8.5 : 0.056;
+        profit = stake * rate;
       } else {
+        // Keep the existing payout for other contract types unchanged.
         profit = stake * 0.85;
       }
     }
