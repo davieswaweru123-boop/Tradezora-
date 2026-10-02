@@ -42,6 +42,16 @@
     return null;
   }
 
+  function normalizeMultiplier(value) {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? n : 6;
+  }
+
+  function normalizeMaxConsecutiveLosses(value) {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 6;
+  }
+
   function settlePosition(position, now) {
     const closingPrice = Number(localStorage.getItem("tradezoraDemoLastPrice") || 0);
     const finalDigit = Number.isFinite(closingPrice) && closingPrice !== 0
@@ -106,10 +116,45 @@
       digit: finalDigit, win: Boolean(win), at: now
     }));
 
+    // Loss progression: the selected multiplier is applied after each loss.
+    // With the default 6x / six-loss cycle and a $10 base stake the sequence is:
+    // $10 -> $60 -> $360 -> $2,160 -> $12,960 -> $77,760 -> $10.
+    // Any win resets immediately to the base stake. A sixth consecutive loss
+    // also completes the cycle and resets the next stake to the base stake.
+    let state = getState();
+    if (state.running) {
+      const baseStake = Number(state.baseStake || state.stake || 0);
+      const multiplier = normalizeMultiplier(state.multiplier);
+      const maxConsecutiveLosses = normalizeMaxConsecutiveLosses(state.maxConsecutiveLosses);
+      let consecutiveLosses = Number(state.consecutiveLosses || 0);
+      let nextStake = Number(state.stake || baseStake);
+
+      if (win) {
+        consecutiveLosses = 0;
+        nextStake = baseStake;
+      } else {
+        consecutiveLosses += 1;
+        if (consecutiveLosses >= maxConsecutiveLosses) {
+          consecutiveLosses = 0;
+          nextStake = baseStake;
+        } else {
+          nextStake = stake * multiplier;
+        }
+      }
+
+      state = {
+        ...state,
+        baseStake,
+        multiplier,
+        maxConsecutiveLosses,
+        consecutiveLosses,
+        stake: nextStake
+      };
+    }
+
     // Take Profit / Stop Loss are session guards for continuous AUTO trading.
     // The current trade is always allowed to settle; the risk guard only
     // decides whether another AUTO trade may be opened afterwards.
-    let state = getState();
     if (state.running) {
       const tradePnl = win ? profit : -stake;
       const sessionPnl = Number(state.sessionPnl || 0) + tradePnl;
@@ -162,7 +207,9 @@
       mode: state.mode || 'AUTO',
       openedAt: now,
       settleAt: now + 5000,
-      continuous: true
+      continuous: true,
+      multiplier: normalizeMultiplier(state.multiplier),
+      consecutiveLosses: Number(state.consecutiveLosses || 0)
     });
     write(POS, positions);
 
@@ -223,7 +270,11 @@
         type:String(config.type || 'EVEN').toUpperCase(),
         contract:config.contract || 'even',
         digit:Number(config.digit ?? 0),
+        baseStake:Number(config.baseStake || config.stake || 1),
         stake:Number(config.stake || 1),
+        multiplier:normalizeMultiplier(config.multiplier),
+        maxConsecutiveLosses:normalizeMaxConsecutiveLosses(config.maxConsecutiveLosses),
+        consecutiveLosses:0,
         mode:config.mode || 'AUTO',
         market:config.market || null,
         takeProfit:normalizeRiskTarget(config.takeProfit),

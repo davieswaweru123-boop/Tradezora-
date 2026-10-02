@@ -270,8 +270,9 @@
             Multiplier
             <select id="multiplier">
               <option>1x</option>
-              <option selected>2x</option>
+              <option>2x</option>
               <option>5x</option>
+              <option selected>6x</option>
               <option>10x</option>
             </select>
           </label>
@@ -1748,12 +1749,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const risk = getRiskSettings();
+    const multiplierEl = $("#multiplier");
+    const selectedMultiplier = Number(String(multiplierEl?.value || "6x").replace("x", ""));
+    const multiplier = Number.isFinite(selectedMultiplier) && selectedMultiplier > 0 ? selectedMultiplier : 6;
 
     window.TradeZoraContinuousEngine.start({
       type,
       contract: contractType,
       digit: selectedDigit,
       stake: streamStake,
+      baseStake: streamStake,
+      multiplier,
+      maxConsecutiveLosses: 6,
       mode: "AUTO",
       market: activeMarket,
       takeProfit: risk.takeProfit,
@@ -1841,6 +1848,14 @@ document.addEventListener("DOMContentLoaded", () => {
     stake = Number(restoredState.stake) > 0 ? Number(restoredState.stake) : stake;
     contractType = restoredState.contract || contractType;
     restoreRiskSettings(restoredState);
+    const restoredMultiplier = Number(restoredState.multiplier || 6);
+    const multiplierEl = $("#multiplier");
+    if (multiplierEl && Number.isFinite(restoredMultiplier)) {
+      const optionValue = `${restoredMultiplier}x`;
+      if ([...multiplierEl.options].some(option => option.value === optionValue)) {
+        multiplierEl.value = optionValue;
+      }
+    }
 
     contractTabs.forEach(tab => {
       tab.classList.toggle("active", (tab.dataset.contract || "match") === contractType);
@@ -1871,6 +1886,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const savedRiskState = currentContinuousState();
   if (savedRiskState.takeProfit || savedRiskState.stopLoss) {
     restoreRiskSettings(savedRiskState);
+  }
+  const savedMultiplier = Number(savedRiskState.multiplier || 6);
+  const multiplierControl = $("#multiplier");
+  if (multiplierControl && Number.isFinite(savedMultiplier)) {
+    const optionValue = `${savedMultiplier}x`;
+    if ([...multiplierControl.options].some(option => option.value === optionValue)) {
+      multiplierControl.value = optionValue;
+    }
   }
 
   // Sync once on page load without changing the persisted running state.
