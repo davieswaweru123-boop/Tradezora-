@@ -146,7 +146,7 @@ body{
 </div>
 
 
-<!-- SIGN UP -->
+<!-- CREATE ACCOUNT -->
 
 <form id="signup" class="form">
 
@@ -334,20 +334,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   /* =========================================================
-     SAVE SESSION
+     SAVE BACKEND SESSION
      ========================================================= */
 
   function saveSession(data){
 
-    if(!data || !data.token){
+    /*
+      IMPORTANT:
+      The TradeZora backend returns:
+
+      session_token
+
+      NOT:
+
+      token
+    */
+
+    if(!data || !data.session_token){
+
       throw new Error(
         "The server did not return a session token."
       );
+
     }
+
 
     localStorage.setItem(
       "tradezoraAuthToken",
-      data.token
+      data.session_token
     );
 
 
@@ -381,12 +395,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   /* =========================================================
-     SIGN UP
+     CREATE ACCOUNT
      ========================================================= */
 
   signupForm.onsubmit = async (e) => {
 
     e.preventDefault();
+
 
     signupMsg.style.color =
       "#8f9b96";
@@ -409,6 +424,8 @@ document.addEventListener("DOMContentLoaded", () => {
       signupPassword.value;
 
 
+    /* Validate name */
+
     if(!name){
 
       signupMsg.style.color =
@@ -420,8 +437,11 @@ document.addEventListener("DOMContentLoaded", () => {
       signupButton.disabled = false;
 
       return;
+
     }
 
+
+    /* Validate email */
 
     if(!email){
 
@@ -434,8 +454,11 @@ document.addEventListener("DOMContentLoaded", () => {
       signupButton.disabled = false;
 
       return;
+
     }
 
+
+    /* Validate password */
 
     if(password.length < 8){
 
@@ -448,6 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
       signupButton.disabled = false;
 
       return;
+
     }
 
 
@@ -481,12 +505,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if(!response.ok){
 
         throw new Error(
+          data.error ||
           data.message ||
           "Unable to create your account."
         );
 
       }
 
+
+      /* Save the real backend session */
 
       saveSession(data);
 
@@ -536,6 +563,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     e.preventDefault();
 
+
     loginMsg.style.color =
       "#8f9b96";
 
@@ -565,6 +593,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loginButton.disabled = false;
 
       return;
+
     }
 
 
@@ -597,12 +626,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if(!response.ok){
 
         throw new Error(
+          data.error ||
           data.message ||
           "Invalid email or password."
         );
 
       }
 
+
+      /* Save the real backend session */
 
       saveSession(data);
 
