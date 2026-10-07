@@ -27,6 +27,14 @@ body{
   display:block;
   text-align:center;
   margin-bottom:25px;
+  color:#fff;
+  text-decoration:none;
+  font-size:25px;
+  font-weight:800;
+}
+
+.auth .logo span{
+  color:#fff;
 }
 
 .tabs{
@@ -114,6 +122,24 @@ body{
   line-height:1.5;
 }
 
+.error{
+  color:#ff5d6c;
+}
+
+.forgot-link{
+  display:block;
+  text-align:right;
+  margin-top:-5px;
+  color:#16e58a;
+  font-size:12px;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+.forgot-link:hover{
+  text-decoration:underline;
+}
+
 .back{
   text-align:center;
   margin-top:20px;
@@ -123,6 +149,46 @@ body{
   color:#8f9b96;
   text-decoration:none;
   font-size:12px;
+}
+
+.back a:hover{
+  color:#16e58a;
+}
+
+.secondary-link{
+  display:block;
+  text-align:center;
+  margin-top:4px;
+  color:#8f9b96;
+  font-size:12px;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+.secondary-link:hover{
+  color:#16e58a;
+}
+
+.notice{
+  background:#071710;
+  border:1px solid #173528;
+  border-radius:10px;
+  padding:12px;
+  color:#8f9b96;
+  font-size:12px;
+  line-height:1.5;
+  text-align:center;
+}
+
+@media(max-width:520px){
+  .auth{
+    padding:24px 20px;
+    border-radius:16px;
+  }
+
+  .form h1{
+    font-size:25px;
+  }
 }
 </style>
 </head>
@@ -226,11 +292,56 @@ body{
     >
   </label>
 
+  <a
+    id="forgotLink"
+    class="forgot-link"
+    href="#"
+  >
+    Forgot password?
+  </a>
+
   <button id="loginButton" type="submit">
     Log In
   </button>
 
   <div id="loginMsg" class="msg"></div>
+
+</form>
+
+
+<!-- FORGOT PASSWORD -->
+
+<form id="forgotPassword" class="form" style="display:none">
+
+  <h1>Reset your password</h1>
+
+  <p>
+    Enter the email address connected to your TradeZora account.
+  </p>
+
+  <label>
+    Email
+    <input
+      id="forgotEmail"
+      type="email"
+      autocomplete="email"
+      required
+    >
+  </label>
+
+  <button id="forgotButton" type="submit">
+    Send Reset Link
+  </button>
+
+  <div id="forgotMsg" class="msg"></div>
+
+  <a
+    id="backToLogin"
+    class="secondary-link"
+    href="#"
+  >
+    ← Back to Log In
+  </a>
 
 </form>
 
@@ -266,6 +377,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm =
     document.getElementById("login");
 
+  const forgotForm =
+    document.getElementById("forgotPassword");
+
 
   const signupName =
     document.getElementById("signupName");
@@ -284,11 +398,18 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("loginPassword");
 
 
+  const forgotEmail =
+    document.getElementById("forgotEmail");
+
+
   const signupMsg =
     document.getElementById("signupMsg");
 
   const loginMsg =
     document.getElementById("loginMsg");
+
+  const forgotMsg =
+    document.getElementById("forgotMsg");
 
 
   const signupButton =
@@ -297,40 +418,87 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginButton =
     document.getElementById("loginButton");
 
+  const forgotButton =
+    document.getElementById("forgotButton");
+
+
+  const forgotLink =
+    document.getElementById("forgotLink");
+
+  const backToLogin =
+    document.getElementById("backToLogin");
+
+
+  /* =========================================================
+     SHOW FORM
+     ========================================================= */
+
+  function showForm(type){
+
+    signupForm.style.display =
+      type === "signup" ? "grid" : "none";
+
+    loginForm.style.display =
+      type === "login" ? "grid" : "none";
+
+    forgotForm.style.display =
+      type === "forgot" ? "grid" : "none";
+
+
+    signupTab.classList.toggle(
+      "active",
+      type === "signup"
+    );
+
+    loginTab.classList.toggle(
+      "active",
+      type === "login"
+    );
+
+
+    signupMsg.textContent = "";
+    loginMsg.textContent = "";
+    forgotMsg.textContent = "";
+  }
+
 
   /* =========================================================
      TAB SWITCHING
      ========================================================= */
 
-  function showTab(login){
-
-    signupTab.classList.toggle(
-      "active",
-      !login
-    );
-
-    loginTab.classList.toggle(
-      "active",
-      login
-    );
-
-    signupForm.style.display =
-      login ? "none" : "grid";
-
-    loginForm.style.display =
-      login ? "grid" : "none";
-
-    signupMsg.textContent = "";
-    loginMsg.textContent = "";
-
-  }
-
-
   signupTab.onclick = () =>
-    showTab(false);
+    showForm("signup");
 
   loginTab.onclick = () =>
-    showTab(true);
+    showForm("login");
+
+
+  forgotLink.onclick = (e) => {
+
+    e.preventDefault();
+
+    if(loginEmail.value.trim()){
+      forgotEmail.value =
+        loginEmail.value.trim();
+    }
+
+    showForm("forgot");
+
+  };
+
+
+  backToLogin.onclick = (e) => {
+
+    e.preventDefault();
+
+    if(forgotEmail.value.trim()){
+      loginEmail.value =
+        forgotEmail.value.trim();
+    }
+
+    showForm("login");
+
+  };
 
 
   /* =========================================================
@@ -670,6 +838,118 @@ document.addEventListener("DOMContentLoaded", () => {
         "Unable to log in.";
 
       loginButton.disabled = false;
+
+    }
+
+  };
+
+
+  /* =========================================================
+     FORGOT PASSWORD
+     ========================================================= */
+
+  forgotForm.onsubmit = async (e) => {
+
+    e.preventDefault();
+
+
+    const email =
+      forgotEmail.value
+        .trim()
+        .toLowerCase();
+
+
+    if(!email){
+
+      forgotMsg.style.color =
+        "#ff5d6c";
+
+      forgotMsg.textContent =
+        "Please enter your email address.";
+
+      return;
+
+    }
+
+
+    forgotMsg.style.color =
+      "#8f9b96";
+
+    forgotMsg.textContent =
+      "Sending reset link…";
+
+    forgotButton.disabled = true;
+
+
+    try{
+
+      const response =
+        await fetch(
+          `${API_BASE}/api/auth/forgot-password`,
+          {
+            method:"POST",
+
+            headers:{
+              "Content-Type":
+                "application/json"
+            },
+
+            body:JSON.stringify({
+              email
+            })
+          }
+        );
+
+
+      const data =
+        await response.json()
+          .catch(() => ({}));
+
+
+      if(!response.ok){
+
+        throw new Error(
+          data.error ||
+          data.message ||
+          "Unable to send reset link."
+        );
+
+      }
+
+
+      /*
+        The backend intentionally gives a
+        generic response so users cannot
+        discover whether an email exists.
+      */
+
+      forgotMsg.style.color =
+        "#16e58a";
+
+      forgotMsg.textContent =
+        data.message ||
+        "If an account exists for that email, a password reset link has been sent. Check your inbox and spam folder.";
+
+
+      forgotButton.disabled = false;
+
+
+    }catch(error){
+
+      console.error(
+        "TradeZora forgot password error:",
+        error
+      );
+
+
+      forgotMsg.style.color =
+        "#ff5d6c";
+
+      forgotMsg.textContent =
+        error.message ||
+        "Unable to send reset link.";
+
+      forgotButton.disabled = false;
 
     }
 
