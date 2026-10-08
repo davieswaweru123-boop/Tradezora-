@@ -411,10 +411,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const account = await response.json();
+      const data = await response.json();
 
-      if (account && account.role === "admin" &&
-          String(account.email || "").toLowerCase() === "davieswaweru123@gmail.com") {
+      // /api/account returns the user inside an "account" object.
+      // Accept that format and also tolerate a direct account object.
+      const account = data?.account || data;
+
+      if (
+        account &&
+        String(account.role || "").toLowerCase() === "admin" &&
+        String(account.email || "").trim().toLowerCase() === "davieswaweru123@gmail.com"
+      ) {
         adminPanelLink.classList.add("visible");
       } else {
         adminPanelLink.classList.remove("visible");
