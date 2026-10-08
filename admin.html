@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#050807">
+<title>TradeZora — Admin Panel</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;padding:0;min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#050807;color:#edf7f2}body{padding-bottom:30px}button,input{font:inherit}button{cursor:pointer}a{text-decoration:none;color:inherit}:root{--bg:#050807;--panel:#09100d;--border:#173528;--green:#16e58a;--muted:#8f9b96;--red:#ff4f61}
+.topbar{position:sticky;top:0;z-index:50;min-height:68px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(5,8,7,.96);border-bottom:1px solid var(--border);backdrop-filter:blur(12px)}.brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border:2px solid var(--green);border-radius:12px;display:grid;place-items:center;color:var(--green);font-weight:900}.brand strong{display:block;font-size:17px}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.demo{border:1px solid #5d3b86;background:#211632;color:#d8b9ff;border-radius:999px;padding:6px 9px;font-size:10px;font-weight:800}.back{border:1px solid var(--border);background:var(--panel);border-radius:11px;padding:10px 12px;font-size:12px;font-weight:700}
+.wrap{width:min(1100px,100%);margin:auto;padding:18px 14px}.hero{border:1px solid var(--border);background:#0b1712;border-radius:18px;padding:18px;margin-bottom:14px}.hero h1{margin:0 0 5px;font-size:25px}.hero p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}.chip{display:inline-flex;margin-top:12px;padding:7px 10px;border-radius:999px;background:rgba(22,229,138,.09);border:1px solid rgba(22,229,138,.3);color:var(--green);font-size:11px;font-weight:800}.notice{border:1px solid #5b4b24;background:#17140b;color:#d9c98c;border-radius:14px;padding:12px 13px;margin-bottom:14px;font-size:12px;line-height:1.45}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}.stat{background:var(--panel);border:1px solid var(--border);border-radius:15px;padding:14px}.label{font-size:11px;color:var(--muted)}.value{font-size:22px;font-weight:900;margin-top:7px}.sub{font-size:10px;color:var(--muted);margin-top:4px}.nav{display:flex;gap:8px;overflow:auto;padding-bottom:8px;margin-bottom:12px;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.nav button{white-space:nowrap;border:1px solid var(--border);background:var(--panel);color:#cbd7d2;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:700}.nav button.active{border-color:var(--green);background:rgba(22,229,138,.09);color:var(--green)}
+.section{display:none;background:var(--panel);border:1px solid var(--border);border-radius:17px;padding:15px;margin-bottom:14px}.section.active{display:block}.head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}.section h2{font-size:17px;margin:0}.head span{font-size:11px;color:var(--muted)}.search{width:100%;background:#060b09;color:#edf7f2;border:1px solid var(--border);border-radius:11px;padding:12px;outline:none;margin-bottom:12px}.empty{border:1px dashed #234536;border-radius:13px;padding:22px 14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.5}.empty strong{display:block;color:#dce8e3;margin-bottom:5px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.action{min-height:88px;text-align:left;background:#07100c;border:1px solid var(--border);border-radius:14px;padding:13px;color:#edf7f2}.action b{display:block;font-size:13px;margin-bottom:6px}.action span{font-size:10px;color:var(--muted);line-height:1.4}.profile{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--border);border-radius:14px;background:#07100c}.avatar{width:45px;height:45px;border-radius:50%;display:grid;place-items:center;background:rgba(22,229,138,.12);border:1px solid rgba(22,229,138,.35);color:var(--green);font-weight:900}.profile small{display:block;color:var(--muted);margin-top:3px;font-size:11px;word-break:break-all}.refresh{border:1px solid var(--border);background:#07100c;color:#dce8e3;border-radius:10px;padding:8px 10px;font-size:11px;font-weight:700}.status{margin-top:12px;padding:11px;border-radius:11px;font-size:11px;display:none}.status.ok{display:block;background:rgba(22,229,138,.08);border:1px solid rgba(22,229,138,.25);color:var(--green)}.status.error{display:block;background:rgba(255,79,97,.08);border:1px solid rgba(255,79,97,.25);color:#ff9ba7}.footer{padding:10px 4px;color:#62716a;font-size:10px;text-align:center}@media(min-width:700px){.wrap{padding:24px 20px}.stats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(4,1fr)}.hero{padding:24px}}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="brand"><div class="logo">TZ</div><div><strong>TradeZora</strong><small>Administrator Console</small></div></div><div style="display:flex;align-items:center;gap:8px"><span class="demo">DEMO</span><a class="back" href="dashboard.html">← Trade</a></div></header>
+<main class="wrap">
+<section class="hero"><h1>Admin Panel</h1><p>Manage the TradeZora platform from one protected control centre.</p><span class="chip">◆ OWNER ADMIN</span></section>
+<div class="notice"><strong>Demo mode:</strong> this control panel is currently connected to the standalone TradeZora demo platform. No real-money deposits, withdrawals or live broker trades are processed here.</div>
+<section class="stats"><div class="stat"><div class="label">TOTAL USERS</div><div class="value" id="totalUsers">—</div><div class="sub">Backend statistics</div></div><div class="stat"><div class="label">PENDING KYC</div><div class="value" id="pendingKyc">—</div><div class="sub">Backend statistics</div></div><div class="stat"><div class="label">DEPOSITS</div><div class="value" id="deposits">—</div><div class="sub">Backend statistics</div></div><div class="stat"><div class="label">WITHDRAWALS</div><div class="value" id="withdrawals">—</div><div class="sub">Backend statistics</div></div></section>
+<nav class="nav"><button class="active" data-tab="overview">Overview</button><button data-tab="users">Users</button><button data-tab="kyc">KYC</button><button data-tab="deposits">Deposits</button><button data-tab="withdrawals">Withdrawals</button><button data-tab="trades">Trades</button><button data-tab="ledger">Ledger</button><button data-tab="settings">Settings</button></nav>
+<section class="section active" id="overview"><div class="head"><h2>Overview</h2><button class="refresh" id="refreshBtn">Refresh</button></div><div class="profile"><div class="avatar" id="avatar">D</div><div><strong id="adminName">Checking admin session…</strong><small id="adminEmail">—</small></div></div><div class="grid" style="margin-top:12px"><button class="action" data-target="users"><b>👥 Users</b><span>View registered accounts, status and account information.</span></button><button class="action" data-target="kyc"><b>🪪 KYC</b><span>Review verification records when the KYC system is connected.</span></button><button class="action" data-target="deposits"><b>↓ Deposits</b><span>Monitor deposit requests and transaction records.</span></button><button class="action" data-target="withdrawals"><b>↑ Withdrawals</b><span>Monitor withdrawal requests and their status.</span></button><button class="action" data-target="trades"><b>📈 Trades</b><span>Review demo trade activity, outcomes and P/L.</span></button><button class="action" data-target="ledger"><b>▤ Ledger</b><span>Track balance movements and audit records.</span></button><button class="action" data-target="settings"><b>⚙ Settings</b><span>Platform controls and administrative configuration.</span></button></div><div id="sessionStatus" class="status"></div></section>
+<section class="section" id="users"><div class="head"><h2>Users</h2><span>Admin only</span></div><input class="search" placeholder="Search by name or email…"><div class="empty"><strong>User management is ready for backend connection.</strong>The next backend endpoint will supply registered users, account status, balances and registration dates here.</div></section>
+<section class="section" id="kyc"><div class="head"><h2>KYC</h2><span>Verification</span></div><div class="empty"><strong>No KYC records endpoint is connected yet.</strong>KYC review controls will appear here once the KYC database and document workflow are added.</div></section>
+<section class="section" id="deposits"><div class="head"><h2>Deposits</h2><span>Transaction control</span></div><div class="empty"><strong>No live deposit processor is connected.</strong>Deposit requests and transaction statuses will populate this section after payment infrastructure is implemented.</div></section>
+<section class="section" id="withdrawals"><div class="head"><h2>Withdrawals</h2><span>Transaction control</span></div><div class="empty"><strong>No live withdrawal processor is connected.</strong>Withdrawal requests and approval history will populate this section after payment infrastructure is implemented.</div></section>
+<section class="section" id="trades"><div class="head"><h2>Trades</h2><span>Demo activity</span></div><div class="empty"><strong>Trade activity endpoint is next.</strong>This section will show user, market, contract type, stake, entry, exit, result and P/L from the server-side trade ledger.</div></section>
+<section class="section" id="ledger"><div class="head"><h2>Ledger</h2><span>Audit trail</span></div><div class="empty"><strong>Ledger endpoint is next.</strong>Balance changes should be recorded as auditable transactions rather than direct balance edits.</div></section>
+<section class="section" id="settings"><div class="head"><h2>Platform Settings</h2><span>Owner controls</span></div><div class="grid"><div class="action"><b>Platform mode</b><span>Standalone DEMO</span></div><div class="action"><b>Broker connection</b><span>Not connected</span></div><div class="action"><b>Payments</b><span>Not connected</span></div><div class="action"><b>Admin account</b><span>Owner-only access</span></div></div></section>
+<div class="footer">TradeZora Admin Console • Protected owner area</div>
+</main>
+<script>
+(()=>{
+"use strict";
+const API_BASE="https://tradezora-backend-use.onrender.com";
+const ADMIN_EMAIL="davieswaweru123@gmail.com";
+const $=s=>document.querySelector(s);
+function showSection(id){document.querySelectorAll(".section").forEach(x=>x.classList.toggle("active",x.id===id));document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id));window.scrollTo({top:0,behavior:"smooth"})}
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>showSection(b.dataset.tab)));
+document.querySelectorAll("[data-target]").forEach(b=>b.addEventListener("click",()=>showSection(b.dataset.target)));
+async function verifyAdmin(){
+ const token=localStorage.getItem("tradezoraAuthToken");
+ if(!token){location.href="auth.html";return}
+ try{
+  const r=await fetch(`${API_BASE}/api/admin/me`,{headers:{Authorization:`Bearer ${token}`,Accept:"application/json"}});
+  if(!r.ok)throw new Error("Admin authorization failed.");
+  const data=await r.json();
+  const admin=data.admin||data.user||data.account||data;
+  const email=String(admin.email||"").trim().toLowerCase();
+  if(email!==ADMIN_EMAIL)throw new Error("This account is not authorized.");
+  const name=String(admin.name||"Davies").trim()||"Davies";
+  $("#adminName").textContent=name;$("#adminEmail").textContent=email;$("#avatar").textContent=name.charAt(0).toUpperCase();
+  $("#sessionStatus").textContent="Admin authorization verified.";$("#sessionStatus").className="status ok";
+ }catch(e){console.error(e);$("#sessionStatus").textContent="Admin authorization failed. Returning to dashboard.";$("#sessionStatus").className="status error";setTimeout(()=>location.href="dashboard.html",1200)}
+}
+$("#refreshBtn").addEventListener("click",verifyAdmin);verifyAdmin();
+})();
+</script>
+</body>
+</html>
