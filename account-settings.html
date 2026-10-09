@@ -102,6 +102,15 @@
       padding:7px 9px;border:1px solid var(--border);border-radius:7px;
       color:var(--muted);font-size:9px;font-weight:800;white-space:nowrap
     }
+    .kyc-status{display:inline-flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid var(--border);border-radius:7px;font-size:10px;font-weight:900;white-space:nowrap;background:#0b1510;color:var(--muted)}
+    .kyc-status::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+    .kyc-status.pending{color:#ffc66d;border-color:#594521;background:#21190b}
+    .kyc-status.approved{color:var(--green);border-color:#20543b;background:#102019}
+    .kyc-status.rejected{color:var(--danger);border-color:#5a2930;background:#211014}
+    .verify-button{width:100%;height:42px;margin-top:10px;border:1px solid #246c47;border-radius:9px;background:#0d2418;color:var(--green);font-size:12px;font-weight:900}
+    .verify-button:disabled{opacity:.7;cursor:default}
+    .verify-note{margin:8px 0 0!important;font-size:10px!important}
+
     .toast{
       position:fixed;left:50%;bottom:22px;z-index:50;
       max-width:90vw;padding:10px 13px;border:1px solid #20543b;
@@ -220,10 +229,12 @@
         <div class="setting-row">
           <div>
             <strong>Verify Identity</strong>
-            <span>Identity verification will be added later.</span>
+            <span id="kycDescription">Confirm your identity to support account security and future account features.</span>
           </div>
-          <span class="coming">Coming later</span>
+          <span id="kycStatus" class="kyc-status">Not Verified</span>
         </div>
+        <button id="verifyIdentityBtn" class="verify-button" type="button">Start Identity Verification</button>
+        <p id="kycNote" class="verify-note">Secure identity submission will be enabled after the backend verification endpoint is connected.</p>
       </div>
     </section>
   </main>
@@ -269,6 +280,48 @@
       $("#name").value = name;
     }
 
+    function renderKycStatus(statusValue) {
+      const status = String(statusValue || "not_verified").trim().toLowerCase();
+      const badge = $("#kycStatus");
+      const description = $("#kycDescription");
+      const button = $("#verifyIdentityBtn");
+      const note = $("#kycNote");
+      badge.className = "kyc-status";
+
+      if (["approved", "verified"].includes(status)) {
+        badge.textContent = "Verified";
+        badge.classList.add("approved");
+        description.textContent = "Your identity verification has been approved.";
+        button.textContent = "Identity Verified";
+        button.disabled = true;
+        note.textContent = "No further action is needed unless an updated verification is requested.";
+      } else if (["pending", "pending_review", "under_review", "pending_review"].includes(status)) {
+        badge.textContent = "Pending Review";
+        badge.classList.add("pending");
+        description.textContent = "Your identity details are waiting for review.";
+        button.textContent = "Verification Pending";
+        button.disabled = true;
+        note.textContent = "Your submission is awaiting review. Check back later for an updated status.";
+      } else if (["rejected", "needs_resubmission"].includes(status)) {
+        badge.textContent = "Rejected";
+        badge.classList.add("rejected");
+        description.textContent = "Your previous verification was not approved.";
+        button.textContent = "Review Verification Status";
+        button.disabled = false;
+        note.textContent = "Review the administrator's reason before submitting again.";
+      } else {
+        badge.textContent = "Not Verified";
+        description.textContent = "Confirm your identity to support account security and future account features.";
+        button.textContent = "Start Identity Verification";
+        button.disabled = false;
+        note.textContent = "Secure identity submission will be enabled after the backend verification endpoint is connected.";
+      }
+    }
+
+    $("#verifyIdentityBtn").addEventListener("click", () => {
+      showToast("Identity submission is the next step to connect.");
+    });
+
     async function loadAccount() {
       try {
         const response = await fetch(API_BASE + "/api/account", {
@@ -284,6 +337,7 @@
         }
 
         renderUser(data.account);
+        renderKycStatus(data.account.kyc_status);
         localStorage.setItem(
           "tradezoraDemoUser",
           JSON.stringify({
@@ -293,6 +347,7 @@
         );
       } catch (error) {
         renderUser(storedUser);
+        renderKycStatus(storedUser && storedUser.kyc_status);
         showStatus(error.message || "Could not load your account.", "error");
       }
     }
