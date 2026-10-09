@@ -110,6 +110,17 @@
     .verify-button{width:100%;height:42px;margin-top:10px;border:1px solid #246c47;border-radius:9px;background:#0d2418;color:var(--green);font-size:12px;font-weight:900}
     .verify-button:disabled{opacity:.7;cursor:default}
     .verify-note{margin:8px 0 0!important;font-size:10px!important}
+    .kyc-form{display:none;margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:11px;background:#07100c}
+    .kyc-form.open{display:block}
+    .kyc-form .field{margin-top:11px}
+    .kyc-form .field:first-child{margin-top:0}
+    .kyc-form input,.kyc-form select,.kyc-form textarea{width:100%;min-height:43px;padding:10px 11px;border:1px solid var(--border);border-radius:9px;outline:none;background:#050807;color:#fff;font:inherit;font-size:12px}
+    .kyc-form textarea{min-height:74px;resize:vertical}
+    .kyc-form select option{background:#050807;color:#fff}
+    .kyc-warning{padding:10px;border:1px solid #594521;border-radius:8px;background:#21190b;color:#ffc66d;font-size:10px;line-height:1.5;margin-bottom:12px}
+    .kyc-actions{display:flex;gap:8px}
+    .kyc-actions button{flex:1}
+    .cancel-kyc{height:44px;margin-top:10px;border:1px solid var(--border);border-radius:9px;background:#0b1510;color:#dce8e3;font-size:12px;font-weight:800}
 
     .toast{
       position:fixed;left:50%;bottom:22px;z-index:50;
@@ -234,7 +245,21 @@
           <span id="kycStatus" class="kyc-status">Not Verified</span>
         </div>
         <button id="verifyIdentityBtn" class="verify-button" type="button">Start Identity Verification</button>
-        <p id="kycNote" class="verify-note">Secure identity submission will be enabled after the backend verification endpoint is connected.</p>
+        <p id="kycNote" class="verify-note">Submit your details for review. Identity-document uploads are not available yet.</p>
+        <div id="kycForm" class="kyc-form">
+          <div class="kyc-warning"><strong>Demo-stage safety note:</strong> Do not enter your full ID/passport number or upload identity images. The document reference is optional; if used, enter only a short reference or last four characters.</div>
+          <form id="kycSubmitForm">
+            <div class="field"><label for="kycLegalName">Legal name</label><input id="kycLegalName" name="legal_name" type="text" maxlength="200" autocomplete="name" required placeholder="Name as shown on your document"></div>
+            <div class="field"><label for="kycDob">Date of birth</label><input id="kycDob" name="date_of_birth" type="date" required></div>
+            <div class="field"><label for="kycCountry">Country</label><input id="kycCountry" name="country" type="text" maxlength="100" autocomplete="country-name" required placeholder="Country of residence"></div>
+            <div class="field"><label for="kycDocumentType">Document type</label><select id="kycDocumentType" name="document_type" required><option value="">Choose document type</option><option value="national_id">National ID</option><option value="passport">Passport</option><option value="driving_licence">Driving licence</option><option value="other">Other</option></select></div>
+            <div class="field"><label for="kycDocumentReference">Document reference (optional)</label><input id="kycDocumentReference" name="document_reference" type="text" maxlength="80" placeholder="Last 4 characters only"></div>
+            <div class="field"><label for="kycNotes">Additional notes (optional)</label><textarea id="kycNotes" name="notes" maxlength="1000" placeholder="Anything the reviewer should know"></textarea></div>
+            <div class="kyc-actions"><button id="submitKyc" class="save" type="submit">Submit for Review</button></div>
+            <button id="cancelKyc" class="cancel-kyc" type="button">Cancel</button>
+            <div id="kycFormStatus" class="status" aria-live="polite"></div>
+          </form>
+        </div>
       </div>
     </section>
   </main>
@@ -280,13 +305,15 @@
       $("#name").value = name;
     }
 
-    function renderKycStatus(statusValue) {
-      const status = String(statusValue || "not_verified").trim().toLowerCase();
+    function renderKycStatus(statusValue, rejectionReason) {
+      const status = String(statusValue || "not_submitted").trim().toLowerCase();
       const badge = $("#kycStatus");
       const description = $("#kycDescription");
       const button = $("#verifyIdentityBtn");
       const note = $("#kycNote");
       badge.className = "kyc-status";
+      button.disabled = false;
+      $("#kycForm").classList.remove("open");
 
       if (["approved", "verified"].includes(status)) {
         badge.textContent = "Verified";
@@ -295,7 +322,7 @@
         button.textContent = "Identity Verified";
         button.disabled = true;
         note.textContent = "No further action is needed unless an updated verification is requested.";
-      } else if (["pending", "pending_review", "under_review", "pending_review"].includes(status)) {
+      } else if (["pending", "pending_review", "under_review"].includes(status)) {
         badge.textContent = "Pending Review";
         badge.classList.add("pending");
         description.textContent = "Your identity details are waiting for review.";
@@ -306,20 +333,89 @@
         badge.textContent = "Rejected";
         badge.classList.add("rejected");
         description.textContent = "Your previous verification was not approved.";
-        button.textContent = "Review Verification Status";
-        button.disabled = false;
-        note.textContent = "Review the administrator's reason before submitting again.";
+        button.textContent = "Resubmit Verification";
+        note.textContent = rejectionReason ? "Reviewer reason: " + rejectionReason : "Please review your details and submit again.";
       } else {
         badge.textContent = "Not Verified";
         description.textContent = "Confirm your identity to support account security and future account features.";
         button.textContent = "Start Identity Verification";
-        button.disabled = false;
-        note.textContent = "Secure identity submission will be enabled after the backend verification endpoint is connected.";
+        note.textContent = "Complete the form below to submit your details for review.";
       }
     }
 
     $("#verifyIdentityBtn").addEventListener("click", () => {
-      showToast("Identity submission is the next step to connect.");
+      if ($("#verifyIdentityBtn").disabled) return;
+      $("#kycForm").classList.add("open");
+      $("#kycLegalName").focus();
+    });
+
+    $("#cancelKyc").addEventListener("click", () => {
+      $("#kycForm").classList.remove("open");
+    });
+
+    async function loadKyc() {
+      try {
+        const response = await fetch(API_BASE + "/api/kyc", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.error || "Could not load verification status.");
+        const application = data.application;
+        renderKycStatus(application?.status || "not_submitted", application?.rejection_reason || "");
+        if (application) {
+          $("#kycLegalName").value = application.legal_name || "";
+          $("#kycDob").value = application.date_of_birth ? String(application.date_of_birth).slice(0, 10) : "";
+          $("#kycCountry").value = application.country || "";
+          $("#kycDocumentType").value = application.document_type || "";
+          $("#kycNotes").value = application.notes || "";
+        }
+      } catch (error) {
+        console.error("Load KYC error:", error);
+        $("#kycNote").textContent = error.message || "Could not load verification status.";
+      }
+    }
+
+    $("#kycSubmitForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = $("#submitKyc");
+      const status = $("#kycFormStatus");
+      status.textContent = "";
+      status.className = "status";
+      const payload = {
+        legal_name: $("#kycLegalName").value.trim(),
+        date_of_birth: $("#kycDob").value,
+        country: $("#kycCountry").value.trim(),
+        document_type: $("#kycDocumentType").value,
+        document_reference: $("#kycDocumentReference").value.trim(),
+        notes: $("#kycNotes").value.trim()
+      };
+      if (payload.document_reference.length > 80 || payload.notes.length > 1000) {
+        status.textContent = "Please shorten the reference or notes.";
+        status.className = "status error";
+        return;
+      }
+      button.disabled = true;
+      button.textContent = "Submitting...";
+      try {
+        const response = await fetch(API_BASE + "/api/kyc", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.success) throw new Error(data.error || "Could not submit verification.");
+        status.textContent = "Identity details submitted for review.";
+        status.className = "status success";
+        showToast("Verification submitted");
+        $("#kycDocumentReference").value = "";
+        await loadKyc();
+      } catch (error) {
+        status.textContent = error.message || "Could not submit verification.";
+        status.className = "status error";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Submit for Review";
+      }
     });
 
     async function loadAccount() {
@@ -490,6 +586,7 @@
     });
 
     loadAccount();
+    loadKyc();
   </script>
 </body>
 </html>
