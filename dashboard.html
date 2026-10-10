@@ -86,6 +86,25 @@
   .probabilities{gap:3px;padding-bottom:9px}
   .current-digit-marker{bottom:-11px}
 }
+
+/* ===== REAL-MONEY M-PESA DEPOSIT MODAL ===== */
+.money-modal{position:fixed;inset:0;z-index:240;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;pointer-events:none;transition:.2s}
+.money-modal.open{opacity:1;visibility:visible;pointer-events:auto}
+.money-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(7px)}
+.money-modal-card{position:relative;width:min(480px,100%);max-height:90vh;overflow:auto;padding:22px;border:1px solid var(--border);border-radius:18px;background:#09110d;box-shadow:0 25px 80px rgba(0,0,0,.6)}
+.money-modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.money-modal-head h2{margin:0;font-size:20px}
+.money-modal-close{width:36px;height:36px;border:1px solid var(--border);border-radius:9px;background:#0b1711;color:#fff;font-size:22px}
+.money-modal-note{padding:11px 12px;border:1px solid #254b38;border-radius:10px;background:#0b1d13;color:#cfe7d8;font-size:11px;line-height:1.5;margin-bottom:14px}
+.money-account-balance{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:14px}
+.money-account-balance span{color:var(--muted);font-size:11px}.money-account-balance strong{color:var(--green);font-size:18px}
+.money-field{display:block;margin:12px 0;color:#dce8e1;font-size:12px;font-weight:700}
+.money-field input{display:block;width:100%;margin-top:6px;padding:12px;border:1px solid var(--border);border-radius:9px;background:#050a08;color:#fff;outline:none}
+.money-conversion{margin:10px 0 14px;padding:11px;border-radius:9px;background:#07100c;color:var(--muted);font-size:12px;line-height:1.6}
+.money-conversion strong{color:#fff}.money-submit{width:100%;min-height:46px;border:0;border-radius:10px;background:var(--green);color:#041008;font-weight:900}.money-submit:disabled{opacity:.55;cursor:wait}
+.money-history{margin-top:18px;border-top:1px solid var(--border);padding-top:14px}.money-history h3{font-size:13px;margin:0 0 8px}.money-history-item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #14251c;font-size:11px}.money-history-item:last-child{border-bottom:0}.money-status{color:var(--muted);text-align:right}.money-status.success{color:var(--green)}.money-status.failed{color:var(--red)}
+@media(max-width:500px){.money-modal-card{padding:17px;border-radius:15px}.money-modal-head h2{font-size:18px}}
+
 </style>
 </head>
 
@@ -317,8 +336,7 @@
       </section>
 
       <p class="demo-note">
-        TradeZora is currently a simulated demo terminal. No real funds, deposits,
-        withdrawals or live market execution are connected.
+        TradeZora trading remains simulated demo trading. Real-money deposits use a separate USD account and are credited only after M-Pesa confirmation. Demo trades do not use real funds.
       </p>
     </section>
   </main>
@@ -338,6 +356,44 @@
       <span>History</span>
     </a>
   </nav>
+
+
+  <!-- REAL-MONEY DEPOSIT MODAL: separate from the demo trading balance -->
+  <div id="depositModal" class="money-modal" aria-hidden="true">
+    <div class="money-modal-backdrop" data-close-deposit></div>
+    <section class="money-modal-card" role="dialog" aria-modal="true" aria-labelledby="depositModalTitle">
+      <div class="money-modal-head">
+        <h2 id="depositModalTitle">Deposit with M-Pesa</h2>
+        <button class="money-modal-close" type="button" aria-label="Close deposit window" data-close-deposit>×</button>
+      </div>
+      <div class="money-modal-note">
+        This deposits into your separate <strong>real-money USD account</strong>, not your demo balance.
+        Fixed rate: <strong>$1 = KSh 129.40</strong>. Minimum $5; maximum $1,900.
+      </div>
+      <div class="money-account-balance">
+        <span>Real-money balance (USD)</span>
+        <strong id="realAccountBalance">Loading…</strong>
+      </div>
+      <form id="mpesaDepositForm">
+        <label class="money-field">Deposit amount (USD)
+          <input id="depositAmountUsd" type="number" min="5" max="1900" step="0.01" value="5.00" required>
+        </label>
+        <label class="money-field">M-Pesa phone number
+          <input id="depositPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXX or 2547XXXXXXXX" required>
+        </label>
+        <div class="money-conversion">
+          You will be prompted to pay: <strong id="depositKesPreview">KSh 647</strong><br>
+          The real-money account is credited only after the payment is confirmed by M-Pesa.
+        </div>
+        <button id="mpesaDepositSubmit" class="money-submit" type="submit">Send M-Pesa prompt</button>
+      </form>
+      <div id="depositFeedback" class="money-modal-note" role="status" aria-live="polite" hidden></div>
+      <div class="money-history">
+        <h3>Recent deposits</h3>
+        <div id="depositHistoryList" class="empty">Loading deposit history…</div>
+      </div>
+    </section>
+  </div>
 
   <div id="toast" class="toast" role="status"></div>
   
@@ -598,11 +654,175 @@ document.addEventListener("DOMContentLoaded", () => {
      DEPOSIT
   ========================= */
 
-  $("#depositBtn").onclick = () => {
+  /* =========================
+     REAL-MONEY M-PESA DEPOSIT
+     Kept separate from the simulated demo balance.
+  ========================= */
+  const PAYMENT_API_BASE = "https://tradezora-backend-use.onrender.com";
+  const depositModal = $("#depositModal");
+  const depositForm = $("#mpesaDepositForm");
+  const depositAmountInput = $("#depositAmountUsd");
+  const depositPhoneInput = $("#depositPhone");
+  const depositKesPreview = $("#depositKesPreview");
+  const depositFeedback = $("#depositFeedback");
+  const depositSubmit = $("#mpesaDepositSubmit");
+  const realAccountBalance = $("#realAccountBalance");
+  const depositHistoryList = $("#depositHistoryList");
+  const USD_TO_KES = 129.40;
 
-    toast("Demo account only — real deposits are disabled.");
+  function formatUsd(value) {
+    return "$" + Number(value || 0).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
 
-  };
+  function showDepositFeedback(message, isError = false) {
+    if (!depositFeedback) return;
+    depositFeedback.hidden = false;
+    depositFeedback.textContent = message;
+    depositFeedback.style.borderColor = isError ? "#71313a" : "#254b38";
+    depositFeedback.style.background = isError ? "#210d11" : "#0b1d13";
+    depositFeedback.style.color = isError ? "#ff9aa5" : "#cfe7d8";
+  }
+
+  function updateDepositConversion() {
+    const amount = Number(depositAmountInput?.value || 0);
+    const kes = Math.round(amount * USD_TO_KES);
+    if (depositKesPreview) {
+      depositKesPreview.textContent = Number.isFinite(kes) && amount > 0
+        ? "KSh " + kes.toLocaleString("en-KE")
+        : "—";
+    }
+  }
+
+  async function paymentApi(path, options = {}) {
+    const token = localStorage.getItem("tradezoraAuthToken");
+    if (!token) throw new Error("Please log in to your registered account before making a deposit.");
+    const response = await fetch(`${PAYMENT_API_BASE}${path}`, {
+      ...options,
+      headers: {
+        "Accept": "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        "Authorization": `Bearer ${token}`,
+        ...(options.headers || {})
+      }
+    });
+    let data = {};
+    try { data = await response.json(); } catch (_) {}
+    if (!response.ok || data.success === false) {
+      throw new Error(data.error || `Request failed (${response.status}).`);
+    }
+    return data;
+  }
+
+  async function loadRealAccountAndDeposits() {
+    if (!localStorage.getItem("tradezoraAuthToken")) {
+      if (realAccountBalance) realAccountBalance.textContent = "Log in required";
+      if (depositHistoryList) depositHistoryList.textContent = "Log in to view deposit history.";
+      return;
+    }
+    if (realAccountBalance) realAccountBalance.textContent = "Loading…";
+    try {
+      const data = await paymentApi("/api/real-account");
+      const account = data.account || data;
+      if (realAccountBalance) realAccountBalance.textContent = formatUsd(account.balance);
+    } catch (error) {
+      if (realAccountBalance) realAccountBalance.textContent = "Unavailable";
+      console.warn("Real-money balance could not be loaded:", error.message);
+    }
+    try {
+      const data = await paymentApi("/api/payments/deposits");
+      const deposits = Array.isArray(data.deposits) ? data.deposits : [];
+      if (!depositHistoryList) return;
+      if (!deposits.length) {
+        depositHistoryList.className = "empty";
+        depositHistoryList.textContent = "No deposits yet.";
+        return;
+      }
+      depositHistoryList.className = "";
+      depositHistoryList.innerHTML = deposits.slice(0, 8).map((deposit) => {
+        const status = String(deposit.status || "pending").toLowerCase();
+        const statusClass = status === "completed" || status === "success" || status === "approved"
+          ? "success" : status === "failed" || status === "rejected" ? "failed" : "";
+        const date = deposit.created_at ? new Date(deposit.created_at).toLocaleString() : "";
+        const kesText = deposit.kes_amount ? ` · KSh ${Number(deposit.kes_amount).toLocaleString("en-KE")}` : "";
+        const receiptText = deposit.mpesa_receipt_number ? `<br>Receipt: ${String(deposit.mpesa_receipt_number).replace(/[&<>"']/g, "")}` : "";
+        return `<div class="money-history-item"><div><strong>${formatUsd(deposit.amount)}</strong><div style="color:var(--muted);margin-top:3px">${date}${kesText}</div>${receiptText}</div><div class="money-status ${statusClass}">${status.toUpperCase()}</div></div>`;
+      }).join("");
+    } catch (error) {
+      if (depositHistoryList) {
+        depositHistoryList.className = "empty";
+        depositHistoryList.textContent = "Could not load deposit history. Please try again.";
+      }
+      console.warn("Deposit history could not be loaded:", error.message);
+    }
+  }
+
+  function openDepositModal() {
+    if (!depositModal) return;
+    depositModal.classList.add("open");
+    depositModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    if (depositFeedback) depositFeedback.hidden = true;
+    updateDepositConversion();
+    loadRealAccountAndDeposits();
+  }
+
+  function closeDepositModal() {
+    if (!depositModal) return;
+    depositModal.classList.remove("open");
+    depositModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  $("#depositBtn").onclick = openDepositModal;
+  document.querySelectorAll("[data-close-deposit]").forEach((button) => {
+    button.addEventListener("click", closeDepositModal);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && depositModal?.classList.contains("open")) closeDepositModal();
+  });
+  depositAmountInput?.addEventListener("input", updateDepositConversion);
+
+  depositForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const amount = Number(depositAmountInput?.value);
+    const phone = String(depositPhoneInput?.value || "").trim();
+    if (!Number.isFinite(amount) || amount < 5 || amount > 1900) {
+      showDepositFeedback("Enter a deposit between $5.00 and $1,900.00 USD.", true);
+      return;
+    }
+    if (!phone) {
+      showDepositFeedback("Enter the Kenyan M-Pesa phone number that should receive the payment prompt.", true);
+      return;
+    }
+    if (!localStorage.getItem("tradezoraAuthToken")) {
+      showDepositFeedback("You need to log in to your registered account before making a real-money deposit.", true);
+      return;
+    }
+
+    depositSubmit.disabled = true;
+    depositSubmit.textContent = "Sending prompt…";
+    showDepositFeedback("Contacting M-Pesa. Please wait and do not submit the same payment repeatedly.");
+    try {
+      const data = await paymentApi("/api/payments/mpesa/deposit", {
+        method: "POST",
+        body: JSON.stringify({ amount_usd: amount.toFixed(2), phone_number: phone })
+      });
+      const deposit = data.deposit || {};
+      const kes = Number(deposit.amount_kes || Math.round(amount * USD_TO_KES));
+      showDepositFeedback(
+        `${data.message || "M-Pesa prompt requested."} Amount: ${formatUsd(deposit.amount_usd ?? amount)} (KSh ${kes.toLocaleString("en-KE")}). Status: ${(deposit.status || "pending").toUpperCase()}. Check your phone and approve the prompt if the details are correct. Your real balance will update only after M-Pesa confirms payment.`
+      );
+      await loadRealAccountAndDeposits();
+    } catch (error) {
+      showDepositFeedback(error.message || "Could not start the M-Pesa payment. Please try again.", true);
+    } finally {
+      depositSubmit.disabled = false;
+      depositSubmit.textContent = "Send M-Pesa prompt";
+    }
+  });
 
 
   /* =========================
